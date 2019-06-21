@@ -1,3 +1,9 @@
+<img src="https://raw.githubusercontent.com/CREDITSCOM/Documentation/master/Src/Logo_Credits_horizontal_black.png" align="center">
+
+[Documentation](https://developers.credits.com/en/Articles/Platform) \|
+[Guides](https://developers.credits.com/en/Articles/Guides) \|
+[News](https://credits.com/en/Home/News)
+
 <h1>CS Desktop Wallet</h3>
 <h2>What's CS Desktop wallet?</h2>
 <p>CS Desktop Wallet - the client application is a desktop version of the wallet. Wallet Desktop is implemented in Java. This version of the wallet provides a high level of security, privacy and stability.

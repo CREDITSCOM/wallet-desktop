@@ -99,7 +99,7 @@
         <Label fx:id="feeErrorLabel" maxHeight="45.0" minHeight="20.0" prefHeight="30.0"
                styleClass="credits--not-padding-labelError"/>
         <Label styleClass="credits-not-padding-label"
-               text="Send text (it's not free). It is not necessary to fill in">
+               text="User data. It is not necessary to fill in">
         </Label>
         <TextField fx:id="transText" maxHeight="45.0" minHeight="45.0" prefHeight="56.0" prefWidth="605.0"
                    promptText="Put text here" styleClass="credits-textField"/>

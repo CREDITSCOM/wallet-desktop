@@ -69,7 +69,7 @@
     <HBox alignment="TOP_RIGHT" layoutX="20.0" layoutY="420.0" prefHeight="75.0" prefWidth="885.0">
         <VBox prefHeight="83.0" prefWidth="500.0">
             <Label style="-fx-font-size: 16px;" styleClass="arrow"
-                   text="   Send text (it's not free). It's not necessary to fill in"/>
+                   text="   User data. It's not necessary to fill in"/>
             <TextField fx:id="transactionText" editable="false" maxHeight="45.0" maxWidth="516.0"
                        prefHeight="45.0" prefWidth="516.0"
                        style="-fx-font-size: 16px; -fx-border-color: transparent;"

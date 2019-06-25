@@ -54,20 +54,20 @@ public class NewCoinController extends AbstractController {
     private boolean checkValidData(String coinName, String smartContractAddress) {
         AtomicBoolean isValidationSuccessful = new AtomicBoolean(true);
         if (coinName.isEmpty()) {
-            FormUtils.validateField(coinField, coinErrorLabel, ERR_COIN, isValidationSuccessful);
+            FormUtils.showErrorLabelAndPaintField(coinField, coinErrorLabel, ERR_COIN, isValidationSuccessful);
         }
 
         if(coinName.toLowerCase().equals("credits") || coinName.toLowerCase().equals("cs")) {
-            FormUtils.validateField(coinField, coinErrorLabel, THIS_NAME_IS_FORBIDDEN, isValidationSuccessful);
+            FormUtils.showErrorLabelAndPaintField(coinField, coinErrorLabel, THIS_NAME_IS_FORBIDDEN, isValidationSuccessful);
         }
 
         if (smartContractAddress.isEmpty()) {
-            FormUtils.validateField(tokenField, tokenErrorLabel, ERR_TOKEN, isValidationSuccessful);
+            FormUtils.showErrorLabelAndPaintField(tokenField, tokenErrorLabel, ERR_TOKEN, isValidationSuccessful);
         }
 
         session.coinsKeeper.getKeptObject().ifPresent(coinsMap -> {
             if(coinsMap.containsKey(coinName)) {
-                FormUtils.validateField(coinField, coinErrorLabel, ERR_COIN_DUPLICATE, isValidationSuccessful);
+                FormUtils.showErrorLabelAndPaintField(coinField, coinErrorLabel, ERR_COIN_DUPLICATE, isValidationSuccessful);
             }
         });
 

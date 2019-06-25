@@ -112,18 +112,18 @@ public class WalletController extends AbstractController {
             FormUtils.validateTable(coinsTableView, coinsErrorLabel, ERR_COIN, isValidationSuccessful);
         }
         if (transactionToAddress == null || transactionToAddress.isEmpty()) {
-            FormUtils.validateField(addressField, addressErrorLabel, ERR_TO_ADDRESS, isValidationSuccessful);
+            FormUtils.showErrorLabelAndPaintField(addressField, addressErrorLabel, ERR_TO_ADDRESS, isValidationSuccessful);
         }
         if (GeneralConverter.toBigDecimal(transactionAmount).compareTo(BigDecimal.ZERO) <= 0) {
-            FormUtils.validateField(amountField, amountErrorLabel, ERR_AMOUNT, isValidationSuccessful);
+            FormUtils.showErrorLabelAndPaintField(amountField, amountErrorLabel, ERR_AMOUNT, isValidationSuccessful);
         }
         if (GeneralConverter.toBigDecimal(transactionFee).compareTo(BigDecimal.ZERO) <= 0) {
-            FormUtils.validateField(feeField, feeErrorLabel, ERR_FEE, isValidationSuccessful);
+            FormUtils.showErrorLabelAndPaintField(feeField, feeErrorLabel, ERR_FEE, isValidationSuccessful);
         }
         try {
             Validator.validateToAddress(transactionToAddress);
         } catch (NodeClientException e) {
-            FormUtils.validateField(addressField, addressErrorLabel, "Invalid Address", isValidationSuccessful);
+            FormUtils.showErrorLabelAndPaintField(addressField, addressErrorLabel, "Invalid Address", isValidationSuccessful);
         }
 
         if (isValidationSuccessful.get()) {

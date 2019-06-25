@@ -40,7 +40,6 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.math.BigDecimal;
-import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,6 +50,7 @@ import static com.credits.client.node.service.NodeApiServiceImpl.handleCallback;
 import static com.credits.client.node.thrift.generated.TransactionState.*;
 import static com.credits.client.node.util.TransactionIdCalculateUtils.calcTransactionIdSourceTarget;
 import static com.credits.general.thrift.generated.Variant._Fields.V_STRING;
+import static com.credits.general.util.GeneralConverter.*;
 import static com.credits.general.util.GeneralConverter.createObjectFromString;
 import static com.credits.general.util.Utils.rethrowUnchecked;
 import static com.credits.general.util.Utils.threadPool;
@@ -277,8 +277,8 @@ public class SmartContractController extends AbstractController {
 
                     SmartContractTransactionTabRow tableRow = new SmartContractTransactionTabRow();
                     tableRow.setAmount(GeneralConverter.toString(transactionData.getAmount()));
-                    tableRow.setSource(GeneralConverter.encodeToBASE58(transactionData.getSource()));
-                    tableRow.setTarget(GeneralConverter.encodeToBASE58(transactionData.getTarget()));
+                    tableRow.setSource(encodeToBASE58(transactionData.getSource()));
+                    tableRow.setTarget(encodeToBASE58(transactionData.getTarget()));
                     tableRow.setBlockId(transactionData.getBlockId());
                     tableRow.setState(VALID.name());
                     tableRow.setMethod(transactionData.getMethod());
@@ -585,59 +585,73 @@ public class SmartContractController extends AbstractController {
     }
 
     @FXML
+    private void handleExecuteGetter() {
+        executeContractMethod(false);
+    }
+
+    @FXML
     private void handleExecute() {
+        executeContractMethod(true);
+    }
+
+    private void executeContractMethod(boolean contractStateCanBeChanged) {
         try {
-            List<ByteBuffer> usedSmartsListFromField = getSmartsListFromField(usdSmart.getText());
-            // VALIDATE
-            AtomicBoolean isValidationSuccessful = new AtomicBoolean(true);
-            clearLabErr();
-            String transactionFee = feeField.getText();
-            if (GeneralConverter.toBigDecimal(transactionFee).compareTo(BigDecimal.ZERO) <= 0) {
-                FormUtils.validateField(feeField, feeErrorLabel, ERR_FEE, isValidationSuccessful);
-            }
-            if (!isValidationSuccessful.get()) {
-                return;
-            }
-            Method method = cbMethods.getSelectionModel().getSelectedItem().getMethod();
-            List<Variant> params = new ArrayList<>();
-            Parameter[] currentMethodParams = this.currentMethod.getParameters();
-            ObservableList<Node> paramsContainerChildren = this.pParamsContainer.getChildren();
-            int i = 0;
-            for (Node node : paramsContainerChildren) {
-                if (node instanceof TextField) {
-                    String paramValue = ((TextField) node).getText();
-                    Parameter parameter = currentMethodParams[i];
-                    params.add(toVariant(parameter.getType().getTypeName(), createObjectFromString(paramValue, parameter.getType())));
-                    ++i;
-                }
-            }
-            SmartContractData smartContractData = this.selectedContract;
-            smartContractData.setMethod(method.getName());
-            smartContractData.setParams(params);
+            if (checkFeeFieldNotValid()) return;
+
+            final var usedContracts = getSmartsListFromField(usdSmart.getText());
+            final var params = getVariantsFromParamsFields();
+
+            selectedContract.setMethod(currentMethod.getName());
+            selectedContract.setParams(params);
+            selectedContract.setGetterMethod(contractStateCanBeChanged);
 
             CompletableFuture
-                .supplyAsync(
-                    () -> calcTransactionIdSourceTarget(
-                        AppState.getNodeApiService(),
-                        session.account,
-                        smartContractData.getBase58Address(),
-                        true),
-                    threadPool)
-                .thenApply(
-                    (transactionData) -> createSmartContractTransaction(
-                        transactionData,
-                        FormUtils.getActualOfferedMaxFee16Bits(feeField),
-                        smartContractData,
-                        usedSmartsListFromField,
-                        session))
-                .whenComplete(handleCallback(handleExecuteResult()));
-
-
+                    .supplyAsync(
+                            () -> calcTransactionIdSourceTarget(
+                                    AppState.getNodeApiService(),
+                                    session.account,
+                                    selectedContract.getBase58Address(),
+                                    true),
+                            threadPool)
+                    .thenApply(
+                            (transactionData) -> createSmartContractTransaction(
+                                    transactionData,
+                                    FormUtils.getActualOfferedMaxFee16Bits(feeField),
+                                    selectedContract,
+                                    usedContracts,
+                                    session))
+                    .whenComplete(handleCallback(handleExecuteResult()));
         } catch (CreditsException e) {
             LOGGER.error("failed!", e);
-            FormUtils.showError(e.toString());
+            FormUtils.showError(e.getMessage());
         }
     }
+
+    private boolean checkFeeFieldNotValid() {
+        AtomicBoolean isValidationSuccessful = new AtomicBoolean(true);
+        clearLabErr();
+        if (feeField.getText().isEmpty() || (toBigDecimal(feeField.getText()).compareTo(BigDecimal.ZERO) <= 0)) {
+            FormUtils.showErrorLabelAndPaintField(feeField, feeErrorLabel, ERR_FEE, isValidationSuccessful);
+        }
+        return !isValidationSuccessful.get();
+    }
+
+    private ArrayList<Variant> getVariantsFromParamsFields() {
+        final var params = currentMethod.getParameters();
+        final var paramsValuesContainer = pParamsContainer.getChildren();
+        final var paramsAsVariant = new ArrayList<Variant>();
+        for (int i = 0; i < paramsValuesContainer.size(); i++) {
+            Node node = paramsValuesContainer.get(i);
+            if (node instanceof TextField) {
+                String paramValue = ((TextField) node).getText();
+                Parameter parameter = params[i];
+                paramsAsVariant.add(toVariant(parameter.getType().getTypeName(), createObjectFromString(paramValue, parameter.getType())));
+            }
+        }
+        return paramsAsVariant;
+    }
+
+
 
     private Callback<Pair<Long, TransactionFlowResultData>> handleExecuteResult() {
         return new Callback<Pair<Long, TransactionFlowResultData>>() {

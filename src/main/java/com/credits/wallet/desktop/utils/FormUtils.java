@@ -96,9 +96,11 @@ public class FormUtils {
     }
 
 
-    public static void validateField(
-        TextField textField, Label errorLabel, String errorText,
-        AtomicBoolean validationFlag) {
+    public static void showErrorLabelAndPaintField(
+            TextField textField,
+            Label errorLabel,
+            String errorText,
+            AtomicBoolean validationFlag) {
         errorLabel.setText(errorText);
         setErrorStyle(textField);
         validationFlag.set(false);

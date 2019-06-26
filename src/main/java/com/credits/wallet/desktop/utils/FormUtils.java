@@ -124,7 +124,7 @@ public class FormUtils {
     }
 
     public static void clearErrorOnField(TextField textField, Label errorLabel) {
-        errorLabel.setText("");
+        if (errorLabel != null) errorLabel.setText("");
         clearErrorStyle(textField);
     }
 
@@ -133,7 +133,9 @@ public class FormUtils {
     }
 
     public static short getActualOfferedMaxFee16Bits(TextField feeField) {
-        var actualOfferedMaxFeePair = calculateActualFee(GeneralConverter.toDouble(feeField.getText()));
+        if (feeField.getText().isEmpty()) throw new IllegalArgumentException("fee text field can't be empty");
+        var fee = GeneralConverter.toDouble(feeField.getText());
+        var actualOfferedMaxFeePair = calculateActualFee(fee);
         return actualOfferedMaxFeePair.getRight();
     }
 
@@ -158,6 +160,8 @@ public class FormUtils {
             actualOfferedMaxFeeLabel.setText("");
             feeField.setText("");
         } else {
+            feeField.setStyle(feeField.getStyle().replace("-fx-prompt-text-fill: red;", ""));
+            feeField.setStyle(feeField.getStyle().replace("-fx-border-color: red;", "-fx-border-color: black;"));
             var actualOfferedMaxFeePair = calculateActualFee(GeneralConverter.toDouble(value));
             actualOfferedMaxFeeLabel.setText(GeneralConverter.toString(actualOfferedMaxFeePair.getLeft()));
             feeField.setText(value);

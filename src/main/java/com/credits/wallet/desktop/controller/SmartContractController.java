@@ -121,6 +121,7 @@ public class SmartContractController extends AbstractController {
     private TableView<SmartContractTransactionTabRow> unapprovedTableView;
     private SimpleBooleanProperty storeContractState = new SimpleBooleanProperty();
 
+
     @FXML
     private void handleBack() {
         VistaNavigator.loadVista(VistaNavigator.WALLET);

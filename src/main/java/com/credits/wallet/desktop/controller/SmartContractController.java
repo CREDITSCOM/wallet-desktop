@@ -16,7 +16,6 @@ import com.credits.wallet.desktop.struct.MethodData;
 import com.credits.wallet.desktop.struct.SmartContractTabRow;
 import com.credits.wallet.desktop.struct.SmartContractTransactionTabRow;
 import com.credits.wallet.desktop.utils.ApiUtils;
-import com.credits.wallet.desktop.utils.FormUtils;
 import com.credits.wallet.desktop.utils.sourcecode.SourceCodeUtils;
 import com.credits.wallet.desktop.utils.sourcecode.codeArea.CodeAreaUtils;
 import javafx.application.Platform;
@@ -45,7 +44,6 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.credits.client.node.service.NodeApiServiceImpl.async;
 import static com.credits.client.node.service.NodeApiServiceImpl.handleCallback;
@@ -60,24 +58,25 @@ import static com.credits.wallet.desktop.AppState.NODE_ERROR;
 import static com.credits.wallet.desktop.utils.ApiUtils.createSmartContractTransaction;
 import static com.credits.wallet.desktop.utils.FormUtils.*;
 import static com.credits.wallet.desktop.utils.SmartContractsUtils.getSmartsListFromField;
-import static java.util.Arrays.asList;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 
 
 public class SmartContractController extends AbstractController {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SmartContractController.class);
     private static final String ERR_FEE = "Fee must be greater than 0";
-    private static Logger LOGGER = LoggerFactory.getLogger(SmartContractController.class);
+    private static final int COUNT_ROUNDS_LIFE = 50;
+    private static final String ERR_GETTING_TRANSACTION_HISTORY = "Error getting transaction history";
+    private static final Set<String> OBJECT_METHODS = Set.of("getClass", "hashCode", "equals", "toString", "notify", "notifyAll", "wait", "finalize");
 
     private CodeArea codeArea;
     private Method currentMethod;
     private HashMap<String, CompiledSmartContract> favoriteContracts;
 
-    private final int COUNT_ROUNDS_LIFE = 50;
-    private final String ERR_GETTING_TRANSACTION_HISTORY = "Error getting transaction history";
     private final List<SmartContractTransactionTabRow> unapprovedList = new ArrayList<>();
     private final List<SmartContractTransactionTabRow> approvedList = new ArrayList<>();
     private CompiledSmartContract selectedContract;
+    private SimpleBooleanProperty storeContractState = new SimpleBooleanProperty();
 
     @FXML
     private HBox hbFeeLayout;
@@ -98,9 +97,9 @@ public class SmartContractController extends AbstractController {
     @FXML
     private ComboBox<MethodData> cbMethods;
     @FXML
-    TableView<SmartContractTabRow> smartContractTableView;
+    private TableView<SmartContractTabRow> smartContractTableView;
     @FXML
-    TableView<SmartContractTabRow> favoriteContractTableView;
+    private TableView<SmartContractTabRow> favoriteContractTableView;
     @FXML
     private TextField tfSearchAddress;
     @FXML
@@ -114,12 +113,9 @@ public class SmartContractController extends AbstractController {
     @FXML
     private Label actualOfferedMaxFeeLabel;
     @FXML
-    private Label feeErrorLabel;
-    @FXML
     private TableView<SmartContractTransactionTabRow> approvedTableView;
     @FXML
     private TableView<SmartContractTransactionTabRow> unapprovedTableView;
-    private SimpleBooleanProperty storeContractState = new SimpleBooleanProperty();
 
 
     @FXML
@@ -136,22 +132,102 @@ public class SmartContractController extends AbstractController {
     private void handleSearch() {
         String address = tfSearchAddress.getText();
         async(() -> AppState.getNodeApiService().getSmartContract(address), handleGetSmartContractResult());
-
     }
 
-    private Callback<SmartContractData> handleGetSmartContractResult() {
-        return new Callback<>() {
-            @Override
-            public void onSuccess(SmartContractData contractData) throws CreditsException {
-                refreshSmartContractForm(compileSmartContract(contractData));
+    @FXML
+    private void handleExecute() {
+        final short fee;
+        try {
+            if (storeContractState.getValue()) {
+                if (checkFeeFieldNotValid()) return;
+                fee = getActualOfferedMaxFee16Bits(feeField);
+                selectedContract.setGetterMethod(false);
+            } else {
+                fee = 0;
+                selectedContract.setGetterMethod(true);
             }
 
-            @Override
-            public void onError(Throwable e) {
-                LOGGER.error("failed!", e);
-                showError("Can't get smart-contract from the node. Reason: " + e.getMessage());
+            final var usedContracts = getSmartsListFromField(usdSmart.getText());
+            final var params = getVariantsFromParamsFields();
+
+            selectedContract.setMethod(currentMethod.getName());
+            selectedContract.setParams(params);
+
+            CompletableFuture
+                    .supplyAsync(
+                            () -> calcTransactionIdSourceTarget(
+                                    AppState.getNodeApiService(),
+                                    session.account,
+                                    selectedContract.getBase58Address(),
+                                    true),
+                            threadPool)
+                    .thenApply(
+                            (transactionData) -> createSmartContractTransaction(
+                                    transactionData,
+                                    fee,
+                                    selectedContract,
+                                    usedContracts,
+                                    session))
+                    .whenComplete(handleCallback(handleExecuteResult()));
+        } catch (CreditsException e) {
+            LOGGER.error("failed!", e);
+            showError(e.getMessage());
+        }
+    }
+
+    @FXML
+    private void handleRefreshTransactions() {
+        fillTransactionsTables(selectedContract.getBase58Address());
+    }
+
+    @FXML
+    private void cbMethodsOnAction() {
+        this.pParams.setVisible(false);
+        this.currentMethod = this.cbMethods.getSelectionModel().getSelectedItem().getMethod();
+        if (this.currentMethod == null) {
+            return;
+        }
+        Parameter[] params = this.currentMethod.getParameters();
+        this.pParamsContainer.getChildren().clear();
+        if (params.length > 0) {
+            this.pParams.setVisible(true);
+            double layoutY = 10;
+            for (Parameter param : params) {
+                TextField paramValueTextField = new TextField();
+                paramValueTextField.setLayoutX(250);
+                paramValueTextField.setLayoutY(layoutY);
+                paramValueTextField.setStyle(
+                        "-fx-background-color:  #fff; -fx-border-radius:15; -fx-border-width: 1; -fx-border-color:  #000; -fx-font-size: 16px");
+                paramValueTextField.setPrefSize(500, 30);
+                Label paramNameLabel = new Label(param.getType().getSimpleName() + " " + param.getName());
+                paramNameLabel.setLayoutX(10);
+                paramNameLabel.setLayoutY(layoutY + 5);
+                paramNameLabel.setStyle("-fx-font-size: 18px");
+                paramNameLabel.setLabelFor(paramValueTextField);
+                this.pParamsContainer.getChildren().addAll(paramNameLabel, paramValueTextField);
+                layoutY += 40;
             }
-        };
+            this.pParamsContainer.setPrefHeight(layoutY);
+        }
+    }
+
+    @FXML
+    private void handleRefreshSmarts() {
+        updateSelectedTab();
+    }
+
+    @FXML
+    private void handleStoreContractState(ActionEvent actionEvent) {
+        hbFeeLayout.setVisible(storeContractState.getValue());
+    }
+
+    @FXML
+    private void updateSelectedTab() {
+        if (myContractsTab != null && myContractsTab.isSelected()) {
+            refreshContractsTab();
+        } else if (favoriteContractsTab != null && favoriteContractsTab.isSelected()) {
+            refreshFavoriteContractsTab();
+        }
     }
 
     @Override
@@ -183,6 +259,58 @@ public class SmartContractController extends AbstractController {
         cbStoreContractState.selectedProperty().bindBidirectional(storeContractState);
     }
 
+    @Override
+    public void formDeinitialize() {
+
+    }
+
+    private Callback<SmartContractData> handleGetSmartContractResult() {
+        return new Callback<>() {
+            @Override
+            public void onSuccess(SmartContractData contractData) throws CreditsException {
+                refreshSmartContractForm(compileSmartContract(contractData));
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                LOGGER.error("failed!", e);
+                showError("Can't get smart-contract from the node. Reason: " + e.getMessage());
+            }
+        };
+    }
+
+    private void refreshSmartContractForm(CompiledSmartContract compiledSmartContract) {
+        if (compiledSmartContract == null || compiledSmartContract.getSmartContractDeployData().getByteCodeObjects().size() == 0 ||
+                compiledSmartContract.getAddress().length == 0) {
+            tbFavorite.setVisible(false);
+            pControls.setVisible(false);
+            pCodePanel.setVisible(false);
+        } else {
+            selectedContract = compiledSmartContract;
+
+            pControls.setVisible(true);
+            pCodePanel.setVisible(true);
+
+            tbFavorite.setOnAction(handleFavoriteButtonEvent(tbFavorite, selectedContract));
+            tbFavorite.setVisible(true);
+            findInFavoriteThenSelect(compiledSmartContract, tbFavorite);
+
+            String sourceCode = compiledSmartContract.getSmartContractDeployData().getSourceCode();
+            tfAddress.setText(compiledSmartContract.getBase58Address());
+            MethodData[] methods = Arrays.stream(compiledSmartContract.getContractClass().getRootClass().getMethods())
+                    .filter(m -> !OBJECT_METHODS.contains(m.getName()))
+                    .map(MethodData::new)
+                    .toArray(MethodData[]::new);
+            cbMethods.getItems().clear();
+            cbMethods.getItems().addAll(methods);
+
+            codeArea.clear();
+            codeArea.replaceText(0, 0, SourceCodeUtils.formatSourceCode(sourceCode));
+
+            fillTransactionsTables(compiledSmartContract.getBase58Address());
+        }
+    }
+
     private HashMap<String, List<SmartContractTransactionData>> getKeptContractsTransactions() {
         return session.contractsTransactionsKeeper.getKeptObject().orElseGet(HashMap::new);
     }
@@ -212,8 +340,7 @@ public class SmartContractController extends AbstractController {
                 handleGetTransactionsResult());
     }
 
-    private Callback<TransactionsStateGetResultData> handleGetTransactionsStateResult(
-            ConcurrentHashMap<Long, TransactionRoundData> transactionMap) {
+    private Callback<TransactionsStateGetResultData> handleGetTransactionsStateResult(ConcurrentHashMap<Long, TransactionRoundData> transactionMap) {
         return new Callback<>() {
             @Override
             public void onSuccess(TransactionsStateGetResultData transactionsStateGetResultData) throws CreditsException {
@@ -231,9 +358,6 @@ public class SmartContractController extends AbstractController {
 
                 transactionMap.forEach((id, value) -> {
                     SmartContractTransactionTabRow tableRow = new SmartContractTransactionTabRow();
-/*
-                    tableRow.setInnerId(id);
-*/
                     tableRow.setAmount(value.getAmount());
                     tableRow.setCurrency(value.getCurrency());
                     tableRow.setSource(value.getSource());
@@ -361,15 +485,6 @@ public class SmartContractController extends AbstractController {
         });
     }
 
-    @FXML
-    private void updateSelectedTab() {
-        if (myContractsTab != null && myContractsTab.isSelected()) {
-            refreshContractsTab();
-        } else if (favoriteContractsTab != null && favoriteContractsTab.isSelected()) {
-            refreshFavoriteContractsTab();
-        }
-    }
-
     private void initializeContractsTable(TableView<SmartContractTabRow> tableView) {
         initializeRowFactory(tableView);
         initializeColumns(tableView);
@@ -405,9 +520,7 @@ public class SmartContractController extends AbstractController {
         };
     }
 
-    private EventHandler<ActionEvent> handleFavoriteButtonEvent(
-            ToggleButton pressedButton,
-            CompiledSmartContract compiledSmartContract) {
+    private EventHandler<ActionEvent> handleFavoriteButtonEvent(ToggleButton pressedButton, CompiledSmartContract compiledSmartContract) {
         return event -> switchFavoriteState(pressedButton, compiledSmartContract);
     }
 
@@ -427,9 +540,7 @@ public class SmartContractController extends AbstractController {
         refreshFavoriteContractsTab();
     }
 
-    private void changeFavoriteStateIntoTab(
-            TableView<SmartContractTabRow> table, SmartContractData smartContractData,
-            boolean isSelected) {
+    private void changeFavoriteStateIntoTab(TableView<SmartContractTabRow> table, SmartContractData smartContractData, boolean isSelected) {
         table.getItems()
                 .stream()
                 .filter(row -> row.getCompiledSmartContract().equals(smartContractData))
@@ -446,7 +557,6 @@ public class SmartContractController extends AbstractController {
             tbFavorite.setSelected(false);
         }
     }
-
 
     private CompiledSmartContract compileSmartContract(SmartContractData smartContractData) {
         return new CompiledSmartContract(
@@ -468,48 +578,6 @@ public class SmartContractController extends AbstractController {
             }
         }
         return new SmartContractClass(contractClass, innerContractClasses);
-    }
-
-    private final static Set<String> objectMethods = new HashSet<>(asList(
-            "getClass",
-            "hashCode",
-            "equals",
-            "toString",
-            "notify",
-            "notifyAll",
-            "wait",
-            "finalize"));
-
-    private void refreshSmartContractForm(CompiledSmartContract compiledSmartContract) {
-        if (compiledSmartContract == null || compiledSmartContract.getSmartContractDeployData().getByteCodeObjects().size() == 0 ||
-                compiledSmartContract.getAddress().length == 0) {
-            tbFavorite.setVisible(false);
-            pControls.setVisible(false);
-            pCodePanel.setVisible(false);
-        } else {
-            selectedContract = compiledSmartContract;
-
-            pControls.setVisible(true);
-            pCodePanel.setVisible(true);
-
-            tbFavorite.setOnAction(handleFavoriteButtonEvent(tbFavorite, selectedContract));
-            tbFavorite.setVisible(true);
-            findInFavoriteThenSelect(compiledSmartContract, tbFavorite);
-
-            String sourceCode = compiledSmartContract.getSmartContractDeployData().getSourceCode();
-            tfAddress.setText(compiledSmartContract.getBase58Address());
-            MethodData[] methods = Arrays.stream(compiledSmartContract.getContractClass().getRootClass().getMethods())
-                    .filter(m -> !objectMethods.contains(m.getName()))
-                    .map(MethodData::new)
-                    .toArray(MethodData[]::new);
-            cbMethods.getItems().clear();
-            cbMethods.getItems().addAll(methods);
-
-            codeArea.clear();
-            codeArea.replaceText(0, 0, SourceCodeUtils.formatSourceCode(sourceCode));
-
-            fillTransactionsTables(compiledSmartContract.getBase58Address());
-        }
     }
 
     private void findInFavoriteThenSelect(SmartContractData smartContractData, ToggleButton tbFavorite) {
@@ -544,7 +612,7 @@ public class SmartContractController extends AbstractController {
                     smartContracts.forEach(smartContract -> {
                         try {
                             addContractToTable(smartContractTableView, compileSmartContract(smartContract));
-                        } catch (Throwable e){
+                        } catch (Throwable e) {
                             LOGGER.error("can't compile smart contract {}. Reason: {}", smartContract.getBase58Address(), e.getMessage());
                         }
                     });
@@ -570,80 +638,7 @@ public class SmartContractController extends AbstractController {
         };
     }
 
-    @FXML
-    private void cbMethodsOnAction() {
-        this.pParams.setVisible(false);
-        this.currentMethod = this.cbMethods.getSelectionModel().getSelectedItem().getMethod();
-        if (this.currentMethod == null) {
-            return;
-        }
-        Parameter[] params = this.currentMethod.getParameters();
-        this.pParamsContainer.getChildren().clear();
-        if (params.length > 0) {
-            this.pParams.setVisible(true);
-            double layoutY = 10;
-            for (Parameter param : params) {
-                TextField paramValueTextField = new TextField();
-                paramValueTextField.setLayoutX(250);
-                paramValueTextField.setLayoutY(layoutY);
-                paramValueTextField.setStyle(
-                        "-fx-background-color:  #fff; -fx-border-radius:15; -fx-border-width: 1; -fx-border-color:  #000; -fx-font-size: 16px");
-                paramValueTextField.setPrefSize(500, 30);
-                Label paramNameLabel = new Label(param.getType().getSimpleName() + " " + param.getName());
-                paramNameLabel.setLayoutX(10);
-                paramNameLabel.setLayoutY(layoutY + 5);
-                paramNameLabel.setStyle("-fx-font-size: 18px");
-                paramNameLabel.setLabelFor(paramValueTextField);
-                this.pParamsContainer.getChildren().addAll(paramNameLabel, paramValueTextField);
-                layoutY += 40;
-            }
-            this.pParamsContainer.setPrefHeight(layoutY);
-        }
-    }
-
-    @FXML
-    private void handleExecute() {
-        final short fee;
-        try {
-            if (storeContractState.getValue()) {
-                if (checkFeeFieldNotValid()) return;
-                fee = getActualOfferedMaxFee16Bits(feeField);
-                selectedContract.setGetterMethod(false);
-            } else {
-                fee = 0;
-                selectedContract.setGetterMethod(true);
-            }
-
-            final var usedContracts = getSmartsListFromField(usdSmart.getText());
-            final var params = getVariantsFromParamsFields();
-
-            selectedContract.setMethod(currentMethod.getName());
-            selectedContract.setParams(params);
-
-            CompletableFuture
-                    .supplyAsync(
-                            () -> calcTransactionIdSourceTarget(
-                                    AppState.getNodeApiService(),
-                                    session.account,
-                                    selectedContract.getBase58Address(),
-                                    true),
-                            threadPool)
-                    .thenApply(
-                            (transactionData) -> createSmartContractTransaction(
-                                    transactionData,
-                                    fee,
-                                    selectedContract,
-                                    usedContracts,
-                                    session))
-                    .whenComplete(handleCallback(handleExecuteResult()));
-        } catch (CreditsException e) {
-            LOGGER.error("failed!", e);
-            showError(e.getMessage());
-        }
-    }
-
     private boolean checkFeeFieldNotValid() {
-        clearLabErr();
         if (feeField.getText().isEmpty() || (toBigDecimal(feeField.getText()).compareTo(BigDecimal.ZERO) <= 0)) {
             feeField.clear();
             feeField.setPromptText(ERR_FEE);
@@ -668,7 +663,6 @@ public class SmartContractController extends AbstractController {
         }
         return paramsAsVariant;
     }
-
 
     private Callback<Pair<Long, TransactionFlowResultData>> handleExecuteResult() {
         return new Callback<>() {
@@ -704,26 +698,5 @@ public class SmartContractController extends AbstractController {
         row.setFav(favoriteButton);
         findInFavoriteThenSelect(smartContractData, favoriteButton);
         table.getItems().add(row);
-    }
-
-    private void clearLabErr() {
-        clearErrorOnField(feeField, feeErrorLabel);
-    }
-
-    public void handleRefreshSmarts() {
-        updateSelectedTab();
-    }
-
-    @Override
-    public void formDeinitialize() {
-
-    }
-
-    public void handleRefreshTransactions() {
-        fillTransactionsTables(selectedContract.getBase58Address());
-    }
-
-    public void handleStoreContractState(ActionEvent actionEvent) {
-        hbFeeLayout.setVisible(storeContractState.getValue());
     }
 }

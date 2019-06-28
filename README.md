@@ -105,7 +105,12 @@ Below the detailed steps that are needed for compiling wallet-desktop from sourc
     
 <img src="/.github/readme-images/8.PNG" align="center"> 
 
-
+13. For run wallet you have to install openjfx sdk and then you need specify path to lib folder of openjfx. 
+Use following command as example
+ "%your_module_path_here%" - path to the lib folder OpenJFX SDK
+```shell
+java --module-path %your_module_path_here% --add-modules=javafx.controls,javafx.fxml,javafx.graphics -jar wallet-desktop.jar`
+```
 
 <!-- Docs to Markdown version 1.0β17 -->
 

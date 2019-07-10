@@ -183,7 +183,8 @@ public class SmartContractController extends AbstractController {
     @FXML
     private void cbMethodsOnAction() {
         this.pParams.setVisible(false);
-        this.currentMethod = this.cbMethods.getSelectionModel().getSelectedItem().getMethod();
+        final var selectedItem = this.cbMethods.getSelectionModel().getSelectedItem();
+        this.currentMethod = selectedItem != null ? selectedItem.getMethod() : null;
         if (this.currentMethod == null) {
             return;
         }
@@ -653,11 +654,11 @@ public class SmartContractController extends AbstractController {
         final var params = currentMethod.getParameters();
         final var paramsValuesContainer = pParamsContainer.getChildren();
         final var paramsAsVariant = new ArrayList<Variant>();
-        for (int i = 0; i < paramsValuesContainer.size(); i++) {
+        for (int i = 0, j = 0; i < paramsValuesContainer.size(); i++) {
             Node node = paramsValuesContainer.get(i);
             if (node instanceof TextField) {
                 String paramValue = ((TextField) node).getText();
-                Parameter parameter = params[i];
+                Parameter parameter = params[j++];
                 paramsAsVariant.add(toVariant(parameter.getType().getTypeName(), createObjectFromString(paramValue, parameter.getType())));
             }
         }

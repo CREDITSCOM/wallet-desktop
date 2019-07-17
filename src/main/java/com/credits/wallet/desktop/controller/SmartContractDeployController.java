@@ -2,7 +2,7 @@ package com.credits.wallet.desktop.controller;
 
 import com.credits.client.node.pojo.SmartContractData;
 import com.credits.client.node.pojo.SmartContractDeployData;
-import com.credits.client.node.pojo.TokenStandartData;
+import com.credits.client.node.pojo.TokenStandardData;
 import com.credits.client.node.pojo.TransactionFlowResultData;
 import com.credits.general.classload.ByteCodeContractClassLoader;
 import com.credits.general.exception.CreditsException;
@@ -162,13 +162,13 @@ public class SmartContractDeployController extends AbstractController {
                 deployTabController.smartDeployButton.setDisable(true);
                 throw new CreditsException("Source code is not compiled");
             } else {
-                List<ByteCodeObjectData> byteCodeObjectDataList = compilationPackageToByteCodeObjects(compilationPackage);
+                List<ByteCodeObjectData> byteCodeObjectDataList = compilationPackageToByteCodeObjectsData(compilationPackage);
 
                 Class<?> contractClass = compileSmartContractByteCode(byteCodeObjectDataList);
-                TokenStandartData tokenStandartData = getTokenStandard(contractClass);
+                int tokenStandardId = getTokenStandard(contractClass);
 
                 SmartContractDeployData smartContractDeployData =
-                    new SmartContractDeployData(javaCode, byteCodeObjectDataList, tokenStandartData);
+                    new SmartContractDeployData(javaCode, byteCodeObjectDataList, tokenStandardId);
 
                 long idWithoutFirstTwoBits = getIdWithoutFirstTwoBits(AppState.getNodeApiService(), session.account, true);
 
@@ -197,7 +197,7 @@ public class SmartContractDeployController extends AbstractController {
 
 
     private TokenInfoData getTokenInfo(Class<?> contractClass, SmartContractData smartContractData) {
-        if (smartContractData.getSmartContractDeployData().getTokenStandardData() != TokenStandartData.NotAToken) {
+        if (smartContractData.getSmartContractDeployData().getTokenStandardId() != TokenStandardData.NOT_A_TOKEN.getId()) {
             try {
                 Object contractInstance = contractClass.getDeclaredConstructor(String.class)
                     .newInstance(encodeToBASE58(smartContractData.getDeployer()));

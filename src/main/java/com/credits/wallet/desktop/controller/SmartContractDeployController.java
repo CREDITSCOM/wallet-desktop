@@ -2,7 +2,6 @@ package com.credits.wallet.desktop.controller;
 
 import com.credits.client.node.pojo.SmartContractData;
 import com.credits.client.node.pojo.SmartContractDeployData;
-import com.credits.client.node.pojo.TokenStandardData;
 import com.credits.client.node.pojo.TransactionFlowResultData;
 import com.credits.general.classload.ByteCodeContractClassLoader;
 import com.credits.general.exception.CreditsException;
@@ -11,6 +10,7 @@ import com.credits.general.util.Callback;
 import com.credits.general.util.compiler.model.CompilationPackage;
 import com.credits.wallet.desktop.AppState;
 import com.credits.wallet.desktop.struct.TokenInfoData;
+import com.credits.wallet.desktop.struct.TokenStandardData;
 import com.credits.wallet.desktop.utils.ApiUtils;
 import com.credits.wallet.desktop.utils.FormUtils;
 import com.credits.wallet.desktop.utils.sourcecode.SourceCodeUtils;

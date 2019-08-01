@@ -73,6 +73,8 @@ public class WalletController extends AbstractController {
     private TableView<CoinTabRow> coinsTableView;
     @FXML
     private Label actualOfferedMaxFeeLabel;
+    @FXML
+    public TextField usdSmart;
 
     @FXML
     private void handleLogout() {
@@ -103,6 +105,7 @@ public class WalletController extends AbstractController {
         String transactionFee = feeField.getText();
         String transactionToAddress = addressField.getText();
         String transactionText = transText.getText();
+        String usedSmartContracts = usdSmart.getText();
 
         // VALIDATE
         AtomicBoolean isValidationSuccessful = new AtomicBoolean(true);
@@ -134,6 +137,7 @@ public class WalletController extends AbstractController {
             params.put("transactionFee", transactionFee);
             params.put("transactionText", transactionText);
             params.put("actualOfferedMaxFee16Bits", FormUtils.getActualOfferedMaxFee16Bits(feeField));
+            params.put("usedSmartContracts", usedSmartContracts);
 
             VistaNavigator.loadVista(VistaNavigator.FORM_7, params);
         }

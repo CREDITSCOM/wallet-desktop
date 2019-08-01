@@ -17,6 +17,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -27,6 +28,7 @@ import static com.credits.general.util.Utils.threadPool;
 import static com.credits.wallet.desktop.AppState.CREDITS_TOKEN_NAME;
 import static com.credits.wallet.desktop.AppState.NODE_ERROR;
 import static com.credits.wallet.desktop.utils.ApiUtils.createTransaction;
+import static com.credits.wallet.desktop.utils.SmartContractsUtils.getSmartsListFromField;
 
 
 public class GenerateTransactionController extends AbstractController {
@@ -46,6 +48,9 @@ public class GenerateTransactionController extends AbstractController {
     @FXML
     private TextField transactionFeeValue;
 
+    @FXML
+    private TextField usedSmartContracts;
+
     private short actualOfferedMaxFee16Bits;
 
     @FXML
@@ -56,12 +61,14 @@ public class GenerateTransactionController extends AbstractController {
         params.put("transactionAmount",transactionAmount.getText());
         params.put("transactionText",transactionText.getText());
         params.put("coinType", coinType.getText());
+        params.put("usedSmartContracts",usedSmartContracts.getText());
         VistaNavigator.loadVista(VistaNavigator.WALLET, params);
     }
 
     @FXML
     private void handleGenerate() {
         String toAddress = transactionToAddress.getText();
+        final var usedContracts = getSmartsListFromField(usedSmartContracts.getText());
         try {
             if(coinType.getText().equals(CREDITS_TOKEN_NAME)) {
                 CompletableFuture
@@ -69,7 +76,7 @@ public class GenerateTransactionController extends AbstractController {
                                                                                                                              toAddress,
                         true),threadPool)
                     .thenApply((transactionData) -> createTransaction(transactionData, GeneralConverter.toBigDecimal(
-                        transactionAmount.getText()), actualOfferedMaxFee16Bits, transactionText.getText(),session))
+                        transactionAmount.getText()), actualOfferedMaxFee16Bits, transactionText.getText(),usedContracts, session))
                     .whenComplete(handleCallback(handleTransactionResult()));
             } else {
                 session.coinsKeeper.getKeptObject().ifPresent(coinsMap ->
@@ -125,7 +132,7 @@ public class GenerateTransactionController extends AbstractController {
         transactionText.setText(objects.get("transactionText").toString());
         coinType.setText(objects.get("coinType").toString());
         actualOfferedMaxFee16Bits = (Short)objects.get("actualOfferedMaxFee16Bits");
-
+        usedSmartContracts.setText(objects.get("usedSmartContracts").toString());
     }
 
     @Override

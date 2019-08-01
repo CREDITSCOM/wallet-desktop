@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -30,11 +31,11 @@ public class ApiUtils {
 
 
     public static Pair<Long, TransactionFlowResultData> createTransaction(
-        CalcTransactionIdSourceTargetResult transactionData, BigDecimal amount, short offeredMaxFee16Bits, String text, Session session)
+            CalcTransactionIdSourceTargetResult transactionData, BigDecimal amount, short offeredMaxFee16Bits, String text, List<ByteBuffer> usedSmartContracts, Session session)
         throws NodeClientException, ConverterException {
         return Pair.of(
             transactionData.getTransactionId(),
-            AppState.getNodeApiService().transactionFlow(getTransactionFlowData(transactionData, amount, offeredMaxFee16Bits, null, text, session)));
+            AppState.getNodeApiService().transactionFlow(getTransactionFlowData(transactionData, amount, offeredMaxFee16Bits, null, text, usedSmartContracts, session)));
     }
 
     public static Pair<Long, TransactionFlowResultData> createSmartContractTransaction(
@@ -58,14 +59,14 @@ public class ApiUtils {
 
         SmartContractTransactionFlowData scData = new SmartContractTransactionFlowData(
             getTransactionFlowData(transactionData, ZERO, offeredMaxFee, serializeByThrift(smartContractInvocationData), null,
-                                   session), smartContractInvocationData);
+                            usedSmartContracts, session), smartContractInvocationData);
 
         return Pair.of(transactionData.getTransactionId(), AppState.getNodeApiService().smartContractTransactionFlow(scData));
     }
 
     private static TransactionFlowData getTransactionFlowData(
         CalcTransactionIdSourceTargetResult transactionData,
-        BigDecimal amount, short offeredMaxFee16Bits, byte[] smartContractBytes, String text, Session session) {
+        BigDecimal amount, short offeredMaxFee16Bits, byte[] smartContractBytes, String text, List<ByteBuffer> usedSmartContracts, Session session) {
         long id = transactionData.getTransactionId();
         byte[] source = transactionData.getByteSource();
         byte[] target = transactionData.getByteTarget();
@@ -78,7 +79,7 @@ public class ApiUtils {
         saveTransactionIntoMap(transactionData, amount.toString(), String.valueOf(currency), session);
 
         TransactionFlowData transactionFlowData =
-            new TransactionFlowData(id, source, target, amount, offeredMaxFee16Bits, smartContractBytes, textBytes);
+            new TransactionFlowData(id, source, target, amount, offeredMaxFee16Bits, smartContractBytes, textBytes, usedSmartContracts);
         SignUtils.signTransaction(transactionFlowData, AppState.getPrivateKey());
         return transactionFlowData;
     }

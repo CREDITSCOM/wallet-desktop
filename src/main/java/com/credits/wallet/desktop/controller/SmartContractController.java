@@ -321,7 +321,7 @@ public class SmartContractController extends AbstractController {
         approvedList.clear();
         unapprovedTableView.getItems().clear();
         unapprovedList.clear();
-        if (session.sourceMap != null) {
+        if (session.sourceMap != null && session.sourceMap.size() > 0) {
             ConcurrentHashMap<Long, TransactionRoundData> sourceTransactionMap = session.sourceMap;
             List<Long> ids = new ArrayList<>(sourceTransactionMap.keySet());
             async(

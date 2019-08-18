@@ -1,12 +1,10 @@
 package com.credits.wallet.desktop.utils;
 
-import com.credits.client.node.pojo.TokenStandartData;
-import com.credits.scapi.v0.BasicStandard;
-import com.credits.scapi.v0.ExtensionStandard;
 import com.credits.wallet.desktop.controller.DeployTabController;
 import com.credits.wallet.desktop.controller.SmartContractDeployController;
 import com.credits.wallet.desktop.controller.TreeViewController;
 import com.credits.wallet.desktop.struct.DeploySmartListItem;
+import com.credits.wallet.desktop.struct.TokenStandardData;
 import com.credits.wallet.desktop.utils.sourcecode.building.BuildSourceCodeError;
 import com.credits.wallet.desktop.utils.sourcecode.codeArea.CodeAreaUtils;
 import com.credits.wallet.desktop.utils.sourcecode.codeArea.CreditsCodeArea;
@@ -19,32 +17,21 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.VBox;
 import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.credits.wallet.desktop.struct.TokenStandardData.NOT_A_TOKEN;
+import static java.util.Arrays.stream;
+
 public class DeployControllerUtils {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(DeployControllerUtils.class);
-
-    public static TokenStandartData getTokenStandard(Class<?> contractClass) {
-        TokenStandartData tokenStandart = TokenStandartData.NotAToken;
-        Class<?>[] interfaces = contractClass.getInterfaces();
-        if (interfaces.length > 0) {
-            Class<?> basicStandard = BasicStandard.class;
-            Class<?> extendedStandard = ExtensionStandard.class;
-            for (Class<?> _interface : interfaces) {
-                if (_interface.equals(basicStandard)) {
-                    tokenStandart = TokenStandartData.CreditsBasic;
-                }
-                if (_interface.equals(extendedStandard)) {
-                    tokenStandart = TokenStandartData.CreditsExtended;
-                }
-            }
-        }
-        return tokenStandart;
+    public static int getTokenStandard(Class<?> contractClass) {
+        final var contractInterfaces = contractClass.getInterfaces();
+        return stream(TokenStandardData.values())
+                .filter(ts -> stream(contractInterfaces).anyMatch(ci -> ts.getTokenStandardClass().equals(ci)))
+                .findFirst()
+                .orElse(NOT_A_TOKEN).getId();
     }
 
     public static String getContractFromTemplate(String template) {

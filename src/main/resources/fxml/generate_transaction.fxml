@@ -10,38 +10,30 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
-<Pane styleClass="credits-borderWhitePane" BorderPane.alignment="TOP_CENTER" xmlns="http://javafx.com/javafx/10.0.1"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.credits.wallet.desktop.controller.GenerateTransactionController">
+
+<Pane prefHeight="698.0" prefWidth="984.0" styleClass="credits-borderWhitePane" BorderPane.alignment="TOP_CENTER" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.credits.wallet.desktop.controller.GenerateTransactionController">
+   <TextField fx:id="usedSmartContracts" editable="false" layoutX="404.0" layoutY="538.0" maxHeight="45.0" maxWidth="516.0" prefHeight="45.0" prefWidth="500.0" style="-fx-font-size: 16px; -fx-border-color: transparent;" styleClass="credits-textField" />
     <Label layoutX="20.0" styleClass="credits-topLabelText" text="Transaction verification">
         <font>
-            <Font size="14.0"/>
+            <Font size="14.0" />
         </font>
     </Label>
-    <Label layoutX="20.0" layoutY="30.0" styleClass="credits-topLabelGrayText"
-           text="On this form you can check  and verify your transaction"/>
-    <Button fx:id="btnGenerate" layoutX="550.0" layoutY="540.0" onAction="#handleGenerate" prefHeight="60.0"
-            prefWidth="250.0" style="-fx-font-size: 16px;" styleClass="credits-button" text="Generate transaction"
-            wrapText="true">
+    <Label layoutX="20.0" layoutY="30.0" styleClass="credits-topLabelGrayText" text="On this form you can check  and verify your transaction" />
+    <Button fx:id="btnGenerate" layoutX="549.0" layoutY="612.0" onAction="#handleGenerate" prefHeight="60.0" prefWidth="250.0" style="-fx-font-size: 16px;" styleClass="credits-button" text="Generate transaction" wrapText="true">
     </Button>
-    <Button fx:id="btnBack" layoutX="20.0" layoutY="540.0" onAction="#handleBack" prefHeight="60.0" prefWidth="60.0"
-            style="-fx-font-size: 22;" styleClass="credits-button">
+    <Button fx:id="btnBack" layoutX="20.0" layoutY="612.0" onAction="#handleBack" prefHeight="60.0" prefWidth="60.0" style="-fx-font-size: 22;" styleClass="credits-button">
         <graphic>
             <ImageView fitHeight="26.0" fitWidth="26.0">
-                <Image url="@../img/arrow_down.png"/>
+                <Image url="@../img/arrow_down.png" />
             </ImageView>
         </graphic>
     </Button>
 
     <HBox alignment="TOP_RIGHT" layoutX="20.0" layoutY="120.0" prefHeight="75.0" prefWidth="885.0">
         <VBox prefHeight="83.0" prefWidth="500.0">
-            <Label style="-fx-font-size: 16px;" styleClass="arrow"
-                   text="   Make a payment to address which opened on credits only">
+            <Label style="-fx-font-size: 16px;" styleClass="arrow" text="   Make a payment to address which opened on credits only">
             </Label>
-            <TextField fx:id="transactionToAddress" editable="false" maxHeight="45.0" maxWidth="500.0"
-                       minWidth="0.0" prefHeight="45.0" prefWidth="500.0"
-                       style="-fx-font-size: 16px; -fx-border-color: transparent;"
-                       styleClass="credits-textField"/>
+            <TextField fx:id="transactionToAddress" editable="false" maxHeight="45.0" maxWidth="500.0" minWidth="0.0" prefHeight="45.0" prefWidth="500.0" style="-fx-font-size: 16px; -fx-border-color: transparent;" styleClass="credits-textField" />
         </VBox>
     </HBox>
     <HBox alignment="TOP_RIGHT" layoutX="20.0" layoutY="220.0" prefHeight="75.0" prefWidth="885.0">
@@ -49,31 +41,24 @@
             <HBox prefHeight="100.0" prefWidth="200.0">
                 <Label style="-fx-font-size: 16;" styleClass="arrow" text="   Amount in ">
                 </Label>
-                <Label fx:id="coinType" style="-fx-font-size: 16;" text="Label"/>
+                <Label fx:id="coinType" style="-fx-font-size: 16;" text="Label" />
             </HBox>
-            <TextField fx:id="transactionAmount" editable="false" maxHeight="45.0" prefHeight="45.0"
-                       prefWidth="500.0" style="-fx-font-size: 16px; -fx-border-color: transparent;"
-                       styleClass="credits-textField"/>
+            <TextField fx:id="transactionAmount" editable="false" maxHeight="45.0" prefHeight="45.0" prefWidth="500.0" style="-fx-font-size: 16px; -fx-border-color: transparent;" styleClass="credits-textField" />
         </VBox>
     </HBox>
     <HBox alignment="TOP_RIGHT" layoutX="20.0" layoutY="320.0" prefHeight="75.0" prefWidth="885.0">
         <VBox prefHeight="83.0" prefWidth="500.0">
             <Label style="-fx-font-size: 16px;" styleClass="arrow" text="   Transaction fee">
             </Label>
-            <TextField fx:id="transactionFeeValue" editable="false" maxHeight="45.0" prefHeight="45.0"
-                       prefWidth="500.0" style="-fx-font-size: 16px; -fx-border-color: transparent;"
-                       styleClass="credits-textField">
+            <TextField fx:id="transactionFeeValue" editable="false" maxHeight="45.0" prefHeight="45.0" prefWidth="500.0" style="-fx-font-size: 16px; -fx-border-color: transparent;" styleClass="credits-textField">
             </TextField>
         </VBox>
     </HBox>
     <HBox alignment="TOP_RIGHT" layoutX="20.0" layoutY="420.0" prefHeight="75.0" prefWidth="885.0">
         <VBox prefHeight="83.0" prefWidth="500.0">
-            <Label style="-fx-font-size: 16px;" styleClass="arrow"
-                   text="   User data. It's not necessary to fill in"/>
-            <TextField fx:id="transactionText" editable="false" maxHeight="45.0" maxWidth="516.0"
-                       prefHeight="45.0" prefWidth="516.0"
-                       style="-fx-font-size: 16px; -fx-border-color: transparent;"
-                       styleClass="credits-textField"/>
+            <Label prefHeight="25.0" prefWidth="464.0" style="-fx-font-size: 16px;" styleClass="arrow" text="   User data. It's not necessary to fill in" />
+            <TextField fx:id="transactionText" editable="false" maxHeight="45.0" maxWidth="516.0" prefHeight="45.0" prefWidth="516.0" style="-fx-font-size: 16px; -fx-border-color: transparent;" styleClass="credits-textField" />
         </VBox>
     </HBox>
+   <Label layoutX="404.0" layoutY="513.0" prefHeight="25.0" prefWidth="450.0" style="-fx-font-size: 16px;" styleClass="arrow" text="   Used smart-contracts. It's not necessary to fill in" />
 </Pane>

@@ -27,3 +27,5 @@ buildNumber.properties
 
 coins.csv
 temp
+cache
+log

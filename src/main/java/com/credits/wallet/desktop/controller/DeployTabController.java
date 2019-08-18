@@ -4,7 +4,6 @@ import com.credits.general.classload.ByteCodeContractClassLoader;
 import com.credits.general.exception.CreditsException;
 import com.credits.general.pojo.ByteCodeObjectData;
 import com.credits.general.util.Callback;
-import com.credits.general.util.GeneralConverter;
 import com.credits.general.util.compiler.model.CompilationPackage;
 import com.credits.scapi.v0.BasicStandard;
 import com.credits.scapi.v0.ExtensionStandard;
@@ -18,18 +17,7 @@ import com.credits.wallet.desktop.utils.sourcecode.codeArea.CreditsCodeArea;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -57,10 +45,8 @@ import java.util.List;
 import java.util.Map;
 
 import static com.credits.client.node.service.NodeApiServiceImpl.handleCallback;
-import static com.credits.wallet.desktop.utils.DeployControllerUtils.getContractFromTemplate;
-import static com.credits.wallet.desktop.utils.DeployControllerUtils.initErrorTableView;
-import static com.credits.wallet.desktop.utils.DeployControllerUtils.initSplitPane;
-import static com.credits.wallet.desktop.utils.DeployControllerUtils.initTabCodeArea;
+import static com.credits.general.util.GeneralConverter.compilationPackageToByteCodeObjectsData;
+import static com.credits.wallet.desktop.utils.DeployControllerUtils.*;
 import static com.credits.wallet.desktop.utils.sourcecode.codeArea.autocomplete.CreditsProposalsPopup.DEFAULT_STANDARD_CLASS;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
@@ -469,8 +455,7 @@ public class DeployTabController extends AbstractController {
         if (parentController.checkNotError(testErrorPane1, testErrorTableView, compilationResult, testBottomTabPane,
             testBottomErrorTab)) {
             CompilationPackage compilationPackage = compilationResult.getCompilationPackage();
-            List<ByteCodeObjectData> byteCodeObjectDataList =
-                GeneralConverter.compilationPackageToByteCodeObjects(compilationPackage);
+            List<ByteCodeObjectData> byteCodeObjectDataList = compilationPackageToByteCodeObjectsData(compilationPackage);
             return compileSmartContractByteCode(classLoader, byteCodeObjectDataList);
         }
         return null;

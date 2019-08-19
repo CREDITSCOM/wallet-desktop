@@ -6,7 +6,7 @@ import java.util.List;
 
 
 public class TransactionTabRow {
-    private Long innerId;
+    private Long id;
     private String blockId;
     private String source;
     private String target;
@@ -32,12 +32,12 @@ public class TransactionTabRow {
         this.state = state;
     }
 
-    public Long getInnerId() {
-        return innerId;
+    public Long getId() {
+        return id;
     }
 
-    public void setInnerId(Long innerId) {
-        this.innerId = innerId;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public void setBlockId(String blockTransactionId) {

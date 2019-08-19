@@ -11,7 +11,6 @@ import com.credits.general.util.compiler.model.CompilationPackage;
 import com.credits.wallet.desktop.AppState;
 import com.credits.wallet.desktop.struct.TokenInfoData;
 import com.credits.wallet.desktop.struct.TokenStandardData;
-import com.credits.wallet.desktop.utils.ApiUtils;
 import com.credits.wallet.desktop.utils.FormUtils;
 import com.credits.wallet.desktop.utils.sourcecode.SourceCodeUtils;
 import com.credits.wallet.desktop.utils.sourcecode.building.BuildSourceCodeError;
@@ -233,8 +232,6 @@ public class SmartContractDeployController extends AbstractController {
         return new Callback<Pair<Long, TransactionFlowResultData>>() {
             @Override
             public void onSuccess(Pair<Long, TransactionFlowResultData> resultData) {
-                ApiUtils.saveTransactionRoundNumberIntoMap(resultData.getRight().getRoundNumber(), resultData.getLeft(),
-                                                           session);
                 TransactionFlowResultData transactionFlowResultData = resultData.getRight();
                 String target = transactionFlowResultData.getTarget();
                 StringSelection selection = new StringSelection(target);

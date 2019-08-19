@@ -4,16 +4,16 @@ import com.credits.client.node.exception.NodeClientException;
 import com.credits.client.node.pojo.*;
 import com.credits.client.node.util.NodePojoConverter;
 import com.credits.client.node.util.SignUtils;
-import com.credits.general.pojo.TransactionRoundData;
+import com.credits.general.thrift.generated.Variant;
 import com.credits.general.util.exception.ConverterException;
 import com.credits.wallet.desktop.AppState;
 import com.credits.wallet.desktop.Session;
+import com.credits.wallet.desktop.struct.UnapprovedTransactionData;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -58,7 +58,7 @@ public class ApiUtils {
                                             smartContractData.isGetterMethod());
 
         SmartContractTransactionFlowData scData = new SmartContractTransactionFlowData(
-            getTransactionFlowData(transactionData, ZERO, offeredMaxFee, serializeByThrift(smartContractInvocationData), null,
+            getTransactionFlowData(transactionData, ZERO, offeredMaxFee, smartContractInvocationData, null,
                             usedSmartContracts, session), smartContractInvocationData);
 
         return Pair.of(transactionData.getTransactionId(), AppState.getNodeApiService().smartContractTransactionFlow(scData));
@@ -66,7 +66,7 @@ public class ApiUtils {
 
     private static TransactionFlowData getTransactionFlowData(
         CalcTransactionIdSourceTargetResult transactionData,
-        BigDecimal amount, short offeredMaxFee16Bits, byte[] smartContractBytes, String text, List<ByteBuffer> usedSmartContracts, Session session) {
+        BigDecimal amount, short offeredMaxFee16Bits, SmartContractInvocationData smartContractInvocationData, String text, List<ByteBuffer> usedSmartContracts, Session session) {
         long id = transactionData.getTransactionId();
         byte[] source = transactionData.getByteSource();
         byte[] target = transactionData.getByteTarget();
@@ -76,7 +76,12 @@ public class ApiUtils {
             textBytes = text.getBytes(StandardCharsets.UTF_8);
         }
 
-        saveTransactionIntoMap(transactionData, amount.toString(), String.valueOf(currency), session);
+        saveTransactionIntoMap(transactionData, amount.toString(), String.valueOf(currency), session,
+                smartContractInvocationData == null ? null : smartContractInvocationData.getMethod(),
+                smartContractInvocationData == null ? null : smartContractInvocationData.getParams()
+        );
+
+        byte[] smartContractBytes = smartContractInvocationData == null ? null : serializeByThrift(smartContractInvocationData);
 
         TransactionFlowData transactionFlowData =
             new TransactionFlowData(id, source, target, amount, offeredMaxFee16Bits, smartContractBytes, textBytes, usedSmartContracts);
@@ -87,21 +92,14 @@ public class ApiUtils {
 
     private static void saveTransactionIntoMap(
         CalcTransactionIdSourceTargetResult transactionData, String amount,
-        String currency, Session session) {
-        if (session.sourceMap == null) {
-            session.sourceMap = new ConcurrentHashMap<>();
+        String currency, Session session, String scMethod, List<Variant> csParams) {
+        if (session.unapprovedTransactions == null) {
+            session.unapprovedTransactions = new ConcurrentHashMap<>();
         }
         long shortTransactionId = NodePojoConverter.getShortTransactionId(transactionData.getTransactionId());
-        TransactionRoundData transactionRoundData =
-            new TransactionRoundData(String.valueOf(shortTransactionId), transactionData.getWideSource(),
-                                     transactionData.getWideTarget(), amount, currency);
-        session.sourceMap.put(shortTransactionId, transactionRoundData);
+        UnapprovedTransactionData unapprovedTransactionData =
+            new UnapprovedTransactionData(String.valueOf(shortTransactionId), transactionData.getWideSource(),
+                                     transactionData.getWideTarget(), amount, currency, scMethod, csParams);
+        session.unapprovedTransactions.put(shortTransactionId, unapprovedTransactionData);
     }
-
-    public static void saveTransactionRoundNumberIntoMap(int roundNumber, long transactionId, Session session) {
-        TransactionRoundData transactionRoundData =
-            session.sourceMap.get(NodePojoConverter.getShortTransactionId(transactionId));
-        transactionRoundData.setRoundNumber(roundNumber);
-    }
-
 }

@@ -5,7 +5,6 @@ import com.credits.client.node.pojo.*;
 import com.credits.general.classload.ByteCodeContractClassLoader;
 import com.credits.general.exception.CreditsException;
 import com.credits.general.pojo.ByteCodeObjectData;
-import com.credits.general.pojo.TransactionRoundData;
 import com.credits.general.thrift.generated.Variant;
 import com.credits.general.util.Callback;
 import com.credits.general.util.GeneralConverter;
@@ -15,7 +14,6 @@ import com.credits.wallet.desktop.VistaNavigator;
 import com.credits.wallet.desktop.struct.MethodData;
 import com.credits.wallet.desktop.struct.SmartContractTabRow;
 import com.credits.wallet.desktop.struct.SmartContractTransactionTabRow;
-import com.credits.wallet.desktop.utils.ApiUtils;
 import com.credits.wallet.desktop.utils.sourcecode.SourceCodeUtils;
 import com.credits.wallet.desktop.utils.sourcecode.codeArea.CodeAreaUtils;
 import javafx.application.Platform;
@@ -43,7 +41,6 @@ import java.lang.reflect.Parameter;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static com.credits.client.node.service.NodeApiServiceImpl.async;
 import static com.credits.client.node.service.NodeApiServiceImpl.handleCallback;
@@ -51,8 +48,8 @@ import static com.credits.client.node.thrift.generated.TransactionState.*;
 import static com.credits.client.node.util.TransactionIdCalculateUtils.calcTransactionIdSourceTarget;
 import static com.credits.general.thrift.generated.Variant._Fields.V_STRING;
 import static com.credits.general.util.GeneralConverter.*;
-import static com.credits.general.util.GeneralConverter.createObjectFromString;
-import static com.credits.general.util.Utils.*;
+import static com.credits.general.util.Utils.rethrowUnchecked;
+import static com.credits.general.util.Utils.threadPool;
 import static com.credits.general.util.variant.VariantConverter.toVariant;
 import static com.credits.wallet.desktop.AppState.NODE_ERROR;
 import static com.credits.wallet.desktop.utils.ApiUtils.createSmartContractTransaction;
@@ -321,13 +318,6 @@ public class SmartContractController extends AbstractController {
         approvedList.clear();
         unapprovedTableView.getItems().clear();
         unapprovedList.clear();
-        if (session.sourceMap != null && session.sourceMap.size() > 0) {
-            ConcurrentHashMap<Long, TransactionRoundData> sourceTransactionMap = session.sourceMap;
-            List<Long> ids = new ArrayList<>(sourceTransactionMap.keySet());
-            async(
-                    () -> AppState.getNodeApiService().getTransactionsState(base58Address, ids),
-                    handleGetTransactionsStateResult(sourceTransactionMap));
-        }
 
         List<SmartContractTransactionData> contractTransactions = getKeptContractsTransactions().getOrDefault(base58Address, new ArrayList<>());
         async(
@@ -338,52 +328,8 @@ public class SmartContractController extends AbstractController {
                                                                                      0,
                                                                                      transactionCount - contractTransactions.size());
                 },
-                handleGetTransactionsResult());
-    }
-
-    private Callback<TransactionsStateGetResultData> handleGetTransactionsStateResult(ConcurrentHashMap<Long, TransactionRoundData> transactionMap) {
-        return new Callback<>() {
-            @Override
-            public void onSuccess(TransactionsStateGetResultData transactionsStateGetResultData) throws CreditsException {
-                Map<Long, TransactionStateData> states = transactionsStateGetResultData.getStates();
-                states.forEach((k, v) -> {
-                    if (v.getValue() == VALID.getValue()) {
-                        transactionMap.remove(k);
-                    }
-                });
-
-                int curRound = transactionsStateGetResultData.getRoundNumber();
-                transactionMap.entrySet()
-                        .removeIf(e -> e.getValue().getRoundNumber() != 0 &&
-                                curRound >= e.getValue().getRoundNumber() + COUNT_ROUNDS_LIFE);
-
-                transactionMap.forEach((id, value) -> {
-                    SmartContractTransactionTabRow tableRow = new SmartContractTransactionTabRow();
-                    tableRow.setAmount(value.getAmount());
-                    tableRow.setCurrency(value.getCurrency());
-                    tableRow.setSource(value.getSource());
-                    tableRow.setTarget(value.getTarget());
-                    if (states.get(id) != null) {
-                        if (states.get(id).getValue() == INVALID.getValue()) {
-                            tableRow.setState(INVALID.name());
-                        } else if (curRound == 0 || states.get(id).getValue() == INPROGRESS.getValue()) {
-                            tableRow.setState(INPROGRESS.name());
-                        }
-                        unapprovedList.add(tableRow);
-                    }
-                });
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                LOGGER.error(e.getMessage());
-                if (e instanceof NodeClientException) {
-                    showError(NODE_ERROR);
-                } else {
-                    showError(ERR_GETTING_TRANSACTION_HISTORY + "\n" + e.getMessage());
-                }
-            }
-        };
+                handleGetSmartContractTransactionsResult()
+        );
     }
 
     private void keepTransactions(String base58Address, List<SmartContractTransactionData> transactionList) {
@@ -397,7 +343,7 @@ public class SmartContractController extends AbstractController {
         session.contractsTransactionsKeeper.keepObject(contractsTransactions);
     }
 
-    private Callback<List<SmartContractTransactionData>> handleGetTransactionsResult() {
+    private Callback<List<SmartContractTransactionData>> handleGetSmartContractTransactionsResult() {
         return new Callback<>() {
 
             @Override
@@ -410,8 +356,10 @@ public class SmartContractController extends AbstractController {
                 smartContractTransactionDataList.forEach(transactionData -> {
 
                     SmartTransInfoData smartInfo = transactionData.getSmartInfo();
-
                     SmartContractTransactionTabRow tableRow = new SmartContractTransactionTabRow();
+
+                    tableRow.setId(transactionData.getId());
+                    tableRow.setBlockId(transactionData.getBlockId());
                     tableRow.setAmount(GeneralConverter.toString(transactionData.getAmount()));
                     tableRow.setSource(encodeToBASE58(transactionData.getSource()));
                     tableRow.setTarget(encodeToBASE58(transactionData.getTarget()));
@@ -447,6 +395,29 @@ public class SmartContractController extends AbstractController {
                         }
                     }
                 });
+
+                session.unapprovedTransactions.forEach((id, value) -> {
+
+                    if (smartContractTransactionDataList.stream().anyMatch(smartContractTransactionData -> {
+                        SmartTransInfoData smartInfo = smartContractTransactionData.getSmartInfo();
+                        if (smartInfo == null) { return true; }
+                        return smartContractTransactionData.getId() == id && !smartInfo.isSmartState();
+                    })) {
+                        session.unapprovedTransactions.remove(id);
+                    } else {
+                        SmartContractTransactionTabRow tableRow = new SmartContractTransactionTabRow();
+                        tableRow.setId(id);
+                        tableRow.setAmount(value.getAmount());
+                        tableRow.setCurrency(value.getCurrency());
+                        tableRow.setSource(value.getSource());
+                        tableRow.setTarget(value.getTarget());
+                        tableRow.setState(INPROGRESS.name());
+                        tableRow.setMethod(value.getScMethod());
+                        tableRow.setParams(value.getScParams());
+                        unapprovedList.add(tableRow);
+                    }
+                });
+
                 Platform.runLater(() -> {
                     approvedTableView.getItems().addAll(approvedList);
                 });
@@ -468,12 +439,13 @@ public class SmartContractController extends AbstractController {
     }
 
     private void initTransactionHistoryTable(TableView<SmartContractTransactionTabRow> tableView) {
-        tableView.getColumns().get(0).setCellValueFactory(new PropertyValueFactory<>("blockId"));
-        tableView.getColumns().get(1).setCellValueFactory(new PropertyValueFactory<>("source"));
-        tableView.getColumns().get(2).setCellValueFactory(new PropertyValueFactory<>("target"));
-        tableView.getColumns().get(3).setCellValueFactory(new PropertyValueFactory<>("amount"));
-        tableView.getColumns().get(4).setCellValueFactory(new PropertyValueFactory<>("state"));
-        tableView.getColumns().get(5).setCellValueFactory(new PropertyValueFactory<>("type"));
+        tableView.getColumns().get(0).setCellValueFactory(new PropertyValueFactory<>("id"));
+        tableView.getColumns().get(1).setCellValueFactory(new PropertyValueFactory<>("blockId"));
+        tableView.getColumns().get(2).setCellValueFactory(new PropertyValueFactory<>("source"));
+        tableView.getColumns().get(3).setCellValueFactory(new PropertyValueFactory<>("target"));
+        tableView.getColumns().get(4).setCellValueFactory(new PropertyValueFactory<>("amount"));
+        tableView.getColumns().get(5).setCellValueFactory(new PropertyValueFactory<>("state"));
+        tableView.getColumns().get(6).setCellValueFactory(new PropertyValueFactory<>("type"));
         tableView.setOnMousePressed(event -> {
             if ((event.isPrimaryButtonDown() || event.getButton() == MouseButton.PRIMARY) && event.getClickCount() == 2) {
                 SmartContractTransactionTabRow tabRow = tableView.getSelectionModel().getSelectedItem();
@@ -669,8 +641,6 @@ public class SmartContractController extends AbstractController {
         return new Callback<>() {
             @Override
             public void onSuccess(Pair<Long, TransactionFlowResultData> resultData) {
-                ApiUtils.saveTransactionRoundNumberIntoMap(resultData.getRight().getRoundNumber(),
-                                                           resultData.getLeft(), session);
                 TransactionFlowResultData transactionFlowResultData = resultData.getRight();
                 Variant contractResult = transactionFlowResultData.getContractResult().orElseGet(() -> new Variant(V_STRING, "unknown result"));
                 String message = transactionFlowResultData.getMessage();

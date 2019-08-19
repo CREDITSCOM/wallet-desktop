@@ -21,7 +21,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<Pane prefWidth="1300.0" styleClass="credits-borderWhitePane" BorderPane.alignment="TOP_CENTER" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.credits.wallet.desktop.controller.SmartContractController">
+<Pane prefWidth="1300.0" styleClass="credits-borderWhitePane" BorderPane.alignment="TOP_CENTER" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.credits.wallet.desktop.controller.SmartContractController">
     <TabPane fx:id="contractsTabPane" layoutX="20.0" layoutY="220.0" maxHeight="360.0" minHeight="360.0" prefHeight="360.0" prefWidth="430.0" styleClass="credits-tab-pane" tabClosingPolicy="UNAVAILABLE">
         <Tab fx:id="favoriteContractsTab" onSelectionChanged="#updateSelectedTab" styleClass="credits-tab" text="Favorites">
             <TableView fx:id="favoriteContractTableView" maxHeight="300.0" maxWidth="417.0" minHeight="325.0" minWidth="430.0" prefHeight="325.0" prefWidth="430.0" styleClass="credits-smart-table-view" />
@@ -67,7 +67,8 @@
                                  <children>
                                     <TableView fx:id="approvedTableView" layoutY="25.0" prefHeight="258.0" prefWidth="800.0" styleClass="credits-history-table-view,credits-transaction-table-view">
                                        <columns>
-                                          <TableColumn prefWidth="95.0" text="Id" />
+                                          <TableColumn prefWidth="95.0" text="Inner ID" />
+                                          <TableColumn prefWidth="95.0" text="Block ID" />
                                           <TableColumn prefWidth="400.0" text="Source" />
                                           <TableColumn prefWidth="400.0" text="Target" />
                                           <TableColumn prefWidth="210.0" text="Amount" />
@@ -85,7 +86,8 @@
                                  <children>
                                     <TableView fx:id="unapprovedTableView" layoutY="25.0" prefHeight="430.0" prefWidth="1250.0" styleClass="credits-history-table-view, credits-transaction-table-view">
                                        <columns>
-                                          <TableColumn prefWidth="95.0" text="Id" />
+                                          <TableColumn prefWidth="95.0" text="Inner ID" />
+                                          <TableColumn prefWidth="95.0" text="Block ID" />
                                           <TableColumn prefWidth="400.0" text="Source" />
                                           <TableColumn prefWidth="400.0" text="Target" />
                                           <TableColumn prefWidth="210.0" text="Amount" />
@@ -161,9 +163,7 @@
            </VBox.margin>
         </CheckBox>
         <HBox fx:id="hbFeeLayout" prefHeight="50.0" prefWidth="291.0">
-            <TextField fx:id="feeField" maxHeight="60.0" maxWidth="390.0" minHeight="26.0" minWidth="57.0"
-                       prefHeight="34.0" prefWidth="390.0"
-                       promptText="Max transaction Fee (0.01 - 0.03 - Recommended)" style="-fx-font-size: 12px;" styleClass="credits-textField">
+            <TextField fx:id="feeField" maxHeight="60.0" maxWidth="390.0" minHeight="26.0" minWidth="57.0" prefHeight="34.0" prefWidth="390.0" promptText="Max transaction Fee (0.01 - 0.03 - Recommended)" style="-fx-font-size: 12px;" styleClass="credits-textField">
             <HBox.margin>
                <Insets top="10.0" />
             </HBox.margin></TextField>

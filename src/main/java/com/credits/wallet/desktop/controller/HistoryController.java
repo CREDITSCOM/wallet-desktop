@@ -2,10 +2,7 @@ package com.credits.wallet.desktop.controller;
 
 import com.credits.client.node.exception.NodeClientException;
 import com.credits.client.node.pojo.TransactionData;
-import com.credits.client.node.pojo.TransactionStateData;
-import com.credits.client.node.pojo.TransactionsStateGetResultData;
 import com.credits.general.exception.CreditsException;
-import com.credits.general.pojo.TransactionRoundData;
 import com.credits.general.util.Callback;
 import com.credits.general.util.GeneralConverter;
 import com.credits.wallet.desktop.AppState;
@@ -24,7 +21,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static com.credits.client.node.service.NodeApiServiceImpl.async;
 import static com.credits.client.node.thrift.generated.TransactionState.*;
@@ -36,7 +32,6 @@ public class HistoryController extends AbstractController {
     private final int INIT_PAGE_SIZE = 100;
     private final int FIRST_TRANSACTION_NUMBER = 0;
     private final static Logger LOGGER = LoggerFactory.getLogger(HistoryController.class);
-    private final int COUNT_ROUNDS_LIFE = 50;
 
     @FXML
     private TableView<TransactionTabRow> approvedTableView;
@@ -55,7 +50,7 @@ public class HistoryController extends AbstractController {
     }
 
     private void initTable(TableView<TransactionTabRow> tableView) {
-        tableView.getColumns().get(0).setCellValueFactory(new PropertyValueFactory<>("blockId"));
+        tableView.getColumns().get(0).setCellValueFactory(new PropertyValueFactory<>("id"));
         tableView.getColumns().get(1).setCellValueFactory(new PropertyValueFactory<>("source"));
         tableView.getColumns().get(2).setCellValueFactory(new PropertyValueFactory<>("target"));
         tableView.getColumns().get(3).setCellValueFactory(new PropertyValueFactory<>("amount"));
@@ -73,23 +68,16 @@ public class HistoryController extends AbstractController {
     }
 
     private void fillUnapprovedTable() {
-        if (session.sourceMap != null && session.sourceMap.size() > 0) {
-            ConcurrentHashMap<Long, TransactionRoundData> sourceTransactionMap = session.sourceMap;
-            /*List<Long> validIds =
-                transactionsList.stream().map(TransactionData::getId).collect(Collectors.toList());
-            sourceTransactionMap.remove(validIds)*/
-            List<Long> ids = new ArrayList<>(sourceTransactionMap.keySet());
-            async(() -> AppState.getNodeApiService().getTransactionsState(session.account, ids),
-                handleGetTransactionsStateResult(sourceTransactionMap));
-        }
+        async(() -> AppState.getNodeApiService().getTransactions(session.account, FIRST_TRANSACTION_NUMBER, INIT_PAGE_SIZE),
+                handleUnapprovedTransactions());
     }
 
     private void fillApprovedTable() {
         async(() -> AppState.getNodeApiService().getTransactions(session.account, FIRST_TRANSACTION_NUMBER, INIT_PAGE_SIZE),
-            handleGetTransactionsResult());
+            handleApprovedTransactions());
     }
 
-    private Callback<List<TransactionData>> handleGetTransactionsResult() {
+    private Callback<List<TransactionData>> handleApprovedTransactions() {
         return new Callback<List<TransactionData>>() {
 
             @Override
@@ -98,6 +86,7 @@ public class HistoryController extends AbstractController {
                 List<TransactionTabRow> approvedList = new ArrayList<>();
                 transactionsList.forEach(transactionData -> {
                     TransactionTabRow tableRow = new TransactionTabRow();
+                    tableRow.setId(transactionData.getId());
                     tableRow.setAmount(GeneralConverter.toString(transactionData.getAmount()));
                     tableRow.setSource(GeneralConverter.encodeToBASE58(transactionData.getSource()));
                     tableRow.setTarget(GeneralConverter.encodeToBASE58(transactionData.getTarget()));
@@ -106,6 +95,8 @@ public class HistoryController extends AbstractController {
                     tableRow.setMethod(transactionData.getMethod());
                     tableRow.setParams(transactionData.getParams());
                     approvedList.add(tableRow);
+
+                    session.unapprovedTransactions.remove(transactionData.getId());
                 });
                 refreshTableViewItems(approvedTableView, approvedList);
             }
@@ -129,46 +120,38 @@ public class HistoryController extends AbstractController {
         };
     }
 
-    private Callback<TransactionsStateGetResultData> handleGetTransactionsStateResult(
-        ConcurrentHashMap<Long, TransactionRoundData> transactionMap) {
-        return new Callback<TransactionsStateGetResultData>() {
-            @Override
-            public void onSuccess(TransactionsStateGetResultData transactionsStateGetResultData) throws CreditsException {
-                Map<Long, TransactionStateData> states = transactionsStateGetResultData.getStates();
-                states.forEach((k, v) -> {
-                    if (v.getValue() == VALID.getValue()) {
-                        transactionMap.remove(k);
-                    }
-                });
+    private Callback<List<TransactionData>> handleUnapprovedTransactions() {
+        return new Callback<List<TransactionData>>() {
 
-                int curRound = transactionsStateGetResultData.getRoundNumber();
-                transactionMap.entrySet()
-                    .removeIf(e -> e.getValue().getRoundNumber() != 0 &&
-                        curRound >= e.getValue().getRoundNumber() + COUNT_ROUNDS_LIFE);
+            @Override
+            public void onSuccess(List<TransactionData> transactionsList) throws CreditsException {
 
                 List<TransactionTabRow> unapprovedList = new ArrayList<>();
 
-                transactionMap.forEach((id, value) -> {
-                    TransactionTabRow tableRow = new TransactionTabRow();
-/*
-                    tableRow.setInnerId(id);
-*/
-                    tableRow.setAmount(value.getAmount());
-                    tableRow.setCurrency(value.getCurrency());
-                    tableRow.setSource(value.getSource());
-                    tableRow.setTarget(value.getTarget());
-                    if (states.get(id) != null) {
-                        if (states.get(id).getValue() == INVALID.getValue()) {
-                            tableRow.setState(INVALID.name());
-                        } else if (curRound == 0 || states.get(id).getValue() == INPROGRESS.getValue()) {
-                            tableRow.setState(INPROGRESS.name());
-                        }
+                session.unapprovedTransactions.forEach((id, value) -> {
+
+                    if (transactionsList.stream().anyMatch(transactionData ->
+                            transactionData.getId() == id)) {
+                        session.unapprovedTransactions.remove(id);
+                    } else {
+                        TransactionTabRow tableRow = new TransactionTabRow();
+                        tableRow.setId(id);
+                        tableRow.setAmount(value.getAmount());
+                        tableRow.setCurrency(value.getCurrency());
+                        tableRow.setSource(value.getSource());
+                        tableRow.setTarget(value.getTarget());
+                        tableRow.setState(INPROGRESS.name());
                         unapprovedList.add(tableRow);
                     }
                 });
                 refreshTableViewItems(unapprovedTableView, unapprovedList);
+            }
 
-
+            private void refreshTableViewItems(TableView<TransactionTabRow> tableView, List<TransactionTabRow> itemList) {
+                Platform.runLater(() -> {
+                    tableView.getItems().clear();
+                    tableView.getItems().addAll(itemList);
+                });
             }
 
             @Override
@@ -183,12 +166,6 @@ public class HistoryController extends AbstractController {
         };
     }
 
-    private void refreshTableViewItems(TableView<TransactionTabRow> tableView, List<TransactionTabRow> itemList) {
-        Platform.runLater(() -> {
-            tableView.getItems().clear();
-            tableView.getItems().addAll(itemList);
-        });
-    }
 
     @FXML
     private void handleBack() {

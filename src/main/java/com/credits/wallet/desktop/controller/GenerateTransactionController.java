@@ -8,7 +8,6 @@ import com.credits.general.util.Callback;
 import com.credits.general.util.GeneralConverter;
 import com.credits.wallet.desktop.AppState;
 import com.credits.wallet.desktop.VistaNavigator;
-import com.credits.wallet.desktop.utils.ApiUtils;
 import com.credits.wallet.desktop.utils.FormUtils;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -17,7 +16,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -111,8 +109,6 @@ public class GenerateTransactionController extends AbstractController {
         return new Callback<Pair<Long, TransactionFlowResultData>>() {
             @Override
             public void onSuccess(Pair<Long, TransactionFlowResultData> resultData) {
-                ApiUtils.saveTransactionRoundNumberIntoMap(resultData.getRight().getRoundNumber(),
-                    resultData.getLeft(),session);
                 FormUtils.showPlatformInfo("Transaction created");
             }
 

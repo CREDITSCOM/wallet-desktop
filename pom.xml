@@ -15,7 +15,6 @@
         <skipTests>false</skipTests>
         <skipIntegrationTests>true</skipIntegrationTests>
         <javaVersion>11</javaVersion>
-        <app.version>1.2</app.version>
     </properties>
 
     <repositories>
@@ -24,13 +23,6 @@
             <url>https://jitpack.io</url>
         </repository>
     </repositories>
-
-    <scm>
-        <connection>scm:git:file:${project.basedir}</connection>
-        <developerConnection>scm:git:file:${project.basedir}</developerConnection>
-        <tag>HEAD</tag>
-        <url>scm:git:https://none.git</url>
-    </scm>
 
     <build>
         <defaultGoal>package</defaultGoal>
@@ -48,6 +40,35 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>pl.project13.maven</groupId>
+                <artifactId>git-commit-id-plugin</artifactId>
+                <version>2.2.1</version>
+                <executions>
+                    <execution>
+                        <id>get-git-info</id>
+                        <goals>
+                            <goal>revision</goal>
+                        </goals>
+                        <phase>validate</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <injectAllReactorProjects>true</injectAllReactorProjects>
+                    <generateGitPropertiesFile>false</generateGitPropertiesFile>
+                    <dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
+                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
+                    <generateGitPropertiesFilename>
+                        ${project.build.outputDirectory}/git.properties
+                    </generateGitPropertiesFilename>
+                    <includeOnlyProperties>
+                        <includeOnlyProperty>git.commit.id</includeOnlyProperty>
+                        <includeOnlyProperty>git.closest.tag.commit.count</includeOnlyProperty>
+                        <includeOnlyProperty>git.closest.tag.name</includeOnlyProperty>
+                    </includeOnlyProperties>
+                </configuration>
+            </plugin>
+
+            <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.1.1</version>
                 <configuration>
@@ -55,7 +76,10 @@
                         <manifestEntries>
                             <Main-Class>com.credits.wallet.desktop.WalletApp</Main-Class>
                             <Multi-Release>true</Multi-Release>
-                            <Specification-Version>${app.version}</Specification-Version>
+                            <!--suppress UnresolvedMavenProperty -->
+                            <ImplementationVersion>
+                                ${git.closest.tag.name} build ${git.closest.tag.commit.count} commit ${git.commit.id}
+                            </ImplementationVersion>
                         </manifestEntries>
                     </archive>
                     <descriptorRefs>
@@ -73,61 +97,14 @@
                             <descriptorRefs>
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
                             </descriptorRefs>
-                            <finalName>wallet-desktop-${project.version}.${buildNumber}</finalName>
+                            <!--suppress UnresolvedMavenProperty -->
+                            <finalName>wallet-desktop-${git.closest.tag.name}-b${git.closest.tag.commit.count}</finalName>
                             <appendAssemblyId>false</appendAssemblyId>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
 
-            <plugin>
-                <groupId>pl.project13.maven</groupId>
-                <artifactId>git-commit-id-plugin</artifactId>
-                <version>2.2.1</version>
-                <executions>
-                    <execution>
-                        <id>get-git-info</id>
-                        <goals>
-                            <goal>revision</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <generateGitPropertiesFile>false</generateGitPropertiesFile>
-                    <dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
-                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
-                    <generateGitPropertiesFilename>
-                        ${project.build.outputDirectory}/git.properties
-                    </generateGitPropertiesFilename>
-                    <includeOnlyProperties>
-                        <includeOnlyProperty>git.commit.id</includeOnlyProperty>
-                    </includeOnlyProperties>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>buildnumber-maven-plugin</artifactId>
-                <version>1.1</version>
-                <executions>
-                    <execution>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>create</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <revisionOnScmFailure>1</revisionOnScmFailure>
-                    <doCheck>true</doCheck>
-                    <buildNumberPropertyName>buildNumber</buildNumberPropertyName>
-                    <doUpdate>true</doUpdate>
-                    <format>{0,number}</format>
-                    <items>
-                        <item>buildNumber</item>
-                    </items>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 

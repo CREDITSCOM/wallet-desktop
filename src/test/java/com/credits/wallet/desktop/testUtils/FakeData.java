@@ -65,7 +65,7 @@ public class FakeData {
                     true,
                     new BigDecimal("0"),
                     new Variant(V_STRING, "returnValue"),
-                    new TransactionIdData("".getBytes(), 0)
+                    new TransactionIdData(0, 0)
             );
             transactionData01.setMethod("method01");
             transactionData01.setBlockId("blockId01");

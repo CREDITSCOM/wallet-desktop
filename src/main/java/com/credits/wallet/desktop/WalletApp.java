@@ -35,15 +35,15 @@ public class WalletApp extends Application {
 
         Properties prop = new Properties();
         URL url = WalletApp.class.getResource("/git.properties");
-        String commit = null, author = null;
+        String version = getClass().getPackage().getSpecificationVersion();
+        String commit = null;
         if (url != null) {
             prop.load(url.openStream());
-            commit = (String) prop.get("git.commit.id.abbrev");
-            author = (String) prop.get("git.build.user.name");
+            commit = (String) prop.get("git.commit.id");
         }
         LOGGER.info("\n\n\n");
         LOGGER.info("---------------------------------------------------------------------------");
-        LOGGER.info("Starting Wallet app {}-{}", commit, author);
+        LOGGER.info("Wallet Desktop v{} commit {}", version, commit);
         LOGGER.info("---------------------------------------------------------------------------\n\n\n");
         appStateInitializer = appStateInitializer != null ? appStateInitializer : new AppStateInitializer();
         LOGGER.info("Initializing application state");

@@ -15,6 +15,7 @@
         <skipTests>false</skipTests>
         <skipIntegrationTests>true</skipIntegrationTests>
         <javaVersion>11</javaVersion>
+        <app.version>1.2</app.version>
     </properties>
 
     <repositories>
@@ -25,8 +26,8 @@
     </repositories>
 
     <scm>
-        <connection>scm:git:https://none.git</connection>
-        <developerConnection>scm:git:https://none.git</developerConnection>
+        <connection>scm:git:file:${project.basedir}</connection>
+        <developerConnection>scm:git:file:${project.basedir}</developerConnection>
         <tag>HEAD</tag>
         <url>scm:git:https://none.git</url>
     </scm>
@@ -54,6 +55,7 @@
                         <manifestEntries>
                             <Main-Class>com.credits.wallet.desktop.WalletApp</Main-Class>
                             <Multi-Release>true</Multi-Release>
+                            <Specification-Version>${app.version}</Specification-Version>
                         </manifestEntries>
                     </archive>
                     <descriptorRefs>
@@ -77,6 +79,32 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>pl.project13.maven</groupId>
+                <artifactId>git-commit-id-plugin</artifactId>
+                <version>2.2.1</version>
+                <executions>
+                    <execution>
+                        <id>get-git-info</id>
+                        <goals>
+                            <goal>revision</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <generateGitPropertiesFile>false</generateGitPropertiesFile>
+                    <dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
+                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
+                    <generateGitPropertiesFilename>
+                        ${project.build.outputDirectory}/git.properties
+                    </generateGitPropertiesFilename>
+                    <includeOnlyProperties>
+                        <includeOnlyProperty>git.commit.id</includeOnlyProperty>
+                    </includeOnlyProperties>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>buildnumber-maven-plugin</artifactId>

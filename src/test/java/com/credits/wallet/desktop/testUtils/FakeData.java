@@ -1,14 +1,13 @@
 package com.credits.wallet.desktop.testUtils;
 
-
 import com.credits.client.node.pojo.*;
 import com.credits.general.pojo.ApiResponseCode;
 import com.credits.general.pojo.ApiResponseData;
 import com.credits.general.pojo.ByteCodeObjectData;
-import com.credits.general.pojo.TransactionRoundData;
 import com.credits.general.thrift.generated.Variant;
 import com.credits.general.util.GeneralConverter;
 import com.credits.wallet.desktop.struct.TokenStandardData;
+import com.credits.wallet.desktop.struct.UnapprovedTransactionData;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -27,7 +26,7 @@ public class FakeData {
     public static ArrayList<TransactionData> transactionsDataList = new ArrayList<>();
     public static ArrayList<SmartContractTransactionData> smartContractTransactionsDataList = new ArrayList<>();
     public static final String addressBase58 = "G2iSMjqaEQmA5pvFuFjKbMqJUxJZceAY5oc1uotr7SZZ";
-    public static ConcurrentHashMap<String, ConcurrentHashMap<Long, TransactionRoundData>> sourceMap = new ConcurrentHashMap<>();
+    public static ConcurrentHashMap<String, ConcurrentHashMap<Long, UnapprovedTransactionData>> unapprovedTransactions = new ConcurrentHashMap<>();
     public static TransactionsStateGetResultData transactionsStateGetResultData;
     public static ConcurrentHashMap<String, String> coins = new ConcurrentHashMap<>();
     public static TransactionFlowResultData transactionFlowResultData1;
@@ -223,23 +222,23 @@ public class FakeData {
             transaction4.setCurrency((byte)1);
 
 
-            TransactionRoundData transactionRoundData0 = new TransactionRoundData(String.valueOf(transaction0.getId()),
-                GeneralConverter.encodeToBASE58(transaction0.getSource()), GeneralConverter.encodeToBASE58(transaction0.getTarget()),transaction0.getAmount().toString(),String.valueOf(transaction0.getCurrency()));
-            transactionRoundData0.setRoundNumber(15);
-            TransactionRoundData transactionRoundData1 = new TransactionRoundData(String.valueOf(transaction1.getId()),
-                GeneralConverter.encodeToBASE58(transaction1.getSource()), GeneralConverter.encodeToBASE58(transaction1.getTarget()),transaction1.getAmount().toString(),String.valueOf(transaction1.getCurrency()));
-            transactionRoundData1.setRoundNumber(15);
-            TransactionRoundData transactionRoundData2 = new TransactionRoundData(String.valueOf(transaction2.getId()),
-                GeneralConverter.encodeToBASE58(transaction2.getSource()), GeneralConverter.encodeToBASE58(transaction2.getTarget()),transaction2.getAmount().toString(),String.valueOf(transaction2.getCurrency()));
-            transactionRoundData2.setRoundNumber(18);
-            TransactionRoundData transactionRoundData3 = new TransactionRoundData(String.valueOf(transaction3.getId()),
-                GeneralConverter.encodeToBASE58(transaction3.getSource()), GeneralConverter.encodeToBASE58(transaction3.getTarget()),transaction3.getAmount().toString(),String.valueOf(transaction3.getCurrency()));
-            transactionRoundData3.setRoundNumber(21);
-            TransactionRoundData transactionRoundData4 = new TransactionRoundData(String.valueOf(transaction4.getId()),
-                GeneralConverter.encodeToBASE58(transaction4.getSource()), GeneralConverter.encodeToBASE58(transaction4.getTarget()),transaction4.getAmount().toString(),String.valueOf(transaction4.getCurrency()));
-            transactionRoundData4.setRoundNumber(25);
+            UnapprovedTransactionData transactionRoundData0 = new UnapprovedTransactionData(String.valueOf(transaction0.getId()),
+                    GeneralConverter.encodeToBASE58(transaction0.getSource()), GeneralConverter.encodeToBASE58(transaction0.getTarget()),
+                    transaction0.getAmount().toString(), String.valueOf(transaction0.getCurrency()), null, null);
+            UnapprovedTransactionData transactionRoundData1 = new UnapprovedTransactionData(String.valueOf(transaction1.getId()),
+                GeneralConverter.encodeToBASE58(transaction1.getSource()), GeneralConverter.encodeToBASE58(transaction1.getTarget()),
+                    transaction1.getAmount().toString(),String.valueOf(transaction1.getCurrency()), null, null);
+            UnapprovedTransactionData transactionRoundData2 = new UnapprovedTransactionData(String.valueOf(transaction2.getId()),
+                GeneralConverter.encodeToBASE58(transaction2.getSource()), GeneralConverter.encodeToBASE58(transaction2.getTarget()),
+                    transaction2.getAmount().toString(),String.valueOf(transaction2.getCurrency()), null, null);
+            UnapprovedTransactionData transactionRoundData3 = new UnapprovedTransactionData(String.valueOf(transaction3.getId()),
+                GeneralConverter.encodeToBASE58(transaction3.getSource()), GeneralConverter.encodeToBASE58(transaction3.getTarget()),
+                    transaction3.getAmount().toString(),String.valueOf(transaction3.getCurrency()), null, null);
+            UnapprovedTransactionData transactionRoundData4 = new UnapprovedTransactionData(String.valueOf(transaction4.getId()),
+                GeneralConverter.encodeToBASE58(transaction4.getSource()), GeneralConverter.encodeToBASE58(transaction4.getTarget()),
+                    transaction4.getAmount().toString(),String.valueOf(transaction4.getCurrency()), null, null);
 
-            ConcurrentHashMap<Long, TransactionRoundData> map = new ConcurrentHashMap<>();
+            ConcurrentHashMap<Long, UnapprovedTransactionData> map = new ConcurrentHashMap<>();
 
             map.put(transaction0.getId(), transactionRoundData0);
             map.put(transaction1.getId(), transactionRoundData1);
@@ -256,7 +255,7 @@ public class FakeData {
             transactionsStateGetResultData =
                 new TransactionsStateGetResultData(successResponse, transactionStateDataMap, 27);
 
-            sourceMap.put("GWe8WZYLBxAqsfPZgejnysXQm5Q697VSsyr3x59RvYBf", map);
+            unapprovedTransactions.put("GWe8WZYLBxAqsfPZgejnysXQm5Q697VSsyr3x59RvYBf", map);
 
             transactionFlowResultData1 = new TransactionFlowResultData(
                     successResponse,

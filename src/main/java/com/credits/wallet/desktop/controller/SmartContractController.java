@@ -44,7 +44,6 @@ import java.util.concurrent.CompletableFuture;
 
 import static com.credits.client.node.service.NodeApiServiceImpl.async;
 import static com.credits.client.node.service.NodeApiServiceImpl.handleCallback;
-import static com.credits.client.node.thrift.generated.TransactionState.*;
 import static com.credits.client.node.util.TransactionIdCalculateUtils.calcTransactionIdSourceTarget;
 import static com.credits.general.thrift.generated.Variant._Fields.V_STRING;
 import static com.credits.general.util.GeneralConverter.*;
@@ -62,7 +61,6 @@ public class SmartContractController extends AbstractController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SmartContractController.class);
     private static final String ERR_FEE = "Fee must be greater than 0";
-    private static final int COUNT_ROUNDS_LIFE = 50;
     private static final String ERR_GETTING_TRANSACTION_HISTORY = "Error getting transaction history";
     private static final Set<String> OBJECT_METHODS = Set.of("getClass", "hashCode", "equals", "toString", "notify", "notifyAll", "wait", "finalize");
 
@@ -364,11 +362,10 @@ public class SmartContractController extends AbstractController {
                     tableRow.setSource(encodeToBASE58(transactionData.getSource()));
                     tableRow.setTarget(encodeToBASE58(transactionData.getTarget()));
                     tableRow.setBlockId(transactionData.getBlockId());
-                    tableRow.setState(VALID.name());
+                    tableRow.setType(getTransactionDescType(transactionData));
                     tableRow.setMethod(transactionData.getMethod());
                     tableRow.setParams(transactionData.getParams());
                     tableRow.setSmartInfo(smartInfo);
-                    tableRow.setType(transactionData.getType().getName());
 
                     if (smartInfo == null) {
                         approvedList.add(tableRow);
@@ -411,7 +408,7 @@ public class SmartContractController extends AbstractController {
                         tableRow.setCurrency(value.getCurrency());
                         tableRow.setSource(value.getSource());
                         tableRow.setTarget(value.getTarget());
-                        tableRow.setState(INPROGRESS.name());
+                        tableRow.setType("unknown");
                         tableRow.setMethod(value.getScMethod());
                         tableRow.setParams(value.getScParams());
                         unapprovedList.add(tableRow);

@@ -1,15 +1,10 @@
 package com.credits.wallet.desktop.utils;
 
+import com.credits.client.node.pojo.TransactionData;
 import com.credits.general.util.GeneralConverter;
 import com.credits.wallet.desktop.struct.CoinTabRow;
 import javafx.application.Platform;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.stage.StageStyle;
 import javafx.util.Callback;
 
@@ -153,6 +148,16 @@ public class FormUtils {
                 refreshOfferedMaxFeeValues(feeField, actualOfferedMaxFeeLabel, oldValue);
             }
         });
+    }
+
+    public static String getTransactionDescType(TransactionData transactionData) {
+        switch (transactionData.getType()){
+            case TT_SmartDeploy: return "Deploy";
+            case TT_SmartState: return "State";
+            case TT_SmartExecute: return "Execute";
+            case TT_Normal: return "CS Transfer";
+            default: return "Unknown";
+        }
     }
 
     private static void refreshOfferedMaxFeeValues(TextField feeField, Label actualOfferedMaxFeeLabel, String value) {

@@ -12,7 +12,7 @@ public class TransactionTabRow {
     private String target;
     private String currency;
     private String amount;
-    private String state;
+    private String type;
     private String method;
     private List<Variant> params;
 
@@ -24,12 +24,12 @@ public class TransactionTabRow {
         this.source = source;
     }
 
-    public String getState() {
-        return state;
+    public String getType() {
+        return type;
     }
 
-    public void setState(String state) {
-        this.state = state;
+    public void setType(String state) {
+        this.type = state;
     }
 
     public Long getId() {

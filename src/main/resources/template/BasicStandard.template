@@ -1,10 +1,12 @@
 import com.credits.scapi.annotations.*;
+import com.credits.scapi.v2.SmartContract;
 import com.credits.scapi.v0.*;
+import java.math.BigDecimal;
 
 
-public class %s extends SmartContract implements BasicStandard {
+public class MySmartContract extends SmartContract implements BasicStandard {
 
-    public %s() {
+    public MySmartContract() {
     }
 
     @Override
@@ -60,5 +62,10 @@ public class %s extends SmartContract implements BasicStandard {
     @Override
     public boolean burn(String amount) {
         return false;
+    }
+
+    @Override
+    public String payable(BigDecimal amount, byte[] userData) {
+        return null;
     }
 }

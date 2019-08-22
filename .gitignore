@@ -29,3 +29,4 @@ coins.csv
 temp
 cache
 log
+*.txt

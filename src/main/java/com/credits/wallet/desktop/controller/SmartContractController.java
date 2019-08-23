@@ -441,8 +441,7 @@ public class SmartContractController extends AbstractController {
         tableView.getColumns().get(2).setCellValueFactory(new PropertyValueFactory<>("source"));
         tableView.getColumns().get(3).setCellValueFactory(new PropertyValueFactory<>("target"));
         tableView.getColumns().get(4).setCellValueFactory(new PropertyValueFactory<>("amount"));
-        tableView.getColumns().get(5).setCellValueFactory(new PropertyValueFactory<>("state"));
-        tableView.getColumns().get(6).setCellValueFactory(new PropertyValueFactory<>("type"));
+        tableView.getColumns().get(5).setCellValueFactory(new PropertyValueFactory<>("type"));
         tableView.setOnMousePressed(event -> {
             if ((event.isPrimaryButtonDown() || event.getButton() == MouseButton.PRIMARY) && event.getClickCount() == 2) {
                 SmartContractTransactionTabRow tabRow = tableView.getSelectionModel().getSelectedItem();

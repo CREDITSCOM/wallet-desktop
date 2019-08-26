@@ -1,15 +1,10 @@
 package com.credits.wallet.desktop.utils;
 
+import com.credits.general.util.Constants;
 import com.credits.general.util.GeneralConverter;
 import com.credits.wallet.desktop.struct.CoinTabRow;
 import javafx.application.Platform;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.stage.StageStyle;
 import javafx.util.Callback;
 
@@ -134,7 +129,7 @@ public class FormUtils {
 
     public static short getActualOfferedMaxFee16Bits(TextField feeField) {
         if (feeField.getText().isEmpty()) throw new IllegalArgumentException("fee text field can't be empty");
-        var fee = GeneralConverter.toDouble(feeField.getText());
+        var fee = GeneralConverter.toDouble(feeField.getText(), Constants.LOCALE);
         var actualOfferedMaxFeePair = calculateActualFee(fee);
         return actualOfferedMaxFeePair.getRight();
     }
@@ -143,10 +138,6 @@ public class FormUtils {
         feeField.textProperty().addListener((observable, oldValue, newValue) -> {
             try {
                 newValue = NumberUtils.getCorrectNum(newValue);
-                if (!org.apache.commons.lang3.math.NumberUtils.isCreatable(newValue) && !newValue.isEmpty()) {
-                    refreshOfferedMaxFeeValues(feeField, actualOfferedMaxFeeLabel, oldValue);
-                    return;
-                }
                 refreshOfferedMaxFeeValues(feeField, actualOfferedMaxFeeLabel, newValue);
             } catch (Exception e) {
                 //FormUtils.showError("Error. Reason: " + e.getMessage());
@@ -162,7 +153,7 @@ public class FormUtils {
         } else {
             feeField.setStyle(feeField.getStyle().replace("-fx-prompt-text-fill: red;", ""));
             feeField.setStyle(feeField.getStyle().replace("-fx-border-color: red;", "-fx-border-color: black;"));
-            var actualOfferedMaxFeePair = calculateActualFee(GeneralConverter.toDouble(value));
+            var actualOfferedMaxFeePair = calculateActualFee(GeneralConverter.toDouble(value, Constants.LOCALE));
             actualOfferedMaxFeeLabel.setText(GeneralConverter.toString(actualOfferedMaxFeePair.getLeft()));
             feeField.setText(value);
         }

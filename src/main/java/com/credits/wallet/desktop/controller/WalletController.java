@@ -110,9 +110,13 @@ public class WalletController extends AbstractController {
         // VALIDATE
         AtomicBoolean isValidationSuccessful = new AtomicBoolean(true);
         clearLabErr();
-        if (coinsTableView.getSelectionModel().getSelectedItem() == null ||
-            coinsTableView.getSelectionModel().getSelectedItem().getName().isEmpty()) {
-            FormUtils.validateTable(coinsTableView, coinsErrorLabel, ERR_COIN, isValidationSuccessful);
+        var selectedCoin = coinsTableView.getSelectionModel().getSelectedItem();
+        if (selectedCoin == null || selectedCoin.getName().isEmpty()) {
+            if (coinsTableView.getItems().size() == 1) {
+                selectedCoin = coinsTableView.getItems().get(0);
+            } else {
+                FormUtils.validateTable(coinsTableView, coinsErrorLabel, ERR_COIN, isValidationSuccessful);
+            }
         }
         if (transactionToAddress == null || transactionToAddress.isEmpty()) {
             FormUtils.showErrorLabelAndPaintField(addressField, addressErrorLabel, ERR_TO_ADDRESS, isValidationSuccessful);
@@ -131,7 +135,7 @@ public class WalletController extends AbstractController {
 
         if (isValidationSuccessful.get()) {
             HashMap<String, Object> params = new HashMap<>();
-            params.put("coinType", coinsTableView.getSelectionModel().getSelectedItem().getName());
+            params.put("coinType", selectedCoin.getName());
             params.put("transactionToAddress", transactionToAddress);
             params.put("transactionAmount", transactionAmount);
             params.put("transactionFee", transactionFee);
@@ -147,14 +151,14 @@ public class WalletController extends AbstractController {
         ObservableList<CoinTabRow> tableViewItems = tableView.getItems();
         addOrUpdateCsCoinRow(tableViewItems);
         session.coinsKeeper.getKeptObject()
-            .orElseGet(ConcurrentHashMap::new)
-            .forEach((coinName, contractAddress) -> addOrUpdateUserCoinRow(tableViewItems, coinName, contractAddress));
+                .orElseGet(ConcurrentHashMap::new)
+                .forEach((coinName, contractAddress) -> addOrUpdateUserCoinRow(tableViewItems, coinName, contractAddress));
     }
 
     private EventHandler<MouseEvent> handleDeleteToken(TableRow<CoinTabRow> row) {
         return event -> {
             if ((!row.isEmpty()) && !row.getItem().getName().equals("") &&
-                !row.getItem().getName().equals(CREDITS_TOKEN_NAME)) {
+                    !row.getItem().getName().equals(CREDITS_TOKEN_NAME)) {
                 row.addEventHandler(MouseEvent.MOUSE_CLICKED, t -> {
                     if (t.getButton() == MouseButton.SECONDARY) {
                         Platform.runLater(() -> {
@@ -168,7 +172,7 @@ public class WalletController extends AbstractController {
                                 session.coinsKeeper.modify(session.coinsKeeper.new Modifier() {
                                     @Override
                                     public ConcurrentHashMap<String, String> modify(
-                                        ConcurrentHashMap<String, String> restoredObject) {
+                                            ConcurrentHashMap<String, String> restoredObject) {
                                         restoredObject.remove(row.getItem().getName());
                                         return restoredObject;
                                     }
@@ -189,14 +193,14 @@ public class WalletController extends AbstractController {
     }
 
     private void addOrUpdateUserCoinRow(ObservableList<CoinTabRow> tableViewItems, String coinName,
-        String smartContractAddress) {
+                                        String smartContractAddress) {
         CoinTabRow coinRow = getCoinTabRow(tableViewItems, coinName, smartContractAddress);
         if (coinRow.getLock().tryLock()) {
             changeTableViewValue(coinRow, WAITING_STATE_MESSAGE);
             DecimalFormat decimalFormat =
-                new DecimalFormat("##0.000000000000000000"); // todo must use the method "tokenContract.decimal()"
+                    new DecimalFormat("##0.000000000000000000"); // todo must use the method "tokenContract.decimal()"
             session.contractInteractionService.getSmartContractBalance(smartContractAddress,
-                handleUpdateCoinValue(coinRow, decimalFormat));
+                                                                       handleUpdateCoinValue(coinRow, decimalFormat));
         }
     }
 
@@ -206,15 +210,15 @@ public class WalletController extends AbstractController {
     }
 
     private CoinTabRow getCoinTabRow(ObservableList<CoinTabRow> tableViewItems, String tokenName,
-        String contractAddress) {
+                                     String contractAddress) {
         CoinTabRow coinRow = new CoinTabRow(tokenName, WAITING_STATE_MESSAGE, contractAddress);
         return tableViewItems.stream()
-            .filter(foundCoinRow -> foundCoinRow.getName().equals(coinRow.getName()))
-            .findFirst()
-            .orElseGet(() -> {
-                tableViewItems.add(coinRow);
-                return coinRow;
-            });
+                .filter(foundCoinRow -> foundCoinRow.getName().equals(coinRow.getName()))
+                .findFirst()
+                .orElseGet(() -> {
+                    tableViewItems.add(coinRow);
+                    return coinRow;
+                });
     }
 
     private Callback<BigDecimal> handleUpdateCoinValue(CoinTabRow coinRow, DecimalFormat decimalFormat) {
@@ -279,7 +283,7 @@ public class WalletController extends AbstractController {
 
         publicWalletID.setText(session.account);
 
-        FormUtils.initFeeField(feeField,actualOfferedMaxFeeLabel);
+        FormUtils.initFeeField(feeField, actualOfferedMaxFeeLabel);
 
         amountField.textProperty().addListener((observable, oldValue, newValue) -> {
             newValue = checkCorrectInputNumber(newValue)
@@ -305,7 +309,7 @@ public class WalletController extends AbstractController {
     }
 
     private void setFieldValue(TextField tf, String newValue) {
-        if(newValue.isEmpty()) {
+        if (newValue.isEmpty()) {
             tf.setText("");
         } else {
             tf.setText(newValue);

@@ -8,8 +8,6 @@ import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.credits.general.util.Constants.DECIMAL_SEPARATOR;
-
 
 public class AppState {
     public static final String NODE_ERROR="A problem connecting to the Node";
@@ -17,8 +15,6 @@ public class AppState {
     public static final String CREDITS_TOKEN_NAME = "CS";
     public static final int DELAY_AFTER_FULL_SYNC = 5;
     public static final int DELAY_BEFORE_FULL_SYNC = 2;
-
-    public static final String decimalSeparator = DECIMAL_SEPARATOR;
 
     private static final Map<String,Session> sessionMap = new HashMap<>();
     private static NodeApiService nodeApiService;

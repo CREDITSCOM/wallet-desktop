@@ -2,6 +2,7 @@ package com.credits.wallet.desktop.utils;
 
 import com.credits.client.node.pojo.TransactionData;
 import com.credits.general.util.Constants;
+import com.credits.client.node.pojo.TransactionData;
 import com.credits.general.util.GeneralConverter;
 import com.credits.wallet.desktop.struct.CoinTabRow;
 import javafx.application.Platform;

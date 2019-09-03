@@ -18,6 +18,7 @@
         <github.global.server>github</github.global.server>
         <github.owner>creditscom</github.owner>
         <github.project>wallet-desktop</github.project>
+        <repository.updatePolicy>never</repository.updatePolicy>
     </properties>
 
     <distributionManagement>
@@ -154,7 +155,7 @@
             <url>https://raw.github.com/creditscom/wallet-desktop/mvn-repo/</url>
             <snapshots>
                 <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
+                <updatePolicy>${repository.updatePolicy}</updatePolicy>
             </snapshots>
         </repository>
         <repository>
@@ -162,7 +163,7 @@
             <url>https://raw.github.com/creditscom/thrift-api-client/mvn-repo/</url>
             <snapshots>
                 <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
+                <updatePolicy>${repository.updatePolicy}</updatePolicy>
             </snapshots>
         </repository>
     </repositories>

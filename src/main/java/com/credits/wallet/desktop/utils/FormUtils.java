@@ -1,6 +1,7 @@
 package com.credits.wallet.desktop.utils;
 
 import com.credits.general.util.Constants;
+import com.credits.client.node.pojo.TransactionData;
 import com.credits.general.util.GeneralConverter;
 import com.credits.wallet.desktop.struct.CoinTabRow;
 import javafx.application.Platform;
@@ -144,6 +145,16 @@ public class FormUtils {
                 refreshOfferedMaxFeeValues(feeField, actualOfferedMaxFeeLabel, oldValue);
             }
         });
+    }
+
+    public static String getTransactionDescType(TransactionData transactionData) {
+        switch (transactionData.getType()){
+            case TT_SmartDeploy: return "Deploy";
+            case TT_SmartState: return "State";
+            case TT_SmartExecute: return "Execute";
+            case TT_Normal: return "CS Transfer";
+            default: return "Unknown";
+        }
     }
 
     private static void refreshOfferedMaxFeeValues(TextField feeField, Label actualOfferedMaxFeeLabel, String value) {

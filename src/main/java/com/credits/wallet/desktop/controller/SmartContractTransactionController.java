@@ -49,7 +49,7 @@ public class SmartContractTransactionController extends AbstractController{
         labSource.setText(selectedTransactionRow.getSource());
         labTarget.setText(selectedTransactionRow.getTarget());
         labAmount.setText(selectedTransactionRow.getAmount());
-        labState.setText(selectedTransactionRow.getState());
+        labState.setText(selectedTransactionRow.getType());
         labMethod.setText(selectedTransactionRow.getMethod());
         ObservableList<String> items = FXCollections.observableArrayList();
         if (selectedTransactionRow.getParams() != null) {

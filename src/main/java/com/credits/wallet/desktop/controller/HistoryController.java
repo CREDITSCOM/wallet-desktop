@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Map;
 
 import static com.credits.client.node.service.NodeApiServiceImpl.async;
-import static com.credits.client.node.thrift.generated.TransactionState.*;
 import static com.credits.wallet.desktop.AppState.NODE_ERROR;
+import static com.credits.wallet.desktop.utils.FormUtils.getTransactionDescType;
 
 
 public class HistoryController extends AbstractController {
@@ -54,7 +54,7 @@ public class HistoryController extends AbstractController {
         tableView.getColumns().get(1).setCellValueFactory(new PropertyValueFactory<>("source"));
         tableView.getColumns().get(2).setCellValueFactory(new PropertyValueFactory<>("target"));
         tableView.getColumns().get(3).setCellValueFactory(new PropertyValueFactory<>("amount"));
-        tableView.getColumns().get(4).setCellValueFactory(new PropertyValueFactory<>("state"));
+        tableView.getColumns().get(4).setCellValueFactory(new PropertyValueFactory<>("type"));
         tableView.setOnMousePressed(event -> {
             if ((event.isPrimaryButtonDown()|| event.getButton() == MouseButton.PRIMARY) && event.getClickCount() == 2) {
                 TransactionTabRow tabRow = tableView.getSelectionModel().getSelectedItem();
@@ -91,7 +91,7 @@ public class HistoryController extends AbstractController {
                     tableRow.setSource(GeneralConverter.encodeToBASE58(transactionData.getSource()));
                     tableRow.setTarget(GeneralConverter.encodeToBASE58(transactionData.getTarget()));
                     tableRow.setBlockId(transactionData.getBlockId());
-                    tableRow.setState(VALID.name());
+                    tableRow.setType(getTransactionDescType(transactionData));
                     tableRow.setMethod(transactionData.getMethod());
                     tableRow.setParams(transactionData.getParams());
                     approvedList.add(tableRow);
@@ -121,7 +121,7 @@ public class HistoryController extends AbstractController {
     }
 
     private Callback<List<TransactionData>> handleUnapprovedTransactions() {
-        return new Callback<List<TransactionData>>() {
+        return new Callback<>() {
 
             @Override
             public void onSuccess(List<TransactionData> transactionsList) throws CreditsException {
@@ -131,7 +131,7 @@ public class HistoryController extends AbstractController {
                 session.unapprovedTransactions.forEach((id, value) -> {
 
                     if (transactionsList.stream().anyMatch(transactionData ->
-                            transactionData.getId() == id)) {
+                                                                   transactionData.getId() == id)) {
                         session.unapprovedTransactions.remove(id);
                     } else {
                         TransactionTabRow tableRow = new TransactionTabRow();
@@ -140,7 +140,7 @@ public class HistoryController extends AbstractController {
                         tableRow.setCurrency(value.getCurrency());
                         tableRow.setSource(value.getSource());
                         tableRow.setTarget(value.getTarget());
-                        tableRow.setState(INPROGRESS.name());
+                        tableRow.setType("unknown");
                         unapprovedList.add(tableRow);
                     }
                 });

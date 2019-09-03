@@ -1,7 +1,7 @@
 package com.credits.wallet.desktop.utils;
 
-import com.credits.general.util.Constants;
 import com.credits.client.node.pojo.TransactionData;
+import com.credits.general.util.Constants;
 import com.credits.general.util.GeneralConverter;
 import com.credits.wallet.desktop.struct.CoinTabRow;
 import javafx.application.Platform;
@@ -12,6 +12,7 @@ import javafx.util.Callback;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.credits.general.util.Utils.calculateActualFee;
+import static com.credits.wallet.desktop.utils.NumberUtils.checkCorrectInputNumber;
 
 
 public class FormUtils {
@@ -137,13 +138,10 @@ public class FormUtils {
 
     public static void initFeeField(TextField feeField, Label actualOfferedMaxFeeLabel) {
         feeField.textProperty().addListener((observable, oldValue, newValue) -> {
-            try {
-                newValue = NumberUtils.getCorrectNum(newValue);
-                refreshOfferedMaxFeeValues(feeField, actualOfferedMaxFeeLabel, newValue);
-            } catch (Exception e) {
-                //FormUtils.showError("Error. Reason: " + e.getMessage());
-                refreshOfferedMaxFeeValues(feeField, actualOfferedMaxFeeLabel, oldValue);
-            }
+            newValue = checkCorrectInputNumber(newValue)
+                       ? newValue
+                       : oldValue;
+            refreshOfferedMaxFeeValues(feeField, actualOfferedMaxFeeLabel, newValue);
         });
     }
 
@@ -160,14 +158,13 @@ public class FormUtils {
     private static void refreshOfferedMaxFeeValues(TextField feeField, Label actualOfferedMaxFeeLabel, String value) {
         if (value.isEmpty()) {
             actualOfferedMaxFeeLabel.setText("");
-            feeField.setText("");
         } else {
             feeField.setStyle(feeField.getStyle().replace("-fx-prompt-text-fill: red;", ""));
             feeField.setStyle(feeField.getStyle().replace("-fx-border-color: red;", "-fx-border-color: black;"));
             var actualOfferedMaxFeePair = calculateActualFee(GeneralConverter.toDouble(value, Constants.LOCALE));
             actualOfferedMaxFeeLabel.setText(GeneralConverter.toString(actualOfferedMaxFeePair.getLeft()));
-            feeField.setText(value);
         }
+        feeField.setText(value);
     }
 }
 

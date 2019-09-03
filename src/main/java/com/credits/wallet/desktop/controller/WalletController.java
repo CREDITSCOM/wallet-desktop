@@ -8,7 +8,6 @@ import com.credits.wallet.desktop.AppState;
 import com.credits.wallet.desktop.VistaNavigator;
 import com.credits.wallet.desktop.struct.CoinTabRow;
 import com.credits.wallet.desktop.utils.FormUtils;
-import com.credits.wallet.desktop.utils.NumberUtils;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
@@ -36,6 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static com.credits.client.node.service.NodeApiServiceImpl.async;
 import static com.credits.wallet.desktop.AppState.CREDITS_DECIMAL;
 import static com.credits.wallet.desktop.AppState.CREDITS_TOKEN_NAME;
+import static com.credits.wallet.desktop.utils.NumberUtils.checkCorrectInputNumber;
 import static org.apache.commons.lang3.StringUtils.repeat;
 
 
@@ -282,7 +282,9 @@ public class WalletController extends AbstractController {
         FormUtils.initFeeField(feeField,actualOfferedMaxFeeLabel);
 
         amountField.textProperty().addListener((observable, oldValue, newValue) -> {
-            newValue = NumberUtils.getCorrectNum(newValue);
+            newValue = checkCorrectInputNumber(newValue)
+                       ? newValue
+                       : oldValue;
             setFieldValue(amountField, newValue);
         });
 

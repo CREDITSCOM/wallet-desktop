@@ -147,8 +147,12 @@
 
     <repositories>
         <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
+            <id>sc-api-mvn-repo</id>
+            <url>https://raw.github.com/creditscom/sc-api/mvn-repo/</url>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>${repository.updatePolicy}</updatePolicy>
+            </snapshots>
         </repository>
         <repository>
             <id>wallet-desktop-mvn-repo</id>

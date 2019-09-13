@@ -16,12 +16,13 @@ public class AppStateInitializer {
 
     public final int DEFAULT_NODE_API_PORT = 9090;
 
-    Properties properties;
+    public Properties properties;
 
     public void init() {
         properties = loadProperties();
 
         AppState.setNodeApiService(initializeNodeApiService());
+        AppState.setJdkPath(properties.getProperty("jdk.path"));
     }
 
     public Properties loadProperties() {

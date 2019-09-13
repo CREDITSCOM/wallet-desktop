@@ -6,6 +6,7 @@ import com.credits.general.util.compiler.model.CompilationPackage;
 import com.credits.general.util.compiler.model.JavaSourceFromString;
 import com.credits.general.util.sourceCode.EclipseJdt;
 import com.credits.general.util.sourceCode.GeneralSourceCodeUtils;
+import com.credits.wallet.desktop.AppState;
 import com.credits.wallet.desktop.utils.sourcecode.ParseCodeUtils;
 import org.eclipse.jdt.core.compiler.IProblem;
 
@@ -41,7 +42,8 @@ public class SourceCodeBuilder {
 
     @SuppressWarnings("unchecked")
     private static CompilationResult compileClasses(Map<String, String> classesToCompile, List<BuildSourceCodeError> errorsList) {
-        CompilationPackage compilationPackage = new InMemoryCompiler().compile(classesToCompile);
+        System.out.println("AppState.getJdkPath() = " + AppState.getJdkPath());
+        CompilationPackage compilationPackage = new InMemoryCompiler(AppState.getJdkPath()).compile(classesToCompile);
         DiagnosticCollector collector = compilationPackage.getCollector();
         List<Diagnostic> diagnostics = collector.getDiagnostics();
         diagnostics.forEach(action -> {

@@ -22,6 +22,7 @@ public class AppState {
     private static PublicKey publicKey;
     private static String pwd;
     private static Stage primaryStage;
+    private static String jdkPath;
 
     public static void setNodeApiService(NodeApiService nodeApiService) {
         AppState.nodeApiService = nodeApiService;
@@ -65,4 +66,8 @@ public class AppState {
     public static Map<String, Session> getSessionMap() {
         return sessionMap;
     }
+
+    public static String getJdkPath() { return jdkPath; }
+
+    public static void setJdkPath(String jdkPath) { AppState.jdkPath = jdkPath; }
 }

@@ -27,6 +27,8 @@ module wallet.desktop {
 
     requires transitive richtextfx;
     requires com.sun.jna;
+    requires java.sql;
+    requires sqlite.jdbc;
 
     opens com.credits.wallet.desktop;
 }

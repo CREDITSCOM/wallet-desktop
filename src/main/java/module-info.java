@@ -29,6 +29,9 @@ module wallet.desktop {
     requires com.sun.jna;
     requires java.sql;
     requires sqlite.jdbc;
+    requires ormlite.jdbc;
+    requires ormlite.core;
+    requires lombok;
 
     opens com.credits.wallet.desktop;
 }

@@ -1,5 +1,6 @@
 package com.credits.wallet.desktop.utils;
 
+import com.credits.general.exception.CreditsException;
 import lombok.Getter;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,8 @@ public class ApplicationProperties {
     @Getter
     private String jdkPath;
     @Getter
+    private String databasePath;
+    @Getter
     private GitProperties gitProperties;
 
     private ApplicationProperties() {
@@ -34,20 +37,23 @@ public class ApplicationProperties {
         final var properties = openPropertyFile(path);
 
         instance.apiAddress = properties.getProperty("node.api.host", "localhost");
-        apiAddressCantBeEmpty(instance.apiAddress);
+        propertyCantBeEmpty("node.api.host", instance.apiAddress);
         instance.apiPort = parseInt(properties.getProperty("node.api.port", "9090"));
 
         final var defaultJdkPath = Paths.get("..", "ojdkbuild", JDK_VERSION).toString();
         instance.jdkPath = properties.getProperty("jdk.path", defaultJdkPath);
 
+        instance.databasePath = properties.getProperty("database.path", Paths.get(".", "db", "wallet-cache.db").toString());
+        propertyCantBeEmpty("database.path", instance.databasePath);
+
         instance.gitProperties = loadGitProperties();
+
         return instance;
     }
 
-    private static void apiAddressCantBeEmpty(String apiAddress) {
-        if (apiAddress.isEmpty()) throw new RuntimeException("\"node.api.host\" can't be empty");
+    private static void propertyCantBeEmpty(String propertyName, String propertyValue) {
+        if (propertyValue.isEmpty()) throw new ApplicationPropertiesException("\"" + propertyName + "\" can't be empty");
     }
-
 
 
     private static GitProperties loadGitProperties() {
@@ -69,7 +75,7 @@ public class ApplicationProperties {
         try (inputStream) {
             properties.load(inputStream);
         } catch (IOException e) {
-            throw new RuntimeException(e.getMessage(), e);
+            throw new ApplicationPropertiesException(e);
         }
         return properties;
     }
@@ -79,7 +85,7 @@ public class ApplicationProperties {
         try (FileInputStream fis = new FileInputStream(path)) {
             properties.load(fis);
         } catch (IOException e) {
-            throw new RuntimeException(e.getMessage(), e);
+            throw new ApplicationPropertiesException(e);
         }
         return properties;
     }
@@ -89,5 +95,16 @@ public class ApplicationProperties {
         String tag;
         String build;
         String commit;
+    }
+
+    public static class ApplicationPropertiesException extends CreditsException {
+
+        public ApplicationPropertiesException(String errorMessage) {
+            super(errorMessage);
+        }
+
+        public ApplicationPropertiesException(Exception e) {
+            super(e);
+        }
     }
 }

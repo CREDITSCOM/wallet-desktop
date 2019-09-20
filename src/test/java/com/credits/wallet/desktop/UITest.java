@@ -37,8 +37,6 @@ public class UITest {
         .decodeFromBASE58(addressOne), GeneralConverter.decodeFromBASE58(addressTwo), new Variant(V_STRING, "success variant response"));
     */
     @Mock
-    AppStateInitializer mockInitializer;
-    @Mock
     NodeApiService mockNodeApiService;
     @Mock
     ContractInteractionService mockContractInteractionService;
@@ -52,9 +50,6 @@ public class UITest {
     @Before
     public void setUp() throws IOException {
         MockitoAnnotations.initMocks(this);
-        when(mockInitializer.initializeNodeApiService()).thenReturn(mockNodeApiService);
-        when(mockInitializer.loadProperties()).thenReturn(mockProperties);
-        doCallRealMethod().when(mockInitializer).init();
         doCallRealMethod().when(mockWalletApp).start(any());
 
         doAnswer((Answer<Void>) invocationOnMock -> {
@@ -67,7 +62,6 @@ public class UITest {
 
         when(mockNodeApiService.getBalance(anyString())).thenReturn(new BigDecimal("1000.123456789012345678"));
 
-        mockWalletApp.appStateInitializer = mockInitializer;
         addressOne = "11111111111111111111111111111111111111111111";
         addressTwo = "22222222222222222222222222222222222222222222";
         addressThree = "33333333333333333333333333333333333333333333";

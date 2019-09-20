@@ -1,6 +1,8 @@
 package com.credits.wallet.desktop;
 
 import com.credits.client.node.service.NodeApiService;
+import com.credits.client.node.service.NodeApiServiceImpl;
+import com.credits.wallet.desktop.utils.ApplicationProperties;
 import javafx.stage.Stage;
 
 import java.security.PrivateKey;
@@ -10,13 +12,13 @@ import java.util.Map;
 
 
 public class AppState {
-    public static final String NODE_ERROR="A problem connecting to the Node";
+    public static final String NODE_ERROR = "A problem connecting to the Node";
     public static final int CREDITS_DECIMAL = 18;
     public static final String CREDITS_TOKEN_NAME = "CS";
     public static final int DELAY_AFTER_FULL_SYNC = 5;
     public static final int DELAY_BEFORE_FULL_SYNC = 2;
 
-    private static final Map<String,Session> sessionMap = new HashMap<>();
+    private static final Map<String, Session> sessionMap = new HashMap<>();
     private static NodeApiService nodeApiService;
     private static PrivateKey privateKey;
     private static PublicKey publicKey;
@@ -24,9 +26,14 @@ public class AppState {
     private static Stage primaryStage;
     private static String jdkPath;
 
-    public static void setNodeApiService(NodeApiService nodeApiService) {
-        AppState.nodeApiService = nodeApiService;
+    private AppState() {
     }
+
+    public static void initialize(ApplicationProperties properties) {
+        nodeApiService = NodeApiServiceImpl.getInstance(properties.getApiAddress(), properties.getApiPort());
+        jdkPath = properties.getJdkPath();
+    }
+
     public static NodeApiService getNodeApiService() {
         return nodeApiService;
     }
@@ -67,7 +74,7 @@ public class AppState {
         return sessionMap;
     }
 
-    public static String getJdkPath() { return jdkPath; }
-
-    public static void setJdkPath(String jdkPath) { AppState.jdkPath = jdkPath; }
+    public static String getJdkPath() {
+        return jdkPath;
+    }
 }

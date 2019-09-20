@@ -19,14 +19,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doCallRealMethod;
-import static org.mockito.Mockito.when;
 
 public class SaveNodeApiQueriesTest {
 
     WalletApp walletApp;
-    @Mock
-    AppStateInitializer mockInitializer;
     @Mock
     NodeApiServiceImpl mockNodeApiService;
 
@@ -40,10 +36,7 @@ public class SaveNodeApiQueriesTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        doCallRealMethod().when(mockInitializer).loadProperties();
         mockNodeApiService.nodeClient = NodeThriftApiClient.getInstance("127.0.0.1", 9090);
-        when(mockInitializer.initializeNodeApiService()).thenReturn(mockNodeApiService);
-        doCallRealMethod().when(mockInitializer).init();
     }
 
     @Ignore
@@ -67,7 +60,6 @@ public class SaveNodeApiQueriesTest {
         NodeApiService mock = mockNodeApiService;
 
         walletApp = new WalletApp();
-        walletApp.appStateInitializer = mockInitializer;
         startForm = VistaNavigator.WELCOME;
         runApp();
     }

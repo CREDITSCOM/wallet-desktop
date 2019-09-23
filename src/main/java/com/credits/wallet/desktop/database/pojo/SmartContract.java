@@ -18,6 +18,6 @@ public class SmartContract {
     String deployer;
     @DatabaseField(columnName = "source_code")
     String sourceCode;
-    @DatabaseField(columnName = "time_stamp_creation")
-    long timeStampCreation;
+    @DatabaseField(columnName = "time_stamp")
+    long timeStamp;
 }

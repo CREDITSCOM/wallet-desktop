@@ -6,10 +6,18 @@ import com.j256.ormlite.core.dao.DaoManager;
 import com.j256.ormlite.core.support.ConnectionSource;
 import com.j256.ormlite.core.table.TableUtils;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 
+import java.io.IOException;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Objects;
 
+import static com.credits.wallet.desktop.utils.GeneralUtils.getResourceAsStream;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+@Slf4j
 public class DatabaseHelper {
 
     private final String databaseUrl;
@@ -20,8 +28,13 @@ public class DatabaseHelper {
         this.databaseUrl = databaseUrl;
     }
 
-    public void connect() throws SQLException {
-        connectionSource = new JdbcConnectionSource(databaseUrl);
+    public void connect() {
+        try {
+            connectionSource = new JdbcConnectionSource(databaseUrl);
+        } catch (SQLException e) {
+            log.error("can't connect to database. Reason {}", e.getMessage());
+            throw new RuntimeException(e);
+        }
     }
 
     public void createTable(Class<?> clazz) throws SQLException {
@@ -47,5 +60,20 @@ public class DatabaseHelper {
             smartContracts = DaoManager.createDao(connectionSource, SmartContract.class);
         }
         return smartContracts;
+    }
+
+    public void createDatabaseSchemeIfNotExist() {
+        try (var connection = DriverManager.getConnection(databaseUrl);
+             var statement = connection.createStatement()) {
+            var sqlFileStream = IOUtils.toString(getResourceAsStream("/sql/create_db.sql"), UTF_8);
+            final var sqlRequests = sqlFileStream.split(";");
+            for (var sql : sqlRequests) {
+                statement.executeUpdate(sql);
+            }
+
+        } catch (SQLException | IOException e) {
+            log.error("can't create database scheme. Reason {}", e.getMessage());
+            throw new RuntimeException(e);
+        }
     }
 }

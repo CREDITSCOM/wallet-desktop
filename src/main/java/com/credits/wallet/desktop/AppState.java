@@ -9,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,12 +46,8 @@ public class AppState {
 
     private static void initializeDatabase(String databasePath) {
         database = new DatabaseHelper(URI_SCHEME_JDBC_SQLITE + databasePath);
-        try {
-            database.connect();
-        } catch (SQLException e) {
-            log.error("can't connect to database. Reason {}", e.getMessage());
-            throw new RuntimeException(e);
-        }
+        database.connect();
+        database.createDatabaseSchemeIfNotExist();
     }
 
     public static NodeApiService getNodeApiService() {

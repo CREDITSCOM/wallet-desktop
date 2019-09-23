@@ -42,4 +42,9 @@ class DatabaseHelperTest {
 
         assertEquals(contract, returnedContract);
     }
+
+    @Test
+    void createDatabaseSchemeIfNotExist() {
+        db.createDatabaseSchemeIfNotExist();
+    }
 }

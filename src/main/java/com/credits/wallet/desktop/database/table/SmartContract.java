@@ -1,4 +1,4 @@
-package com.credits.wallet.desktop.database.pojo;
+package com.credits.wallet.desktop.database.table;
 
 
 import com.j256.ormlite.core.field.DatabaseField;

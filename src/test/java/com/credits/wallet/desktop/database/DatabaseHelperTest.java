@@ -1,9 +1,9 @@
 package com.credits.wallet.desktop.database;
 
-import com.credits.wallet.desktop.database.pojo.SmartContract;
-import com.credits.wallet.desktop.database.pojo.Transaction;
-import com.credits.wallet.desktop.database.pojo.TransactionType;
-import com.credits.wallet.desktop.database.pojo.Wallet;
+import com.credits.wallet.desktop.database.table.SmartContract;
+import com.credits.wallet.desktop.database.table.Transaction;
+import com.credits.wallet.desktop.database.table.TransactionType;
+import com.credits.wallet.desktop.database.table.Wallet;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,9 +55,12 @@ class DatabaseHelperTest extends DatabaseTest {
         final var address1 = new Wallet("address1");
         final var address2 = new Wallet("address2");
         final var transactionType = new TransactionType();
-        final var transaction1 = new Transaction(address1, address2, "1.00", System.currentTimeMillis(), "from address1 to address2", transactionType);
-        final var transaction2 = new Transaction(address2, address1, "1.00", System.currentTimeMillis(), "from address2 to address1", transactionType);
-        final var transaction3 = new Transaction(address2, address1, "2.00", System.currentTimeMillis(), "from address2 to address1", transactionType);
+        final var transaction1 = new Transaction(address1, address2, "1.00", System.currentTimeMillis(), "from address1 to address2",
+                                                 transactionType, "0.0");
+        final var transaction2 = new Transaction(address2, address1, "1.00", System.currentTimeMillis(), "from address2 to address1",
+                                                 transactionType, "0.1");
+        final var transaction3 = new Transaction(address2, address1, "2.00", System.currentTimeMillis(), "from address2 to address1",
+                                                 transactionType, "0.2");
 
         db.keepTransaction(transaction1);
         db.keepTransaction(transaction2);

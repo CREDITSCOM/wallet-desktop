@@ -1,4 +1,4 @@
-package com.credits.wallet.desktop.database.pojo;
+package com.credits.wallet.desktop.database.table;
 
 import com.j256.ormlite.core.field.DatabaseField;
 import com.j256.ormlite.core.table.DatabaseTable;
@@ -23,18 +23,22 @@ public class Transaction {
     String userData;
     @DatabaseField(foreign = true, foreignAutoCreate = true, foreignAutoRefresh = true, columnName = "type")
     TransactionType type;
+    @DatabaseField
+    String blockNumber;
 
     public Transaction(Wallet sender,
                        Wallet receiver,
                        String fee,
                        long timestamp,
                        String userData,
-                       TransactionType type) {
+                       TransactionType type,
+                       String blockNumber) {
         this.sender = sender;
         this.receiver = receiver;
         this.fee = fee;
         this.timestamp = timestamp;
         this.userData = userData;
         this.type = type;
+        this.blockNumber = blockNumber;
     }
 }

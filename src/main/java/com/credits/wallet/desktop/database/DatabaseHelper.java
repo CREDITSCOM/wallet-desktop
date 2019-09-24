@@ -1,9 +1,9 @@
 package com.credits.wallet.desktop.database;
 
 import com.credits.general.exception.CreditsException;
-import com.credits.wallet.desktop.database.pojo.SmartContract;
-import com.credits.wallet.desktop.database.pojo.Transaction;
-import com.credits.wallet.desktop.database.pojo.Wallet;
+import com.credits.wallet.desktop.database.table.SmartContract;
+import com.credits.wallet.desktop.database.table.Transaction;
+import com.credits.wallet.desktop.database.table.Wallet;
 import com.j256.ormlite.core.dao.Dao;
 import com.j256.ormlite.core.support.ConnectionSource;
 import com.j256.ormlite.core.table.TableUtils;

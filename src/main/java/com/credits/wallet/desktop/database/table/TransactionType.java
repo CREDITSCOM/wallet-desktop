@@ -14,4 +14,8 @@ public class TransactionType {
 
     @DatabaseField
     String type = "unknown";
+
+    public TransactionType(String type) {
+        this.type = type;
+    }
 }

@@ -3,21 +3,25 @@ package com.credits.wallet.desktop.database.pojo;
 
 import com.j256.ormlite.core.field.DatabaseField;
 import com.j256.ormlite.core.table.DatabaseTable;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 @DatabaseTable(tableName = "smart_contract")
 public class SmartContract {
-    @DatabaseField(id = true)
-    String address;
-    @DatabaseField
-    String deployer;
+    @DatabaseField(generatedId = true)
+    long id;
+    @DatabaseField(foreign = true, foreignAutoCreate = true, foreignAutoRefresh = true)
+    Wallet wallet;
     @DatabaseField(columnName = "source_code")
     String sourceCode;
     @DatabaseField(columnName = "time_stamp")
     long timeStamp;
+
+    public SmartContract(Wallet wallet, String sourceCode, long timeStamp) {
+        this.wallet = wallet;
+        this.sourceCode = sourceCode;
+        this.timeStamp = timeStamp;
+    }
 }

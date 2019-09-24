@@ -46,7 +46,7 @@ public class AppState {
 
     private static void initializeDatabase(String databasePath) {
         database = new DatabaseHelper(URI_SCHEME_JDBC_SQLITE + databasePath);
-        database.connect();
+        database.connectAndInitialize();
         database.createDatabaseSchemeIfNotExist();
     }
 

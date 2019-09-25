@@ -76,8 +76,4 @@ class DatabaseHelperTest extends DatabaseTest {
         assertEquals(transaction3, transactionsFromAddress2.get(1));
     }
 
-    @Test
-    void createDatabaseSchemeIfNotExist() {
-        db.createDatabaseSchemeIfNotExist();
-    }
 }

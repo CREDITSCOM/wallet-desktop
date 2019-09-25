@@ -4,6 +4,7 @@ import com.j256.ormlite.core.field.DatabaseField;
 import com.j256.ormlite.core.table.DatabaseTable;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 @Data
 @NoArgsConstructor
@@ -28,14 +29,14 @@ public class Transaction {
     @DatabaseField
     String blockNumber;
 
-    public Transaction(Wallet sender,
-                       Wallet receiver,
-                       String amount,
-                       String fee,
+    public Transaction(@NonNull Wallet sender,
+                       @NonNull Wallet receiver,
+                       @NonNull String amount,
+                       @NonNull String fee,
                        long timestamp,
-                       String userData,
-                       TransactionType type,
-                       String blockNumber) {
+                       @NonNull String userData,
+                       @NonNull TransactionType type,
+                       @NonNull String blockNumber) {
         this.sender = sender;
         this.receiver = receiver;
         this.amount = amount;

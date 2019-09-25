@@ -3,6 +3,7 @@ package com.credits.wallet.desktop.database;
 import com.credits.general.exception.CreditsException;
 import com.credits.wallet.desktop.database.table.SmartContract;
 import com.credits.wallet.desktop.database.table.Transaction;
+import com.credits.wallet.desktop.database.table.TransactionType;
 import com.credits.wallet.desktop.database.table.Wallet;
 import com.j256.ormlite.core.dao.Dao;
 import com.j256.ormlite.core.support.ConnectionSource;
@@ -16,6 +17,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 
+import static com.credits.general.util.Utils.rethrowUnchecked;
 import static com.credits.wallet.desktop.utils.GeneralUtils.getResourceAsStream;
 import static com.j256.ormlite.core.dao.DaoManager.createDao;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -47,7 +49,7 @@ public class DatabaseHelper {
     }
 
     public void createTable(Class<?> clazz) throws SQLException {
-        TableUtils.createTable(connectionSource, clazz);
+        TableUtils.createTableIfNotExists(connectionSource, clazz);
     }
 
     public void keepSmartContract(SmartContract smartContract) throws SQLException {
@@ -63,8 +65,8 @@ public class DatabaseHelper {
         return smartContractDao.queryForId(walletAddresses.get(0).getId());
     }
 
-    public void keepTransaction(Transaction transaction) throws SQLException {
-        transactionDao.createIfNotExists(transaction);
+    public void keepTransaction(Transaction transaction) {
+        rethrowUnchecked(() -> transactionDao.createIfNotExists(transaction));
     }
 
     public List<Transaction> getTransactionsByAddress(String address) throws SQLException {
@@ -82,10 +84,18 @@ public class DatabaseHelper {
                : getTransactionQb.leftJoin(getWalletQb).query();
     }
 
-    public void createDatabaseSchemeIfNotExist() {
+    public void createTablesIfNotExist(){
+        rethrowUnchecked(() -> {
+            createTable(Wallet.class);
+            createTable(TransactionType.class);
+            createTable(Transaction.class);
+        });
+    }
+
+    public void createSchemeFromResourceFile(String path) {
         try (var connection = DriverManager.getConnection(databaseUrl);
              var statement = connection.createStatement()) {
-            var sqlFileStream = IOUtils.toString(getResourceAsStream("/sql/create_db.sql"), UTF_8);
+            var sqlFileStream = IOUtils.toString(getResourceAsStream(path), UTF_8);
             final var sqlRequests = sqlFileStream.split(";");
             for (var sql : sqlRequests) {
                 statement.executeUpdate(sql);

@@ -3,6 +3,8 @@ package com.credits.wallet.desktop;
 import com.credits.client.node.service.NodeApiService;
 import com.credits.client.node.service.NodeApiServiceImpl;
 import com.credits.wallet.desktop.database.DatabaseHelper;
+import com.credits.wallet.desktop.service.DatabaseService;
+import com.credits.wallet.desktop.service.DatabaseServiceImpl;
 import com.credits.wallet.desktop.utils.ApplicationProperties;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +33,7 @@ public class AppState {
     private static String pwd;
     private static Stage primaryStage;
     private static String jdkPath;
-    private static DatabaseHelper database;
+    private static DatabaseService database;
 
     private AppState() {
     }
@@ -45,9 +47,8 @@ public class AppState {
     }
 
     private static void initializeDatabase(String databasePath) {
-        database = new DatabaseHelper(URI_SCHEME_JDBC_SQLITE + databasePath);
-        database.connectAndInitialize();
-        database.createDatabaseSchemeIfNotExist();
+        final var dbHelper = new DatabaseHelper(URI_SCHEME_JDBC_SQLITE + databasePath);
+        database = new DatabaseServiceImpl(nodeApiService, dbHelper);
     }
 
     public static NodeApiService getNodeApiService() {
@@ -94,7 +95,7 @@ public class AppState {
         return jdkPath;
     }
 
-    public static DatabaseHelper getDatabase() {
+    public static DatabaseService getDatabase() {
         return database;
     }
 }

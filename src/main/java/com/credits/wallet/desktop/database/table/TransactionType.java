@@ -4,6 +4,7 @@ import com.j256.ormlite.core.field.DatabaseField;
 import com.j256.ormlite.core.table.DatabaseTable;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 @Data
 @NoArgsConstructor
@@ -15,7 +16,7 @@ public class TransactionType {
     @DatabaseField
     String type = "unknown";
 
-    public TransactionType(String type) {
+    public TransactionType(@NonNull String type) {
         this.type = type;
     }
 }

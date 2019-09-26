@@ -2,17 +2,25 @@ package com.credits.wallet.desktop.database.table;
 
 import com.j256.ormlite.core.field.DatabaseField;
 import com.j256.ormlite.core.table.DatabaseTable;
-import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @DatabaseTable(tableName = "application_metadata")
+@Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class ApplicationMetadata {
 
-    @DatabaseField(foreign = true, foreignAutoRefresh = true)
-    public Wallet account;
+    @DatabaseField(generatedId = true)
+    private int id;
+
+    @DatabaseField(index = true, foreign = true, foreignAutoRefresh = true)
+    private Wallet account;
 
     @DatabaseField(columnName = "amount_transactions")
-    public int amountTransactions;
+    private int amountTransactions;
+
+    public ApplicationMetadata(Wallet account, int amountTransactions) {
+        this.account = account;
+        this.amountTransactions = amountTransactions;
+    }
 }

@@ -92,9 +92,10 @@ public class DatabaseHelper {
     public ApplicationMetadata getOrCreateApplicationMetadata(String address) {
         return rethrowWithDetailMessage(() -> {
             final var wallet = getOrCreateWallet(address);
-            var metadata = applicationMetadataDao.queryForId(wallet);
+            var metadata = applicationMetadataDao.queryBuilder().where().eq("account_id", wallet.getId()).queryForFirst();
             if (metadata == null) {
                 metadata = new ApplicationMetadata(wallet, 0);
+                applicationMetadataDao.create(metadata);
             }
             return metadata;
         });

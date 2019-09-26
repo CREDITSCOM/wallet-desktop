@@ -643,7 +643,7 @@ public class SmartContractController extends AbstractController {
 
                 if (!contractResult.isSetV_void()) {
                     Object resultObj = VariantConverter.toObject(contractResult);
-                    message = "Result: " + resultObj.toString() + "\n\n" + message;
+                    message = "Result: " + (resultObj == null ? "null" : resultObj.toString()) + "\n\n" + message;
                 }
 
                 showPlatformInfo(message);

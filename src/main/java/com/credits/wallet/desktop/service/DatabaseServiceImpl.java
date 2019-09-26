@@ -52,11 +52,12 @@ public class DatabaseServiceImpl implements DatabaseService {
         final var fee = "";
         final var timeCreation = 0L;
         final var transactionType = new TransactionType(transactionData.getType().toString());
-        final var blockNumber = transactionData.getBlockId();
+        final var blockNumber = transactionData.getBlockNumber();
+        final var trxIndex = transactionData.getIndexIntoBlock();
         final var userData = transactionData.getCommentBytes() != null
                              ? new String(transactionData.getCommentBytes(), StandardCharsets.UTF_8)
                              : "";
 
-        return new Transaction(sender, receiver, amount, fee, timeCreation, userData, transactionType, blockNumber);
+        return new Transaction(sender, receiver, amount, fee, timeCreation, userData, transactionType, blockNumber, trxIndex);
     }
 }

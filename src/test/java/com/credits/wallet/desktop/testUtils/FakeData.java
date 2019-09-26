@@ -67,7 +67,6 @@ public class FakeData {
                     new TransactionIdData(0, 0)
             );
             transactionData01.setMethod("method01");
-            transactionData01.setBlockId("blockId01");
             transactionData01.setSmartInfo(smartInfo01);
             transactionData01.setType(TransactionTypeData.TT_SmartDeploy);
             SmartContractInvocationData smartContractInvocationData01 = new SmartContractInvocationData(null,
@@ -85,7 +84,6 @@ public class FakeData {
                     )
             );
             transactionData02.setMethod("method01");
-            transactionData02.setBlockId("blockId01");
             SmartContractInvocationData smartContractInvocationData02 = new SmartContractInvocationData(null,
                     null, null, null,false
             );
@@ -191,60 +189,55 @@ public class FakeData {
             }
 
             TransactionFlowData transaction0 = new TransactionFlowData();
-            transaction0.setId(0L);
+            transaction0.setInnerId(0L);
             transaction0.setSource(byteAddress);
             transaction0.setTarget(byteAddress);
             transaction0.setAmount(new BigDecimal(99.999));
-            transaction0.setCurrency((byte)1);
             TransactionFlowData transaction1 = new TransactionFlowData();
-            transaction1.setId(1L);
+            transaction1.setInnerId(1L);
             transaction1.setSource(byteAddress);
             transaction1.setTarget(byteAddress);
             transaction1.setAmount(new BigDecimal(99.999));
-            transaction1.setCurrency((byte)1);
             TransactionFlowData transaction2 = new TransactionFlowData();
-            transaction2.setId(2L);
+            transaction2.setInnerId(2L);
             transaction2.setSource(byteAddress);
             transaction2.setTarget(byteAddress);
             transaction2.setAmount(new BigDecimal(99.999));
-            transaction2.setCurrency((byte)1);
             TransactionFlowData transaction3 = new TransactionFlowData();
-            transaction3.setId(3L);
+            transaction3.setInnerId(3L);
             transaction3.setSource(byteAddress);
             transaction3.setTarget(byteAddress);
             transaction3.setAmount(new BigDecimal(99.999));
-            transaction3.setCurrency((byte)1);
             TransactionFlowData transaction4 = new TransactionFlowData();
-            transaction4.setId(4L);
+            transaction4.setInnerId(4L);
             transaction4.setSource(byteAddress);
             transaction4.setTarget(byteAddress);
             transaction4.setAmount(new BigDecimal(99.999));
-            transaction4.setCurrency((byte)1);
 
 
-            UnapprovedTransactionData transactionRoundData0 = new UnapprovedTransactionData(String.valueOf(transaction0.getId()),
+            UnapprovedTransactionData transactionRoundData0 = new UnapprovedTransactionData(String.valueOf(transaction0.getInnerId()),
                     GeneralConverter.encodeToBASE58(transaction0.getSource()), GeneralConverter.encodeToBASE58(transaction0.getTarget()),
                     transaction0.getAmount().toString(), String.valueOf(transaction0.getCurrency()), null, null);
-            UnapprovedTransactionData transactionRoundData1 = new UnapprovedTransactionData(String.valueOf(transaction1.getId()),
+            UnapprovedTransactionData transactionRoundData1 = new UnapprovedTransactionData(String.valueOf(transaction1.getInnerId()),
                 GeneralConverter.encodeToBASE58(transaction1.getSource()), GeneralConverter.encodeToBASE58(transaction1.getTarget()),
                     transaction1.getAmount().toString(),String.valueOf(transaction1.getCurrency()), null, null);
-            UnapprovedTransactionData transactionRoundData2 = new UnapprovedTransactionData(String.valueOf(transaction2.getId()),
+            UnapprovedTransactionData transactionRoundData2 = new UnapprovedTransactionData(String.valueOf(transaction2.getInnerId()),
                 GeneralConverter.encodeToBASE58(transaction2.getSource()), GeneralConverter.encodeToBASE58(transaction2.getTarget()),
                     transaction2.getAmount().toString(),String.valueOf(transaction2.getCurrency()), null, null);
-            UnapprovedTransactionData transactionRoundData3 = new UnapprovedTransactionData(String.valueOf(transaction3.getId()),
+            UnapprovedTransactionData transactionRoundData3 = new UnapprovedTransactionData(String.valueOf(transaction3.getInnerId()),
                 GeneralConverter.encodeToBASE58(transaction3.getSource()), GeneralConverter.encodeToBASE58(transaction3.getTarget()),
                     transaction3.getAmount().toString(),String.valueOf(transaction3.getCurrency()), null, null);
-            UnapprovedTransactionData transactionRoundData4 = new UnapprovedTransactionData(String.valueOf(transaction4.getId()),
+            UnapprovedTransactionData transactionRoundData4 = new UnapprovedTransactionData(String.valueOf(transaction4.getInnerId()),
                 GeneralConverter.encodeToBASE58(transaction4.getSource()), GeneralConverter.encodeToBASE58(transaction4.getTarget()),
                     transaction4.getAmount().toString(),String.valueOf(transaction4.getCurrency()), null, null);
 
             ConcurrentHashMap<Long, UnapprovedTransactionData> map = new ConcurrentHashMap<>();
 
-            map.put(transaction0.getId(), transactionRoundData0);
-            map.put(transaction1.getId(), transactionRoundData1);
-            map.put(transaction2.getId(), transactionRoundData2);
-            map.put(transaction3.getId(), transactionRoundData3);
-            map.put(transaction4.getId(), transactionRoundData4);
+            map.put(transaction0.getInnerId(), transactionRoundData0);
+            map.put(transaction1.getInnerId(), transactionRoundData1);
+            map.put(transaction2.getInnerId(), transactionRoundData2);
+            map.put(transaction3.getInnerId(), transactionRoundData3);
+            map.put(transaction4.getInnerId(), transactionRoundData4);
 
             Map<Long, TransactionStateData> transactionStateDataMap = new HashMap<>();
             transactionStateDataMap.put(0L, TransactionStateData.INPROGRESS);

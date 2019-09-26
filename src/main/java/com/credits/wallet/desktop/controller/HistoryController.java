@@ -86,17 +86,17 @@ public class HistoryController extends AbstractController {
                 List<TransactionTabRow> approvedList = new ArrayList<>();
                 transactionsList.forEach(transactionData -> {
                     TransactionTabRow tableRow = new TransactionTabRow();
-                    tableRow.setId(transactionData.getId());
+                    tableRow.setId(transactionData.getInnerId());
                     tableRow.setAmount(GeneralConverter.toString(transactionData.getAmount()));
                     tableRow.setSource(GeneralConverter.encodeToBASE58(transactionData.getSource()));
                     tableRow.setTarget(GeneralConverter.encodeToBASE58(transactionData.getTarget()));
-                    tableRow.setBlockId(transactionData.getBlockId());
+                    tableRow.setBlockId(transactionData.getBlockNumber() + "." + transactionData.getIndexIntoBlock());
                     tableRow.setType(getTransactionDescType(transactionData));
                     tableRow.setMethod(transactionData.getMethod());
                     tableRow.setParams(transactionData.getParams());
                     approvedList.add(tableRow);
 
-                    session.unapprovedTransactions.remove(transactionData.getId());
+                    session.unapprovedTransactions.remove(transactionData.getInnerId());
                 });
                 refreshTableViewItems(approvedTableView, approvedList);
             }
@@ -131,7 +131,7 @@ public class HistoryController extends AbstractController {
                 session.unapprovedTransactions.forEach((id, value) -> {
 
                     if (transactionsList.stream().anyMatch(transactionData ->
-                                                                   transactionData.getId() == id)) {
+                                                                   transactionData.getInnerId() == id)) {
                         session.unapprovedTransactions.remove(id);
                     } else {
                         TransactionTabRow tableRow = new TransactionTabRow();

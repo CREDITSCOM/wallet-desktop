@@ -356,12 +356,11 @@ public class SmartContractController extends AbstractController {
                     SmartTransInfoData smartInfo = transactionData.getSmartInfo();
                     SmartContractTransactionTabRow tableRow = new SmartContractTransactionTabRow();
 
-                    tableRow.setId(transactionData.getId());
-                    tableRow.setBlockId(transactionData.getBlockId());
+                    tableRow.setId(transactionData.getInnerId());
                     tableRow.setAmount(GeneralConverter.toString(transactionData.getAmount()));
                     tableRow.setSource(encodeToBASE58(transactionData.getSource()));
                     tableRow.setTarget(encodeToBASE58(transactionData.getTarget()));
-                    tableRow.setBlockId(transactionData.getBlockId());
+                    tableRow.setBlockId(transactionData.getBlockNumber() + "." + transactionData.getIndexIntoBlock());
                     tableRow.setType(getTransactionDescType(transactionData));
                     tableRow.setMethod(transactionData.getMethod());
                     tableRow.setParams(transactionData.getParams());
@@ -398,7 +397,7 @@ public class SmartContractController extends AbstractController {
                     if (smartContractTransactionDataList.stream().anyMatch(smartContractTransactionData -> {
                         SmartTransInfoData smartInfo = smartContractTransactionData.getSmartInfo();
                         if (smartInfo == null) { return true; }
-                        return smartContractTransactionData.getId() == id && !smartInfo.isSmartState();
+                        return smartContractTransactionData.getInnerId() == id && !smartInfo.isSmartState();
                     })) {
                         session.unapprovedTransactions.remove(id);
                     } else {

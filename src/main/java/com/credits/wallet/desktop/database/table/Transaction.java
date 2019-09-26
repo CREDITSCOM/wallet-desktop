@@ -27,7 +27,9 @@ public class Transaction {
     @DatabaseField(foreign = true, foreignAutoCreate = true, foreignAutoRefresh = true, columnName = "type")
     TransactionType type;
     @DatabaseField
-    String blockNumber;
+    long blockNumber;
+    @DatabaseField
+    int indexIntoBlock;
 
     public Transaction(@NonNull Wallet sender,
                        @NonNull Wallet receiver,
@@ -36,7 +38,8 @@ public class Transaction {
                        long timestamp,
                        @NonNull String userData,
                        @NonNull TransactionType type,
-                       @NonNull String blockNumber) {
+                       long blockNumber,
+                       int indexIntoBlock) {
         this.sender = sender;
         this.receiver = receiver;
         this.amount = amount;
@@ -45,5 +48,6 @@ public class Transaction {
         this.userData = userData;
         this.type = type;
         this.blockNumber = blockNumber;
+        this.indexIntoBlock = indexIntoBlock;
     }
 }

@@ -6,6 +6,7 @@ import com.credits.general.util.Callback;
 import com.credits.general.util.GeneralConverter;
 import com.credits.wallet.desktop.AppState;
 import com.credits.wallet.desktop.VistaNavigator;
+import com.credits.wallet.desktop.service.DatabaseService;
 import com.credits.wallet.desktop.struct.CoinTabRow;
 import com.credits.wallet.desktop.utils.FormUtils;
 import javafx.application.Platform;
@@ -33,8 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.credits.client.node.service.NodeApiServiceImpl.async;
-import static com.credits.wallet.desktop.AppState.CREDITS_DECIMAL;
-import static com.credits.wallet.desktop.AppState.CREDITS_TOKEN_NAME;
+import static com.credits.wallet.desktop.AppState.*;
 import static com.credits.wallet.desktop.utils.NumberUtils.checkCorrectInputNumber;
 import static org.apache.commons.lang3.StringUtils.repeat;
 
@@ -75,6 +75,7 @@ public class WalletController extends AbstractController {
     private Label actualOfferedMaxFeeLabel;
     @FXML
     public TextField usdSmart;
+    private DatabaseService database;
 
     @FXML
     private void handleLogout() {
@@ -280,6 +281,10 @@ public class WalletController extends AbstractController {
 
         initializeTable(coinsTableView);
         updateCoins(coinsTableView);
+
+        database = getDatabase();
+        database.keepLogin(session.account);
+        database.updateTransactionsOnAddress(session.account);
 
         publicWalletID.setText(session.account);
 

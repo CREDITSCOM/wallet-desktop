@@ -34,8 +34,8 @@ class DatabaseHelperTest extends DatabaseTest {
         db = new DatabaseHelper("jdbc:sqlite:" + dbPath.toString());
         db.connectAndInitialize();
         processingTestAnnotations(testInfo);
-        address1 = new Wallet("address1");
-        address2 = new Wallet("address2");
+        address1 = db.getOrCreateWallet("address1");
+        address2 = db.getOrCreateWallet("address2");
         transactionType = new TransactionType();
         transaction1 = new Transaction(address1,
                                        address2,
@@ -44,7 +44,8 @@ class DatabaseHelperTest extends DatabaseTest {
                                        System.currentTimeMillis(),
                                        "from address1 to address2",
                                        transactionType,
-                                       "0.0");
+                                       0,
+                                       0);
         transaction2 = new Transaction(address2,
                                        address1,
                                        "1.00",
@@ -52,7 +53,8 @@ class DatabaseHelperTest extends DatabaseTest {
                                        System.currentTimeMillis(),
                                        "from address2 to address1",
                                        transactionType,
-                                       "0.1");
+                                       0,
+                                       1);
         transaction3 = new Transaction(address2,
                                        address1,
                                        "2.00",
@@ -60,7 +62,8 @@ class DatabaseHelperTest extends DatabaseTest {
                                        System.currentTimeMillis(),
                                        "from address2 to address1",
                                        transactionType,
-                                       "0.2");
+                                       0,
+                                       2);
     }
 
     @AfterEach
@@ -85,9 +88,9 @@ class DatabaseHelperTest extends DatabaseTest {
     @Test
     @CreateTables({Wallet.class, Transaction.class, TransactionType.class})
     void testingTransactionManipulationMethods() throws SQLException {
-        db.keepTransaction(transaction1);
-        db.keepTransaction(transaction2);
-        db.keepTransaction(transaction3);
+        db.createIfNotExistsTransaction(transaction1);
+        db.createIfNotExistsTransaction(transaction2);
+        db.createIfNotExistsTransaction(transaction3);
 
         final var transactionsFromAddress1 = db.getTransactionsByAddress(address1.getAddress());
         assertEquals(1, transactionsFromAddress1.size());
@@ -102,8 +105,8 @@ class DatabaseHelperTest extends DatabaseTest {
     @Test
     @CreateTables({Wallet.class, Transaction.class, TransactionType.class})
     void keepSameTransactionTwice() {
-        db.keepTransaction(transaction1);
-        db.keepTransaction(transaction1);
+        db.createIfNotExistsTransaction(transaction1);
+        db.createIfNotExistsTransaction(transaction1);
     }
 
 }

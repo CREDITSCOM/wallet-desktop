@@ -27,6 +27,14 @@ public class DatabaseServiceImpl implements DatabaseService {
     }
 
     @Override
+    public void keepLogin(String address) {
+        runAsync(() -> {
+           final var metadata = database.getOrCreateApplicationMetadata(address);
+           database.updateApplicationMetadata(metadata);
+        });
+    }
+
+    @Override
     public void updateTransactionsOnAddress(String address) {
         runAsync(() -> {
             var receivedTrx = 0;
@@ -46,8 +54,8 @@ public class DatabaseServiceImpl implements DatabaseService {
     }
 
     private Transaction createTransactionDBEntity(TransactionData transactionData) {
-        final var sender = database.createWalletIfNotExist(encodeToBASE58(transactionData.getSource()));
-        final var receiver = database.createWalletIfNotExist(encodeToBASE58(transactionData.getTarget()));
+        final var sender = database.getOrCreateWallet(encodeToBASE58(transactionData.getSource()));
+        final var receiver = database.getOrCreateWallet(encodeToBASE58(transactionData.getTarget()));
         final var amount = transactionData.getAmount().toString();
         final var fee = "";
         final var timeCreation = 0L;

@@ -28,7 +28,8 @@ class DatabaseServiceTest {
 
         database = new DatabaseServiceImpl(mockNodeApi, mockDBHelper);
         mockTransaction = new TransactionData(0L, new byte[0], new byte[0], BigDecimal.ONE, TransactionTypeData.TT_Normal);
-        mockTransaction.setBlockId("000.1");
+        mockTransaction.setBlockNumber(0);
+        mockTransaction.setIndexIntoBlock(1);
         address = "address";
     }
 

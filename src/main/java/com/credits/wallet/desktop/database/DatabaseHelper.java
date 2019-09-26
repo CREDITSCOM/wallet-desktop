@@ -1,10 +1,7 @@
 package com.credits.wallet.desktop.database;
 
 import com.credits.general.exception.CreditsException;
-import com.credits.wallet.desktop.database.table.SmartContract;
-import com.credits.wallet.desktop.database.table.Transaction;
-import com.credits.wallet.desktop.database.table.TransactionType;
-import com.credits.wallet.desktop.database.table.Wallet;
+import com.credits.wallet.desktop.database.table.*;
 import com.j256.ormlite.core.dao.Dao;
 import com.j256.ormlite.core.support.ConnectionSource;
 import com.j256.ormlite.core.table.TableUtils;
@@ -32,6 +29,7 @@ public class DatabaseHelper {
     private Dao<SmartContract, Long> smartContractDao;
     private Dao<Wallet, Long> walletDao;
     private Dao<Transaction, Long> transactionDao;
+    private Dao<ApplicationMetadata, Wallet> applicationMetadataDao;
 
     public DatabaseHelper(String databaseUrl) {
         this.databaseUrl = databaseUrl;
@@ -43,6 +41,7 @@ public class DatabaseHelper {
             smartContractDao = createDao(connectionSource, SmartContract.class);
             walletDao = createDao(connectionSource, Wallet.class);
             transactionDao = createDao(connectionSource, Transaction.class);
+            applicationMetadataDao = createDao(connectionSource, ApplicationMetadata.class);
 
         } catch (SQLException e) {
             log.error("can't connect to database. Reason {}", e.getMessage());
@@ -67,7 +66,7 @@ public class DatabaseHelper {
         return smartContractDao.queryForId(walletAddresses.get(0).getId());
     }
 
-    public void keepTransaction(Transaction transaction) {
+    public void createIfNotExistsTransaction(Transaction transaction) {
         rethrowWithDetailMessage(() -> transactionDao.createIfNotExists(transaction));
     }
 
@@ -75,7 +74,7 @@ public class DatabaseHelper {
         rethrowWithDetailMessage(() -> transactionDao.create(transactionList));
     }
 
-    public Wallet createWalletIfNotExist(String address) {
+    public Wallet getOrCreateWallet(String address) {
         return rethrowWithDetailMessage(() -> {
             var wallet = findWalletByAddress(address);
             if (wallet == null) {
@@ -83,6 +82,21 @@ public class DatabaseHelper {
                 walletDao.create(wallet);
             }
             return wallet;
+        });
+    }
+
+    public void updateApplicationMetadata(ApplicationMetadata metadata) {
+        rethrowWithDetailMessage(() -> applicationMetadataDao.update(metadata));
+    }
+
+    public ApplicationMetadata getOrCreateApplicationMetadata(String address) {
+        return rethrowWithDetailMessage(() -> {
+            final var wallet = getOrCreateWallet(address);
+            var metadata = applicationMetadataDao.queryForId(wallet);
+            if (metadata == null) {
+                metadata = new ApplicationMetadata(wallet, 0);
+            }
+            return metadata;
         });
     }
 
@@ -110,6 +124,7 @@ public class DatabaseHelper {
             createTable(Wallet.class);
             createTable(TransactionType.class);
             createTable(Transaction.class);
+            createTable(ApplicationMetadata.class);
         });
     }
 
@@ -145,6 +160,8 @@ public class DatabaseHelper {
     }
 
     public static class DatabaseHelperException extends CreditsException {
+
+        private static final long serialVersionUID = 372937201016271310L;
 
         public DatabaseHelperException(String errorMessage) {
             super(errorMessage);

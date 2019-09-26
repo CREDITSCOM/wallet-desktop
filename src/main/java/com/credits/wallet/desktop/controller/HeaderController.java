@@ -115,7 +115,6 @@ public class HeaderController implements Initializable {
 
     private void changeDelay(int delay) {
         flag = future.cancel(false);
-        System.out.println("Synchronized is 100% : " + flag);
         future = headerExecService.scheduleWithFixedDelay(runnable, delay, delay, TimeUnit.SECONDS);
     }
 

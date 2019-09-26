@@ -12,9 +12,9 @@ import lombok.NonNull;
 public class Transaction {
     @DatabaseField(generatedId = true)
     long id;
-    @DatabaseField(columnName = "sender_id", foreign = true, foreignAutoCreate = true, foreignAutoRefresh = true)
+    @DatabaseField(columnName = "sender_id", foreign = true, foreignAutoRefresh = true)
     Wallet sender;
-    @DatabaseField(columnName = "receiver_id", foreign = true, foreignAutoCreate = true, foreignAutoRefresh = true)
+    @DatabaseField(columnName = "receiver_id", foreign = true, foreignAutoRefresh = true)
     Wallet receiver;
     @DatabaseField
     String amount;

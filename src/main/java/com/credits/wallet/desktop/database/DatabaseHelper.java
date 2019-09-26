@@ -16,11 +16,13 @@ import java.io.IOException;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.concurrent.Callable;
 
-import static com.credits.general.util.Utils.rethrowUnchecked;
+import static com.credits.general.util.Utils.CheckedRunnable;
 import static com.credits.wallet.desktop.utils.GeneralUtils.getResourceAsStream;
 import static com.j256.ormlite.core.dao.DaoManager.createDao;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 @Slf4j
 public class DatabaseHelper {
@@ -66,7 +68,26 @@ public class DatabaseHelper {
     }
 
     public void keepTransaction(Transaction transaction) {
-        rethrowUnchecked(() -> transactionDao.createIfNotExists(transaction));
+        rethrowWithDetailMessage(() -> transactionDao.createIfNotExists(transaction));
+    }
+
+    public void keepTransactionsList(List<Transaction> transactionList) {
+        rethrowWithDetailMessage(() -> transactionDao.create(transactionList));
+    }
+
+    public Wallet createWalletIfNotExist(String address) {
+        return rethrowWithDetailMessage(() -> {
+            var wallet = findWalletByAddress(address);
+            if (wallet == null) {
+                wallet = new Wallet(address);
+                walletDao.create(wallet);
+            }
+            return wallet;
+        });
+    }
+
+    private Wallet findWalletByAddress(String address) throws SQLException {
+        return walletDao.queryBuilder().where().eq("address", address).queryForFirst();
     }
 
     public List<Transaction> getTransactionsByAddress(String address) throws SQLException {
@@ -84,8 +105,8 @@ public class DatabaseHelper {
                : getTransactionQb.leftJoin(getWalletQb).query();
     }
 
-    public void createTablesIfNotExist(){
-        rethrowUnchecked(() -> {
+    public void createTablesIfNotExist() {
+        rethrowWithDetailMessage(() -> {
             createTable(Wallet.class);
             createTable(TransactionType.class);
             createTable(Transaction.class);
@@ -104,6 +125,22 @@ public class DatabaseHelper {
         } catch (SQLException | IOException e) {
             log.error("can't create database scheme. Reason {}", e.getMessage());
             throw new RuntimeException(e);
+        }
+    }
+
+    private static void rethrowWithDetailMessage(CheckedRunnable runnable) {
+        try {
+            runnable.run();
+        } catch (Exception e) {
+            throw new DatabaseHelperException(getRootCauseMessage(e));
+        }
+    }
+
+    private static <R> R rethrowWithDetailMessage(Callable<R> callable) {
+        try {
+            return callable.call();
+        } catch (Exception e) {
+            throw new DatabaseHelperException(getRootCauseMessage(e));
         }
     }
 

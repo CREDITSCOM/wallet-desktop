@@ -5,7 +5,6 @@ import com.credits.client.node.service.NodeApiService;
 import com.credits.wallet.desktop.database.DatabaseHelper;
 import com.credits.wallet.desktop.database.table.Transaction;
 import com.credits.wallet.desktop.database.table.TransactionType;
-import com.credits.wallet.desktop.database.table.Wallet;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
@@ -13,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import static com.credits.general.util.GeneralConverter.encodeToBASE58;
 import static java.lang.Math.min;
 import static java.util.concurrent.CompletableFuture.runAsync;
+import static java.util.stream.Collectors.toList;
 
 @Slf4j
 public class DatabaseServiceImpl implements DatabaseService {
@@ -36,7 +36,8 @@ public class DatabaseServiceImpl implements DatabaseService {
                 receivedTrx += response.getTransactionsList().size();
                 totalTrx = response.getAmountTotalTransactions();
                 final var transactions = response.getTransactionsList();
-                transactions.forEach(it -> database.keepTransaction(createTransactionDBEntity(it)));
+                final var entities = transactions.stream().map(this::createTransactionDBEntity).collect(toList());
+                database.keepTransactionsList(entities);
             }
         }).whenComplete((__, exception) -> {
             if (exception != null) {
@@ -46,8 +47,8 @@ public class DatabaseServiceImpl implements DatabaseService {
     }
 
     private Transaction createTransactionDBEntity(TransactionData transactionData) {
-        final var sender = new Wallet(encodeToBASE58(transactionData.getSource()));
-        final var receiver = new Wallet(encodeToBASE58(transactionData.getTarget()));
+        final var sender = database.createWalletIfNotExist(encodeToBASE58(transactionData.getSource()));
+        final var receiver = database.createWalletIfNotExist(encodeToBASE58(transactionData.getTarget()));
         final var amount = transactionData.getAmount().toString();
         final var fee = "";
         final var timeCreation = 0L;

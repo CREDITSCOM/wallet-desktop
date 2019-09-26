@@ -10,7 +10,7 @@ import lombok.NonNull;
 public class Wallet {
     @DatabaseField(generatedId = true)
     long id;
-    @DatabaseField(unique = true, indexName = "ix_wallet_address")
+    @DatabaseField(uniqueIndex = true, uniqueIndexName = "ix_wallet_address")
     String address;
 
     public Wallet(@NonNull String address) {

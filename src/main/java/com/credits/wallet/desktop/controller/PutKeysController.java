@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.credits.wallet.desktop.AppState.*;
+import static com.credits.wallet.desktop.utils.FormUtils.showError;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 
@@ -210,7 +211,7 @@ public class PutKeysController extends AbstractController {
                 privateKeyErrorLabel.setText("Private key error");
             }
             LOGGER.error("failed!", e);
-            //return;
+            return;
         }
         try {
             byte[] publicKeyByteArr = GeneralConverter.decodeFromBASE58(pubKey);
@@ -222,11 +223,13 @@ public class PutKeysController extends AbstractController {
                 privateKeyErrorLabel.setText("Public key error");
             }
             LOGGER.error("failed!", e);
-            //return;
+            return;
         }
 
         if (validateKeys(pubKey, privKey)) {
             VistaNavigator.loadVista(VistaNavigator.WALLET);
+        } else {
+            showError("Invalid public or private key");
         }
     }
 

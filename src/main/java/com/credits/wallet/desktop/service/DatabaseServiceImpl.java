@@ -39,10 +39,9 @@ public class DatabaseServiceImpl implements DatabaseService {
                 final var entities = transactions.stream().map(this::createTransactionDBEntity).collect(toList());
                 database.keepTransactionsList(entities);
             }
-        }).whenComplete((__, exception) -> {
-            if (exception != null) {
-                log.error("error occurred while update transactions table. Reason: {}", exception.getMessage());
-            }
+        }).exceptionally(exception -> {
+            log.error("error occurred while update transactions table. Reason: {}", exception.getMessage());
+            return null;
         });
     }
 

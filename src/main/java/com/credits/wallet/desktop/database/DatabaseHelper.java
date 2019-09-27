@@ -58,12 +58,13 @@ public class DatabaseHelper {
     }
 
     public SmartContract getSmartContract(String address) throws SQLException {
+        final var walletQueryBuilder = walletDao.queryBuilder();
         final var walletAddresses = walletDao.queryForEq("address", address);
-        if (walletAddresses.size() == 0) {
+        if (walletAddresses == null || walletAddresses.size() == 0) {
             throw new DatabaseHelperException("smart contract with address \"" + address + "\" not found");
         }
 
-        return smartContractDao.queryForId(walletAddresses.get(0).getId());
+        return smartContractDao.queryBuilder().leftJoin(walletQueryBuilder).queryForFirst();
     }
 
     public void createIfNotExistsTransaction(Transaction transaction) {

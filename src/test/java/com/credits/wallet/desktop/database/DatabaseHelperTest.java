@@ -1,9 +1,6 @@
 package com.credits.wallet.desktop.database;
 
-import com.credits.wallet.desktop.database.table.SmartContract;
-import com.credits.wallet.desktop.database.table.Transaction;
-import com.credits.wallet.desktop.database.table.TransactionType;
-import com.credits.wallet.desktop.database.table.Wallet;
+import com.credits.wallet.desktop.database.table.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -73,7 +70,7 @@ class DatabaseHelperTest extends DatabaseTest {
     }
 
     @Test
-    @CreateTables({Wallet.class, SmartContract.class})
+    @CreateTables({ApplicationMetadata.class, Wallet.class, SmartContract.class})
     void createTableThenAddAndGetSmartContract() throws SQLException {
         final var wallet = new Wallet("someAddress");
         final var contract = new SmartContract(wallet, "someCode", System.currentTimeMillis());

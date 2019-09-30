@@ -44,7 +44,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static com.credits.client.node.service.NodeApiServiceImpl.handleCallback;
+import static com.credits.general.util.Callback.handleCallback;
 import static com.credits.general.util.GeneralConverter.compilationPackageToByteCodeObjectsData;
 import static com.credits.wallet.desktop.utils.DeployControllerUtils.*;
 import static com.credits.wallet.desktop.utils.sourcecode.codeArea.autocomplete.CreditsProposalsPopup.DEFAULT_STANDARD_CLASS;

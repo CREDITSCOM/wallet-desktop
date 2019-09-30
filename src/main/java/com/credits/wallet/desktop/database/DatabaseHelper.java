@@ -119,19 +119,21 @@ public class DatabaseHelper {
         return walletDao.queryBuilder().where().eq("address", address).queryForFirst();
     }
 
-    public List<Transaction> getTransactionsByAddress(String address) throws SQLException {
-        return getTransactionsByAddress(address, -1L);
+    public List<Transaction> getTransactionsByAddress(String address) {
+        return rethrowWithDetailMessage(() -> getTransactionsByAddress(address, -1L));
     }
 
-    public List<Transaction> getTransactionsByAddress(String address, long limit) throws SQLException {
-        final var getWalletQb = walletDao.queryBuilder();
-        final var getTransactionQb = transactionDao.queryBuilder();
+    public List<Transaction> getTransactionsByAddress(String address, long limit) {
+        return  rethrowWithDetailMessage(() -> {
+            final var getWalletQb = walletDao.queryBuilder();
+            final var getTransactionQb = transactionDao.queryBuilder();
 
-        getWalletQb.where().eq("address", address);
+            getWalletQb.where().eq("address", address);
 
-        return limit > 0
-               ? getTransactionQb.leftJoin(getWalletQb).limit(limit).query()
-               : getTransactionQb.leftJoin(getWalletQb).query();
+            return limit > 0
+                   ? getTransactionQb.leftJoin(getWalletQb).limit(limit).query()
+                   : getTransactionQb.leftJoin(getWalletQb).query();
+        });
     }
 
     public void createTablesIfNotExist() {

@@ -15,10 +15,10 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static com.credits.client.node.service.NodeApiServiceImpl.handleCallback;
 import static com.credits.client.node.util.TransactionIdCalculateUtils.CalcTransactionIdSourceTargetResult;
 import static com.credits.client.node.util.TransactionIdCalculateUtils.calcTransactionIdSourceTarget;
 import static com.credits.general.thrift.generated.Variant._Fields.V_STRING;
+import static com.credits.general.util.Callback.handleCallback;
 import static com.credits.general.util.Utils.threadPool;
 import static com.credits.wallet.desktop.utils.ApiUtils.createSmartContractTransaction;
 import static java.util.Arrays.asList;

@@ -7,11 +7,14 @@ import com.credits.wallet.desktop.database.table.Transaction;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.BiConsumer;
 
 import static com.credits.general.util.GeneralConverter.encodeToBASE58;
 import static java.lang.Math.min;
 import static java.util.concurrent.CompletableFuture.runAsync;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.stream.Collectors.toList;
 
 @Slf4j
@@ -65,6 +68,21 @@ public class DatabaseServiceImpl implements DatabaseService {
             log.error("error occurred while update transactions table. Reason: {}", exception.getMessage());
             return null;
         });
+    }
+
+    @Override
+    public void getTransactions(String address,  long limit,
+                                BiConsumer<? super List<Transaction>, ? super Throwable> handleTransactionsResult) {
+        supplyAsync(() -> {
+            final List<Transaction> transactions;
+            try {
+                lock.lock();
+                transactions = database.getTransactionsByAddress(address, limit);
+            } finally {
+                lock.unlock();
+            }
+            return transactions;
+        }).whenComplete(handleTransactionsResult);
     }
 
     private Transaction createTransactionDBEntity(TransactionData transactionData) {

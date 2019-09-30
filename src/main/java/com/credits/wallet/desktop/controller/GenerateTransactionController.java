@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import static com.credits.client.node.service.NodeApiServiceImpl.handleCallback;
+import static com.credits.general.util.Callback.handleCallback;
 import static com.credits.general.util.Utils.threadPool;
 import static com.credits.wallet.desktop.AppState.CREDITS_TOKEN_NAME;
 import static com.credits.wallet.desktop.AppState.NODE_ERROR;

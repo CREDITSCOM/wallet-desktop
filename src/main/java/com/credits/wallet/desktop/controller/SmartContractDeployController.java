@@ -36,9 +36,9 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 
-import static com.credits.client.node.service.NodeApiServiceImpl.handleCallback;
 import static com.credits.client.node.util.TransactionIdCalculateUtils.getCalcTransactionIdSourceTargetResult;
 import static com.credits.client.node.util.TransactionIdCalculateUtils.getIdWithoutFirstTwoBits;
+import static com.credits.general.util.Callback.handleCallback;
 import static com.credits.general.util.GeneralConverter.*;
 import static com.credits.general.util.Utils.threadPool;
 import static com.credits.wallet.desktop.AppState.NODE_ERROR;

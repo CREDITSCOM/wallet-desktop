@@ -43,9 +43,9 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 import static com.credits.client.node.service.NodeApiServiceImpl.async;
-import static com.credits.client.node.service.NodeApiServiceImpl.handleCallback;
 import static com.credits.client.node.util.TransactionIdCalculateUtils.calcTransactionIdSourceTarget;
 import static com.credits.general.thrift.generated.Variant._Fields.V_STRING;
+import static com.credits.general.util.Callback.handleCallback;
 import static com.credits.general.util.GeneralConverter.*;
 import static com.credits.general.util.Utils.rethrowUnchecked;
 import static com.credits.general.util.Utils.threadPool;

@@ -56,11 +56,11 @@ public class HistoryController extends AbstractController {
         tableView.getColumns().get(3).setCellValueFactory(new PropertyValueFactory<>("amount"));
         tableView.getColumns().get(4).setCellValueFactory(new PropertyValueFactory<>("type"));
         tableView.setOnMousePressed(event -> {
-            if ((event.isPrimaryButtonDown()|| event.getButton() == MouseButton.PRIMARY) && event.getClickCount() == 2) {
+            if ((event.isPrimaryButtonDown() || event.getButton() == MouseButton.PRIMARY) && event.getClickCount() == 2) {
                 TransactionTabRow tabRow = tableView.getSelectionModel().getSelectedItem();
                 if (tabRow != null) {
                     HashMap<String, Object> params = new HashMap<>();
-                    params.put("selectedTransactionRow",tabRow);
+                    params.put("selectedTransactionRow", tabRow);
                     VistaNavigator.showFormModal(VistaNavigator.TRANSACTION, params);
                 }
             }
@@ -69,7 +69,7 @@ public class HistoryController extends AbstractController {
 
     private void fillUnapprovedTable() {
         async(() -> AppState.getNodeApiService().getTransactions(session.account, FIRST_TRANSACTION_NUMBER, INIT_PAGE_SIZE),
-                handleUnapprovedTransactions());
+              handleUnapprovedTransactions());
     }
 
     private void fillApprovedTable() {
@@ -84,8 +84,8 @@ public class HistoryController extends AbstractController {
             public void onSuccess(List<Transaction> transactionList) throws CreditsException {
 
                 List<TransactionTabRow> approvedList = new ArrayList<>();
-                TransactionTabRow tableRow = new TransactionTabRow();
                 transactionList.forEach(transactionTable -> {
+                    TransactionTabRow tableRow = new TransactionTabRow();
                     tableRow.setId(transactionTable.getId());
                     tableRow.setAmount(GeneralConverter.toString(transactionTable.getAmount()));
                     tableRow.setSource(transactionTable.getSender().getAddress());
@@ -103,53 +103,16 @@ public class HistoryController extends AbstractController {
 
             @Override
             public void onError(Throwable e) {
-
+                LOGGER.error(e.getMessage());
+                if (e instanceof NodeClientException) {
+                    FormUtils.showError(NODE_ERROR);
+                } else {
+                    FormUtils.showError(ERR_GETTING_TRANSACTION_HISTORY);
+                }
             }
         };
     }
 
-//    private Callback<List<TransactionData>> handleApprovedTransactions() {
-//        return new Callback<List<TransactionData>>() {
-//
-//            @Override
-//            public void onSuccess(List<TransactionData> transactionsList) throws CreditsException {
-//
-//                List<TransactionTabRow> approvedList = new ArrayList<>();
-//                transactionsList.forEach(transactionData -> {
-//                    TransactionTabRow tableRow = new TransactionTabRow();
-//                    tableRow.setId(transactionData.getInnerId());
-//                    tableRow.setAmount(GeneralConverter.toString(transactionData.getAmount()));
-//                    tableRow.setSource(GeneralConverter.encodeToBASE58(transactionData.getSource()));
-//                    tableRow.setTarget(GeneralConverter.encodeToBASE58(transactionData.getTarget()));
-//                    tableRow.setBlockId(transactionData.getBlockNumber() + "." + transactionData.getIndexIntoBlock());
-//                    tableRow.setType(getTransactionDescType(transactionData));
-//                    tableRow.setMethod(transactionData.getMethod());
-//                    tableRow.setParams(transactionData.getParams());
-//                    approvedList.add(tableRow);
-//
-//                    session.unapprovedTransactions.remove(transactionData.getInnerId());
-//                });
-//                refreshTableViewItems(approvedTableView, approvedList);
-//            }
-//
-//            private void refreshTableViewItems(TableView<TransactionTabRow> tableView, List<TransactionTabRow> itemList) {
-//                Platform.runLater(() -> {
-//                    tableView.getItems().clear();
-//                    tableView.getItems().addAll(itemList);
-//                });
-//            }
-//
-//            @Override
-//            public void onError(Throwable e) {
-//                LOGGER.error(e.getMessage());
-//                if (e instanceof NodeClientException) {
-//                    FormUtils.showError(NODE_ERROR);
-//                } else {
-//                    FormUtils.showError(ERR_GETTING_TRANSACTION_HISTORY);
-//                }
-//            }
-//        };
-//    }
 
     private Callback<List<TransactionData>> handleUnapprovedTransactions() {
         return new Callback<>() {

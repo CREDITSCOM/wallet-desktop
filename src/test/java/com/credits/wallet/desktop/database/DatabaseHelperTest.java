@@ -23,7 +23,6 @@ class DatabaseHelperTest extends DatabaseTest {
     private Transaction transaction1;
     private Transaction transaction2;
     private Transaction transaction3;
-    private TransactionType transactionType;
 
     @BeforeEach
     void setUp(TestInfo testInfo) throws IOException {
@@ -33,7 +32,7 @@ class DatabaseHelperTest extends DatabaseTest {
         processingTestAnnotations(testInfo);
         address1 = db.getOrCreateWallet("address1");
         address2 = db.getOrCreateWallet("address2");
-        transactionType = new TransactionType();
+        TransactionType transactionType = db.getOrCreateTransactionType("TT_NORMAL");
         transaction1 = new Transaction(address1,
                                        address2,
                                        "1.00",
@@ -70,7 +69,7 @@ class DatabaseHelperTest extends DatabaseTest {
     }
 
     @Test
-    @CreateTables({ApplicationMetadata.class, Wallet.class, SmartContract.class})
+    @CreateTables({ApplicationMetadata.class, Wallet.class, SmartContract.class, TransactionType.class})
     void createTableThenAddAndGetSmartContract() throws SQLException {
         final var wallet = new Wallet("someAddress");
         final var contract = new SmartContract(wallet, "someCode", System.currentTimeMillis());

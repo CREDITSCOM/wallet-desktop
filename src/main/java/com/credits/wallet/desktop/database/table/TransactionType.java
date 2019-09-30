@@ -13,10 +13,10 @@ public class TransactionType {
     @DatabaseField(generatedId = true)
     long  id;
 
-    @DatabaseField
-    String type = "unknown";
+    @DatabaseField(uniqueIndex = true,  indexName = "ix_transaction_type")
+    String name = "unknown";
 
-    public TransactionType(@NonNull String type) {
-        this.type = type;
+    public TransactionType(@NonNull String name) {
+        this.name = name;
     }
 }

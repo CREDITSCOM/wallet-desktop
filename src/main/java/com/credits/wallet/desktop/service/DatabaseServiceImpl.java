@@ -4,7 +4,6 @@ import com.credits.client.node.pojo.TransactionData;
 import com.credits.client.node.service.NodeApiService;
 import com.credits.wallet.desktop.database.DatabaseHelper;
 import com.credits.wallet.desktop.database.table.Transaction;
-import com.credits.wallet.desktop.database.table.TransactionType;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
@@ -74,7 +73,7 @@ public class DatabaseServiceImpl implements DatabaseService {
         final var amount = transactionData.getAmount().toString();
         final var maxFee = transactionData.getMaxFee();
         final var timeCreation = transactionData.getTimeCreation();
-        final var transactionType = new TransactionType(transactionData.getType().toString());
+        final var transactionType = database.getOrCreateTransactionType(transactionData.getType().toString());
         final var blockNumber = transactionData.getBlockNumber();
         final var trxIndex = transactionData.getIndexIntoBlock();
         final var userData = transactionData.getCommentBytes() != null

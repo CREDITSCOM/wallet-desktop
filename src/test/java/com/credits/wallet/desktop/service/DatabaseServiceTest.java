@@ -6,6 +6,7 @@ import com.credits.client.node.pojo.TransactionsAndAmountData;
 import com.credits.client.node.service.NodeApiService;
 import com.credits.wallet.desktop.database.DatabaseHelper;
 import com.credits.wallet.desktop.database.table.ApplicationMetadata;
+import com.credits.wallet.desktop.database.table.TransactionType;
 import com.credits.wallet.desktop.database.table.Wallet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,6 +38,7 @@ class DatabaseServiceTest {
         Wallet wallet = new Wallet(address);
         when(mockDBHelper.getOrCreateApplicationMetadata(any())).thenReturn(new ApplicationMetadata(wallet, 0));
         when(mockDBHelper.getOrCreateWallet(any())).thenReturn(wallet);
+        when(mockDBHelper.getOrCreateTransactionType(any())).thenReturn(new TransactionType("TT_NORMAL"));
     }
 
     @Test

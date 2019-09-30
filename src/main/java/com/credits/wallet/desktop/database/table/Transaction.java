@@ -24,7 +24,7 @@ public class Transaction {
     private long timeCreation;
     @DatabaseField(columnName = "user_data")
     private String userData;
-    @DatabaseField(foreign = true, foreignAutoCreate = true, foreignAutoRefresh = true)
+    @DatabaseField(foreign = true, foreignAutoRefresh = true)
     private TransactionType type;
     @DatabaseField
     private long blockNumber;

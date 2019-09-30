@@ -30,6 +30,7 @@ public class DatabaseHelper {
     private Dao<Wallet, Long> walletDao;
     private Dao<Transaction, Long> transactionDao;
     private Dao<ApplicationMetadata, Wallet> applicationMetadataDao;
+    private Dao<TransactionType, ?> transactionTypeDao;
 
     public DatabaseHelper(String databaseUrl) {
         this.databaseUrl = databaseUrl;
@@ -42,6 +43,7 @@ public class DatabaseHelper {
             walletDao = createDao(connectionSource, Wallet.class);
             transactionDao = createDao(connectionSource, Transaction.class);
             applicationMetadataDao = createDao(connectionSource, ApplicationMetadata.class);
+            transactionTypeDao = createDao(connectionSource, TransactionType.class);
 
         } catch (SQLException e) {
             log.error("can't connect to database. Reason {}", e.getMessage());
@@ -99,6 +101,17 @@ public class DatabaseHelper {
                 applicationMetadataDao.create(metadata);
             }
             return metadata;
+        });
+    }
+
+    public TransactionType getOrCreateTransactionType(String type) {
+        return rethrowWithDetailMessage(() -> {
+            var transactionType = transactionTypeDao.queryBuilder().where().eq("name", type).queryForFirst();
+            if (transactionType == null) {
+                transactionType = new TransactionType(type);
+                transactionTypeDao.create(transactionType);
+            }
+            return transactionType;
         });
     }
 

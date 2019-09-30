@@ -2,14 +2,17 @@ package com.credits.wallet.desktop.service;
 
 import com.credits.client.node.pojo.TransactionData;
 import com.credits.client.node.service.NodeApiService;
+import com.credits.general.util.Callback;
 import com.credits.wallet.desktop.database.DatabaseHelper;
 import com.credits.wallet.desktop.database.table.Transaction;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.BiConsumer;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Supplier;
 
 import static com.credits.general.util.GeneralConverter.encodeToBASE58;
 import static java.lang.Math.min;
@@ -21,68 +24,56 @@ import static java.util.stream.Collectors.toList;
 public class DatabaseServiceImpl implements DatabaseService {
     final NodeApiService nodeApiService;
     final DatabaseHelper database;
-    private final ReentrantLock lock;
+    private final ReadWriteLock lock;
 
     public DatabaseServiceImpl(NodeApiService nodeApiService, DatabaseHelper database) {
         this.nodeApiService = nodeApiService;
         this.database = database;
         database.connectAndInitialize();
         database.createTablesIfNotExist();
-        lock = new ReentrantLock(true);
+        lock = new ReentrantReadWriteLock(true);
     }
 
     @Override
     public void keepLogin(String address) {
-        runAsync(() -> {
-            try {
-                lock.lock();
-                database.getOrCreateApplicationMetadata(address);
-            } finally {
-                lock.unlock();
-            }
-        });
+        runAsync(() -> writeLock(() -> database.getOrCreateApplicationMetadata(address)));
     }
 
     @Override
     public void updateTransactionsOnAddress(String address) {
-        runAsync(() -> {
-            try {
-                lock.lock();
-                final var metadata = database.getOrCreateApplicationMetadata(address);
-                var receivedTrx = metadata.getAmountTransactions();
-                var totalTrx = metadata.getAmountTransactions();
-                for (var diff = 10; diff > 0; diff = min(totalTrx - receivedTrx, 100)) {
-                    final var response = nodeApiService.getTransactionsAndAmount(address, receivedTrx, diff);
-                    receivedTrx += response.getTransactionsList().size();
-                    totalTrx = response.getAmountTotalTransactions();
-                    final var transactions = response.getTransactionsList();
-                    final var entities = transactions.stream().map(this::createTransactionDBEntity).collect(toList());
-                    database.keepTransactionsList(entities);
-                }
-                metadata.setAmountTransactions(receivedTrx);
-                database.updateApplicationMetadata(metadata);
-            } finally {
-                lock.unlock();
+        runAsync(writeLock(() -> {
+            final var metadata = database.getOrCreateApplicationMetadata(address);
+            var receivedTrx = metadata.getAmountTransactions();
+            var totalTrx = metadata.getAmountTransactions();
+            for (var diff = 10; diff > 0; diff = min(totalTrx - receivedTrx, 100)) {
+                final var response = nodeApiService.getTransactionsAndAmount(address, receivedTrx, diff);
+                receivedTrx += response.getTransactionsList().size();
+                totalTrx = response.getAmountTotalTransactions();
+                final var transactions = response.getTransactionsList();
+                final var entities = transactions.stream().map(this::createTransactionDBEntity).collect(toList());
+                database.keepTransactionsList(entities);
             }
-        }).exceptionally(exception -> {
+            metadata.setAmountTransactions(receivedTrx);
+            database.updateApplicationMetadata(metadata);
+        })).exceptionally(exception -> {
             log.error("error occurred while update transactions table. Reason: {}", exception.getMessage());
             return null;
         });
     }
 
     @Override
-    public void getTransactions(String address,  long limit,
-                                BiConsumer<? super List<Transaction>, ? super Throwable> handleTransactionsResult) {
-        supplyAsync(() -> {
-            final List<Transaction> transactions;
-            try {
-                lock.lock();
-                transactions = database.getTransactionsByAddress(address, limit);
-            } finally {
-                lock.unlock();
-            }
-            return transactions;
-        }).whenComplete(handleTransactionsResult);
+    public void getLastTransactions(String address, long limit, Callback<List<Transaction>> handleResult) {
+        asyncRead(() -> database.getLastTransactions(address, 0, limit), handleResult);
+    }
+
+    @Override
+    public void getLastTransactions(String address, long blockNumber, long limit, Callback<List<Transaction>> handleResult) {
+        asyncRead(() -> database.getLastTransactions(address, blockNumber, limit), handleResult);
+    }
+
+    @Override
+    public void getTransactions(String address, Callback<List<Transaction>> handleResult) {
+        asyncRead(() -> database.getTransactionsByAddress(address), handleResult);
     }
 
     private Transaction createTransactionDBEntity(TransactionData transactionData) {
@@ -99,5 +90,51 @@ public class DatabaseServiceImpl implements DatabaseService {
                              : "";
 
         return new Transaction(sender, receiver, amount, maxFee, timeCreation, userData, transactionType, blockNumber, trxIndex);
+    }
+
+    private <R> void asyncRead(Supplier<R> supplier, Callback<R> handleResult) {
+        supplyAsync(readLock(supplier)).whenComplete(Callback.handleCallback(handleResult));
+    }
+
+    private <R> void asyncWrite(Supplier<R> supplier, Callback<R> handleResult) {
+        supplyAsync(writeLock(supplier)).whenComplete(Callback.handleCallback(handleResult));
+    }
+
+    private <R> Supplier<R> writeLock(Supplier<R> supplier) {
+        return wrapLock(lock.writeLock(), supplier);
+    }
+
+    private <R> Supplier<R> readLock(Supplier<R> supplier) {
+        return wrapLock(lock.readLock(), supplier);
+    }
+
+    private Runnable writeLock(Runnable runnable) {
+        return wrapLock(lock.writeLock(), runnable);
+    }
+
+    private Runnable readLock(Runnable runnable) {
+        return wrapLock(lock.readLock(), runnable);
+    }
+
+    private Runnable wrapLock(Lock lock, Runnable runnable) {
+        return () -> {
+            try {
+                lock.lock();
+                runnable.run();
+            } finally {
+                lock.unlock();
+            }
+        };
+    }
+
+    private <R> Supplier<R> wrapLock(Lock lock, Supplier<R> supplier) {
+        return () -> {
+            try {
+                lock.lock();
+                return supplier.get();
+            } finally {
+                lock.unlock();
+            }
+        };
     }
 }

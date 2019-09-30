@@ -1,9 +1,9 @@
 package com.credits.wallet.desktop.service;
 
+import com.credits.general.util.Callback;
 import com.credits.wallet.desktop.database.table.Transaction;
 
 import java.util.List;
-import java.util.function.BiConsumer;
 
 public interface DatabaseService {
 
@@ -11,6 +11,9 @@ public interface DatabaseService {
 
     void updateTransactionsOnAddress(String address);
 
-    void getTransactions(String address, long limit,
-                         BiConsumer<? super List<Transaction>, ? super Throwable> handleTransactionsResult);
+    void getTransactions(String address, Callback<List<Transaction>> handleResult);
+
+    void getLastTransactions(String address, long limit, Callback<List<Transaction>> handleResult);
+
+    void getLastTransactions(String address, long beginBlock, long limit, Callback<List<Transaction>> handleResult);
 }

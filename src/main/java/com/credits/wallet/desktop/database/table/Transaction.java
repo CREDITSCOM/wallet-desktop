@@ -26,7 +26,7 @@ public class Transaction {
     private String userData;
     @DatabaseField(foreign = true, foreignAutoRefresh = true)
     private TransactionType type;
-    @DatabaseField
+    @DatabaseField(columnName = "block_number", index = true)
     private long blockNumber;
     @DatabaseField
     private int indexIntoBlock;

@@ -124,7 +124,7 @@ public class DatabaseHelper {
     }
 
     public List<Transaction> getTransactionsByAddress(String address, long limit) {
-        return  rethrowWithDetailMessage(() -> {
+        return rethrowWithDetailMessage(() -> {
             final var getWalletQb = walletDao.queryBuilder();
             final var getTransactionQb = transactionDao.queryBuilder();
 
@@ -133,6 +133,22 @@ public class DatabaseHelper {
             return limit > 0
                    ? getTransactionQb.leftJoin(getWalletQb).limit(limit).query()
                    : getTransactionQb.leftJoin(getWalletQb).query();
+        });
+    }
+
+    public List<Transaction> getLastTransactions(String address, long blockNumber, long limit) {
+        return rethrowWithDetailMessage(() -> {
+            final var walletQb = walletDao.queryBuilder();
+            final var transactionQb = transactionDao.queryBuilder().orderBy("block_number", false);
+
+            walletQb.where().eq("address", address);
+            if (blockNumber > 0) {
+                transactionQb.where().ge("block_number", blockNumber);
+            }
+
+            return limit > 0
+                   ? transactionQb.leftJoin(walletQb).limit(limit).query()
+                   : transactionQb.leftJoin(walletQb).query();
         });
     }
 

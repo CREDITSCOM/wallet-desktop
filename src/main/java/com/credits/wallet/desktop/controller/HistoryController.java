@@ -7,6 +7,7 @@ import com.credits.general.util.Callback;
 import com.credits.general.util.GeneralConverter;
 import com.credits.wallet.desktop.AppState;
 import com.credits.wallet.desktop.VistaNavigator;
+import com.credits.wallet.desktop.database.table.Transaction;
 import com.credits.wallet.desktop.struct.TransactionTabRow;
 import com.credits.wallet.desktop.utils.FormUtils;
 import javafx.application.Platform;
@@ -24,7 +25,6 @@ import java.util.Map;
 
 import static com.credits.client.node.service.NodeApiServiceImpl.async;
 import static com.credits.wallet.desktop.AppState.NODE_ERROR;
-import static com.credits.wallet.desktop.utils.FormUtils.getTransactionDescType;
 
 
 public class HistoryController extends AbstractController {
@@ -32,10 +32,10 @@ public class HistoryController extends AbstractController {
     private final int INIT_PAGE_SIZE = 100;
     private final int FIRST_TRANSACTION_NUMBER = 0;
     private final static Logger LOGGER = LoggerFactory.getLogger(HistoryController.class);
+    private long lastBlockNumber;
 
     @FXML
     private TableView<TransactionTabRow> approvedTableView;
-
     @FXML
     private TableView<TransactionTabRow> unapprovedTableView;
 
@@ -46,7 +46,7 @@ public class HistoryController extends AbstractController {
         initTable(unapprovedTableView);
 
         fillApprovedTable();
-        fillUnapprovedTable();
+//        fillUnapprovedTable();
     }
 
     private void initTable(TableView<TransactionTabRow> tableView) {
@@ -73,52 +73,83 @@ public class HistoryController extends AbstractController {
     }
 
     private void fillApprovedTable() {
-        async(() -> AppState.getNodeApiService().getTransactions(session.account, FIRST_TRANSACTION_NUMBER, INIT_PAGE_SIZE),
-            handleApprovedTransactions());
+//        async(() -> AppState.getNodeApiService().getTransactions(session.account, FIRST_TRANSACTION_NUMBER, INIT_PAGE_SIZE),
+//            handleApprovedTransactions());
+        AppState.getDatabase().getLastTransactions(session.account, lastBlockNumber, INIT_PAGE_SIZE, handleApprovedTransactions());
     }
 
-    private Callback<List<TransactionData>> handleApprovedTransactions() {
-        return new Callback<List<TransactionData>>() {
-
+    private Callback<List<Transaction>> handleApprovedTransactions() {
+        return new Callback<>() {
             @Override
-            public void onSuccess(List<TransactionData> transactionsList) throws CreditsException {
+            public void onSuccess(List<Transaction> transactionList) throws CreditsException {
 
                 List<TransactionTabRow> approvedList = new ArrayList<>();
-                transactionsList.forEach(transactionData -> {
-                    TransactionTabRow tableRow = new TransactionTabRow();
-                    tableRow.setId(transactionData.getInnerId());
-                    tableRow.setAmount(GeneralConverter.toString(transactionData.getAmount()));
-                    tableRow.setSource(GeneralConverter.encodeToBASE58(transactionData.getSource()));
-                    tableRow.setTarget(GeneralConverter.encodeToBASE58(transactionData.getTarget()));
-                    tableRow.setBlockId(transactionData.getBlockNumber() + "." + transactionData.getIndexIntoBlock());
-                    tableRow.setType(getTransactionDescType(transactionData));
-                    tableRow.setMethod(transactionData.getMethod());
-                    tableRow.setParams(transactionData.getParams());
+                TransactionTabRow tableRow = new TransactionTabRow();
+                transactionList.forEach(transactionTable -> {
+                    tableRow.setId(transactionTable.getId());
+                    tableRow.setAmount(GeneralConverter.toString(transactionTable.getAmount()));
+                    tableRow.setSource(transactionTable.getSender().getAddress());
+                    tableRow.setTarget(transactionTable.getReceiver().getAddress());
+                    tableRow.setBlockId(transactionTable.getBlockNumber() + "." + transactionTable.getIndexIntoBlock());
+                    tableRow.setType(transactionTable.getType().getName());
                     approvedList.add(tableRow);
 
-                    session.unapprovedTransactions.remove(transactionData.getInnerId());
                 });
-                refreshTableViewItems(approvedTableView, approvedList);
-            }
-
-            private void refreshTableViewItems(TableView<TransactionTabRow> tableView, List<TransactionTabRow> itemList) {
                 Platform.runLater(() -> {
-                    tableView.getItems().clear();
-                    tableView.getItems().addAll(itemList);
+                    approvedTableView.getItems().clear();
+                    approvedTableView.getItems().addAll(approvedList);
                 });
             }
 
             @Override
             public void onError(Throwable e) {
-                LOGGER.error(e.getMessage());
-                if (e instanceof NodeClientException) {
-                    FormUtils.showError(NODE_ERROR);
-                } else {
-                    FormUtils.showError(ERR_GETTING_TRANSACTION_HISTORY);
-                }
+
             }
         };
     }
+
+//    private Callback<List<TransactionData>> handleApprovedTransactions() {
+//        return new Callback<List<TransactionData>>() {
+//
+//            @Override
+//            public void onSuccess(List<TransactionData> transactionsList) throws CreditsException {
+//
+//                List<TransactionTabRow> approvedList = new ArrayList<>();
+//                transactionsList.forEach(transactionData -> {
+//                    TransactionTabRow tableRow = new TransactionTabRow();
+//                    tableRow.setId(transactionData.getInnerId());
+//                    tableRow.setAmount(GeneralConverter.toString(transactionData.getAmount()));
+//                    tableRow.setSource(GeneralConverter.encodeToBASE58(transactionData.getSource()));
+//                    tableRow.setTarget(GeneralConverter.encodeToBASE58(transactionData.getTarget()));
+//                    tableRow.setBlockId(transactionData.getBlockNumber() + "." + transactionData.getIndexIntoBlock());
+//                    tableRow.setType(getTransactionDescType(transactionData));
+//                    tableRow.setMethod(transactionData.getMethod());
+//                    tableRow.setParams(transactionData.getParams());
+//                    approvedList.add(tableRow);
+//
+//                    session.unapprovedTransactions.remove(transactionData.getInnerId());
+//                });
+//                refreshTableViewItems(approvedTableView, approvedList);
+//            }
+//
+//            private void refreshTableViewItems(TableView<TransactionTabRow> tableView, List<TransactionTabRow> itemList) {
+//                Platform.runLater(() -> {
+//                    tableView.getItems().clear();
+//                    tableView.getItems().addAll(itemList);
+//                });
+//            }
+//
+//            @Override
+//            public void onError(Throwable e) {
+//                LOGGER.error(e.getMessage());
+//                if (e instanceof NodeClientException) {
+//                    FormUtils.showError(NODE_ERROR);
+//                } else {
+//                    FormUtils.showError(ERR_GETTING_TRANSACTION_HISTORY);
+//                }
+//            }
+//        };
+//    }
 
     private Callback<List<TransactionData>> handleUnapprovedTransactions() {
         return new Callback<>() {
@@ -175,7 +206,7 @@ public class HistoryController extends AbstractController {
     @FXML
     private void handleRefresh() {
         fillApprovedTable();
-        fillUnapprovedTable();
+//        fillUnapprovedTable();
     }
 
     @Override

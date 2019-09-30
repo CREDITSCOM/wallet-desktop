@@ -72,8 +72,8 @@ public class DatabaseServiceImpl implements DatabaseService {
         final var sender = database.getOrCreateWallet(encodeToBASE58(transactionData.getSource()));
         final var receiver = database.getOrCreateWallet(encodeToBASE58(transactionData.getTarget()));
         final var amount = transactionData.getAmount().toString();
-        final var fee = "";
-        final var timeCreation = 0L;
+        final var maxFee = transactionData.getMaxFee();
+        final var timeCreation = transactionData.getTimeCreation();
         final var transactionType = new TransactionType(transactionData.getType().toString());
         final var blockNumber = transactionData.getBlockNumber();
         final var trxIndex = transactionData.getIndexIntoBlock();
@@ -81,6 +81,6 @@ public class DatabaseServiceImpl implements DatabaseService {
                              ? new String(transactionData.getCommentBytes(), StandardCharsets.UTF_8)
                              : "";
 
-        return new Transaction(sender, receiver, amount, fee, timeCreation, userData, transactionType, blockNumber, trxIndex);
+        return new Transaction(sender, receiver, amount, maxFee, timeCreation, userData, transactionType, blockNumber, trxIndex);
     }
 }

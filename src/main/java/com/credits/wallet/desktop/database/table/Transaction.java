@@ -11,31 +11,31 @@ import lombok.NonNull;
 @DatabaseTable(tableName = "transaction")
 public class Transaction {
     @DatabaseField(generatedId = true)
-    long id;
+    private long id;
     @DatabaseField(columnName = "sender_id", foreign = true, foreignAutoRefresh = true)
-    Wallet sender;
+    private Wallet sender;
     @DatabaseField(columnName = "receiver_id", foreign = true, foreignAutoRefresh = true)
-    Wallet receiver;
+    private Wallet receiver;
     @DatabaseField
-    String amount;
-    @DatabaseField
-    String fee;
-    @DatabaseField(columnName = "time_stamp")
-    long timestamp;
+    private String amount;
+    @DatabaseField(columnName = "max_fee")
+    private double maxFee;
+    @DatabaseField(columnName = "time_creation")
+    private long timeCreation;
     @DatabaseField(columnName = "user_data")
-    String userData;
-    @DatabaseField(foreign = true, foreignAutoCreate = true, foreignAutoRefresh = true, columnName = "type")
-    TransactionType type;
+    private String userData;
+    @DatabaseField(foreign = true, foreignAutoCreate = true, foreignAutoRefresh = true)
+    private TransactionType type;
     @DatabaseField
-    long blockNumber;
+    private long blockNumber;
     @DatabaseField
-    int indexIntoBlock;
+    private int indexIntoBlock;
 
     public Transaction(@NonNull Wallet sender,
                        @NonNull Wallet receiver,
                        @NonNull String amount,
-                       @NonNull String fee,
-                       long timestamp,
+                       double maxFee,
+                       long timeCreation,
                        @NonNull String userData,
                        @NonNull TransactionType type,
                        long blockNumber,
@@ -43,8 +43,8 @@ public class Transaction {
         this.sender = sender;
         this.receiver = receiver;
         this.amount = amount;
-        this.fee = fee;
-        this.timestamp = timestamp;
+        this.maxFee = maxFee;
+        this.timeCreation = timeCreation;
         this.userData = userData;
         this.type = type;
         this.blockNumber = blockNumber;

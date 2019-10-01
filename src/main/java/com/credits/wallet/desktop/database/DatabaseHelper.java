@@ -60,13 +60,7 @@ public class DatabaseHelper {
     }
 
     public SmartContract getSmartContract(String address) throws SQLException {
-        final var walletQueryBuilder = walletDao.queryBuilder();
-        final var walletAddresses = walletDao.queryForEq("address", address);
-        if (walletAddresses == null || walletAddresses.size() == 0) {
-            throw new DatabaseHelperException("smart contract with address \"" + address + "\" not found");
-        }
-
-        return smartContractDao.queryBuilder().leftJoin(walletQueryBuilder).queryForFirst();
+        return smartContractDao.queryBuilder().where().eq("wallet_address", address).queryForFirst();
     }
 
     public void createIfNotExistsTransaction(Transaction transaction) {
@@ -124,32 +118,18 @@ public class DatabaseHelper {
     }
 
     public List<Transaction> getTransactionsByAddress(String address, long limit) {
-        return rethrowWithDetailMessage(() -> {
-            final var getWalletQb = walletDao.queryBuilder();
-            final var getTransactionQb = transactionDao.queryBuilder();
-
-            getWalletQb.where().eq("address", address);
-
-            return limit > 0
-                   ? getTransactionQb.leftJoin(getWalletQb).limit(limit).query()
-                   : getTransactionQb.leftJoin(getWalletQb).query();
-        });
+        return rethrowWithDetailMessage(() -> transactionDao.queryBuilder()
+                .limit(limit > 0 ? limit : null)
+                .where().eq("sender_address", address)
+                .query());
     }
 
     public List<Transaction> getLastTransactions(String address, long blockNumber, long limit) {
-        return rethrowWithDetailMessage(() -> {
-            final var walletQb = walletDao.queryBuilder();
-            final var transactionQb = transactionDao.queryBuilder().orderBy("block_number", false);
-
-            walletQb.where().eq("address", address);
-            if (blockNumber > 0) {
-                transactionQb.where().ge("block_number", blockNumber);
-            }
-
-            return limit > 0
-                   ? transactionQb.leftJoin(walletQb).limit(limit).query()
-                   : transactionQb.leftJoin(walletQb).query();
-        });
+        return rethrowWithDetailMessage(() -> transactionDao.queryBuilder()
+                .limit(limit > 0 ? limit : null)
+                .orderBy("block_number", false)
+                .where().eq("sender_address", address).and().ge("block_number", blockNumber)
+                .query());
     }
 
     public void createTablesIfNotExist() {

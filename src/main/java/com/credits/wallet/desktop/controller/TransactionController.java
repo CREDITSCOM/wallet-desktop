@@ -20,7 +20,7 @@ public class TransactionController extends AbstractController{
     public HBox listContainer;
 
     @FXML
-    private TextField labInnerId;
+    private TextField labTransactionId;
     @FXML
     private TextField labSource;
     @FXML
@@ -38,7 +38,7 @@ public class TransactionController extends AbstractController{
     public void initializeForm(Map<String, Object> objects) {
         TransactionTabRow selectedTransactionRow = (TransactionTabRow) objects.get("selectedTransactionRow");
 
-//        labInnerId.setText(selectedTransactionRow.getBlockNumber());
+        labTransactionId.setText(selectedTransactionRow.getId());
         labSource.setText(selectedTransactionRow.getSender());
         labTarget.setText(selectedTransactionRow.getReceiver());
         labAmount.setText(selectedTransactionRow.getAmount());

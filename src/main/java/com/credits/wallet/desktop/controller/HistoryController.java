@@ -4,7 +4,6 @@ import com.credits.client.node.exception.NodeClientException;
 import com.credits.general.exception.CreditsException;
 import com.credits.general.util.Callback;
 import com.credits.wallet.desktop.AppState;
-import com.credits.wallet.desktop.VistaNavigator;
 import com.credits.wallet.desktop.database.table.Transaction;
 import com.credits.wallet.desktop.struct.TransactionTabRow;
 import com.credits.wallet.desktop.utils.FormUtils;
@@ -13,18 +12,16 @@ import javafx.fxml.FXML;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.credits.wallet.desktop.AppState.NODE_ERROR;
+import static com.credits.wallet.desktop.VistaNavigator.*;
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
 
@@ -58,16 +55,18 @@ public class HistoryController extends AbstractController {
         columns.get(3).setCellValueFactory(new PropertyValueFactory<>("receiver"));
         columns.get(4).setCellValueFactory(new PropertyValueFactory<>("amount"));
         columns.get(5).setCellValueFactory(new PropertyValueFactory<>("type"));
-        tableView.setOnMousePressed(event -> {
-            if ((event.isPrimaryButtonDown() || event.getButton() == MouseButton.PRIMARY) && event.getClickCount() == 2) {
-                TransactionTabRow tabRow = tableView.getSelectionModel().getSelectedItem();
-                if (tabRow != null) {
-                    HashMap<String, Object> params = new HashMap<>();
-                    params.put("selectedTransactionRow", tabRow);
-                    VistaNavigator.showFormModal(VistaNavigator.TRANSACTION, params);
-                }
+        tableView.setOnMousePressed(event -> handleOnClickTransactionRow(tableView, event));
+    }
+
+    private void handleOnClickTransactionRow(TableView<TransactionTabRow> tableView, MouseEvent event) {
+        if ((event.isPrimaryButtonDown() || event.getButton() == MouseButton.PRIMARY) && event.getClickCount() == 2) {
+            TransactionTabRow tabRow = tableView.getSelectionModel().getSelectedItem();
+            if (tabRow != null) {
+                HashMap<String, Object> params = new HashMap<>();
+                params.put("selectedTransactionRow", tabRow);
+                showFormModal(TRANSACTION, params);
             }
-        });
+        }
     }
 
     private void fillApprovedTable() {
@@ -118,7 +117,7 @@ public class HistoryController extends AbstractController {
 
     @FXML
     private void handleBack() {
-        VistaNavigator.loadVista(VistaNavigator.WALLET);
+        loadVista(WALLET);
     }
 
     @FXML

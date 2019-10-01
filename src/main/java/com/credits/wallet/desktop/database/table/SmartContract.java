@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 @DatabaseTable(tableName = "smart_contract")
 public class SmartContract {
     @DatabaseField(generatedId = true)
-    long id;
-    @DatabaseField(foreign = true, foreignAutoCreate = true, foreignAutoRefresh = true)
+    int id;
+    @DatabaseField(foreign = true, foreignColumnName = "address", foreignAutoCreate = true, foreignAutoRefresh = true, unique = true)
     Wallet wallet;
     @DatabaseField(columnName = "source_code")
     String sourceCode;

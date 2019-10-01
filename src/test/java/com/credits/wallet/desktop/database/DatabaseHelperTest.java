@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.time.Instant;
+import java.util.Date;
 
 import static java.nio.file.Files.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,20 +35,21 @@ class DatabaseHelperTest extends DatabaseTest {
         address1 = db.getOrCreateWallet("address1");
         address2 = db.getOrCreateWallet("address2");
         TransactionType transactionType = db.getOrCreateTransactionType("TT_NORMAL");
+        final var currentTime = Date.from(Instant.now());
         transaction1 = new Transaction(address1,
                                        address2,
                                        "1.00",
                                        0.1,
-                                       System.currentTimeMillis(),
-                                       "from address1 to address2",
-                                       transactionType,
-                                       0,
-                                       0);
+                                       currentTime,
+                                                 "from address1 to address2",
+                                                 transactionType,
+                                                 0,
+                                                 0);
         transaction2 = new Transaction(address2,
                                        address1,
                                        "1.00",
                                        0.1,
-                                       System.currentTimeMillis(),
+                                       currentTime,
                                        "from address2 to address1",
                                        transactionType,
                                        0,
@@ -55,7 +58,7 @@ class DatabaseHelperTest extends DatabaseTest {
                                        address1,
                                        "2.00",
                                        0.1,
-                                       System.currentTimeMillis(),
+                                       currentTime,
                                        "from address2 to address1",
                                        transactionType,
                                        0,

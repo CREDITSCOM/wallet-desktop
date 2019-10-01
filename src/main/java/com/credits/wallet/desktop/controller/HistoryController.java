@@ -83,7 +83,7 @@ public class HistoryController extends AbstractController {
                 transactionList.forEach(transaction -> {
                     TransactionTabRow tableRow = new TransactionTabRow();
                     tableRow.setId(transaction.getBlockNumber() + "." + transaction.getIndexIntoBlock());
-                    final String time = timeMillsToLocalDateTimeString(transaction);
+                    final String time = formatDateToString(transaction.getTimeCreation());
                     tableRow.setTime(time);
                     tableRow.setSender(transaction.getSender().getAddress());
                     tableRow.setReceiver(transaction.getReceiver().getAddress());
@@ -110,10 +110,9 @@ public class HistoryController extends AbstractController {
         };
     }
 
-    public String timeMillsToLocalDateTimeString(Transaction transaction) {
-        final var instant = Instant.ofEpochMilli(transaction.getTimeCreation());
-        final var localDate = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
-        return ISO_LOCAL_DATE_TIME.format(localDate).replace('T',' ');
+    public String formatDateToString(Date date) {
+        final var localDate = LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
+        return ISO_LOCAL_DATE_TIME.format(localDate).replace('T', ' ');
     }
 
 

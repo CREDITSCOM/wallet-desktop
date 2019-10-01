@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
+import java.util.Date;
+
 @Data
 @NoArgsConstructor
 @DatabaseTable(tableName = "transaction")
@@ -21,7 +23,7 @@ public class Transaction {
     @DatabaseField(columnName = "max_fee")
     private double maxFee;
     @DatabaseField(columnName = "time_creation")
-    private long timeCreation;
+    private Date timeCreation;
     @DatabaseField(columnName = "user_data")
     private String userData;
     @DatabaseField(foreign = true, foreignAutoRefresh = true)
@@ -35,7 +37,7 @@ public class Transaction {
                        @NonNull Wallet receiver,
                        @NonNull String amount,
                        double maxFee,
-                       long timeCreation,
+                       @NonNull Date timeCreation,
                        @NonNull String userData,
                        @NonNull TransactionType type,
                        long blockNumber,

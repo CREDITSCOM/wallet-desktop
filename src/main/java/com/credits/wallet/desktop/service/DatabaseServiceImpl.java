@@ -9,6 +9,7 @@ import com.credits.wallet.desktop.database.table.Transaction;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -82,7 +83,7 @@ public class DatabaseServiceImpl implements DatabaseService {
         final var receiver = database.getOrCreateWallet(encodeToBASE58(transactionData.getTarget()));
         final var amount = GeneralConverter.toString(transactionData.getAmount());
         final var maxFee = transactionData.getMaxFee();
-        final var timeCreation = transactionData.getTimeCreation();
+        final var timeCreation = new Date(transactionData.getTimeCreation());
         final var transactionType = database.getOrCreateTransactionType(transactionData.getType().toString());
         final var blockNumber = transactionData.getBlockNumber();
         final var trxIndex = transactionData.getIndexIntoBlock();

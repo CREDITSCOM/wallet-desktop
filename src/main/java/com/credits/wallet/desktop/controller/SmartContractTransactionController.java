@@ -45,17 +45,17 @@ public class SmartContractTransactionController extends AbstractController{
     public void initializeForm(Map<String, Object> objects) {
         SmartContractTransactionTabRow selectedTransactionRow = (SmartContractTransactionTabRow) objects.get("selectedTransactionRow");
 
-        labInnerId.setText(selectedTransactionRow.getBlockId());
-        labSource.setText(selectedTransactionRow.getSource());
-        labTarget.setText(selectedTransactionRow.getTarget());
+        labInnerId.setText(selectedTransactionRow.getId());
+        labSource.setText(selectedTransactionRow.getSender());
+        labTarget.setText(selectedTransactionRow.getReceiver());
         labAmount.setText(selectedTransactionRow.getAmount());
         labState.setText(selectedTransactionRow.getType());
-        labMethod.setText(selectedTransactionRow.getMethod());
+//        labMethod.setText(selectedTransactionRow.getMethod());
         ObservableList<String> items = FXCollections.observableArrayList();
-        if (selectedTransactionRow.getParams() != null) {
-            selectedTransactionRow.getParams().forEach(item -> items.add(VariantConverter.toObject(item).toString()));
-        }
-        listParams.setItems(items);
+//        if (selectedTransactionRow.getParams() != null) {
+//            selectedTransactionRow.getParams().forEach(item -> items.add(VariantConverter.toObject(item).toString()));
+//        }
+//        listParams.setItems(items);
 
         SmartTransInfoData smartInfo = selectedTransactionRow.getSmartInfo();
 

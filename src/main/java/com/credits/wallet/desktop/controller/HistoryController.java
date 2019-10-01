@@ -1,10 +1,8 @@
 package com.credits.wallet.desktop.controller;
 
 import com.credits.client.node.exception.NodeClientException;
-import com.credits.client.node.pojo.TransactionData;
 import com.credits.general.exception.CreditsException;
 import com.credits.general.util.Callback;
-import com.credits.general.util.GeneralConverter;
 import com.credits.wallet.desktop.AppState;
 import com.credits.wallet.desktop.VistaNavigator;
 import com.credits.wallet.desktop.database.table.Transaction;
@@ -18,13 +16,16 @@ import javafx.scene.input.MouseButton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.credits.client.node.service.NodeApiServiceImpl.async;
 import static com.credits.wallet.desktop.AppState.NODE_ERROR;
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
 
 public class HistoryController extends AbstractController {
@@ -50,11 +51,13 @@ public class HistoryController extends AbstractController {
     }
 
     private void initTable(TableView<TransactionTabRow> tableView) {
-        tableView.getColumns().get(0).setCellValueFactory(new PropertyValueFactory<>("id"));
-        tableView.getColumns().get(1).setCellValueFactory(new PropertyValueFactory<>("source"));
-        tableView.getColumns().get(2).setCellValueFactory(new PropertyValueFactory<>("target"));
-        tableView.getColumns().get(3).setCellValueFactory(new PropertyValueFactory<>("amount"));
-        tableView.getColumns().get(4).setCellValueFactory(new PropertyValueFactory<>("type"));
+        final var columns = tableView.getColumns();
+        columns.get(0).setCellValueFactory(new PropertyValueFactory<>("id"));
+        columns.get(1).setCellValueFactory(new PropertyValueFactory<>("time"));
+        columns.get(2).setCellValueFactory(new PropertyValueFactory<>("sender"));
+        columns.get(3).setCellValueFactory(new PropertyValueFactory<>("receiver"));
+        columns.get(4).setCellValueFactory(new PropertyValueFactory<>("amount"));
+        columns.get(5).setCellValueFactory(new PropertyValueFactory<>("type"));
         tableView.setOnMousePressed(event -> {
             if ((event.isPrimaryButtonDown() || event.getButton() == MouseButton.PRIMARY) && event.getClickCount() == 2) {
                 TransactionTabRow tabRow = tableView.getSelectionModel().getSelectedItem();
@@ -67,14 +70,7 @@ public class HistoryController extends AbstractController {
         });
     }
 
-    private void fillUnapprovedTable() {
-        async(() -> AppState.getNodeApiService().getTransactions(session.account, FIRST_TRANSACTION_NUMBER, INIT_PAGE_SIZE),
-              handleUnapprovedTransactions());
-    }
-
     private void fillApprovedTable() {
-//        async(() -> AppState.getNodeApiService().getTransactions(session.account, FIRST_TRANSACTION_NUMBER, INIT_PAGE_SIZE),
-//            handleApprovedTransactions());
         AppState.getDatabase().getLastTransactions(session.account, lastBlockNumber, INIT_PAGE_SIZE, handleApprovedTransactions());
     }
 
@@ -84,14 +80,15 @@ public class HistoryController extends AbstractController {
             public void onSuccess(List<Transaction> transactionList) throws CreditsException {
 
                 List<TransactionTabRow> approvedList = new ArrayList<>();
-                transactionList.forEach(transactionTable -> {
+                transactionList.forEach(transaction -> {
                     TransactionTabRow tableRow = new TransactionTabRow();
-                    tableRow.setId(transactionTable.getId());
-                    tableRow.setAmount(GeneralConverter.toString(transactionTable.getAmount()));
-                    tableRow.setSource(transactionTable.getSender().getAddress());
-                    tableRow.setTarget(transactionTable.getReceiver().getAddress());
-                    tableRow.setBlockId(transactionTable.getBlockNumber() + "." + transactionTable.getIndexIntoBlock());
-                    tableRow.setType(transactionTable.getType().getName());
+                    tableRow.setId(transaction.getBlockNumber() + "." + transaction.getIndexIntoBlock());
+                    final String time = timeMillsToLocalDateTimeString(transaction);
+                    tableRow.setTime(time);
+                    tableRow.setSender(transaction.getSender().getAddress());
+                    tableRow.setReceiver(transaction.getReceiver().getAddress());
+                    tableRow.setAmount(transaction.getAmount());
+                    tableRow.setType(transaction.getType().getName());
                     approvedList.add(tableRow);
 
                 });
@@ -113,51 +110,10 @@ public class HistoryController extends AbstractController {
         };
     }
 
-
-    private Callback<List<TransactionData>> handleUnapprovedTransactions() {
-        return new Callback<>() {
-
-            @Override
-            public void onSuccess(List<TransactionData> transactionsList) throws CreditsException {
-
-                List<TransactionTabRow> unapprovedList = new ArrayList<>();
-
-                session.unapprovedTransactions.forEach((id, value) -> {
-
-                    if (transactionsList.stream().anyMatch(transactionData ->
-                                                                   transactionData.getInnerId() == id)) {
-                        session.unapprovedTransactions.remove(id);
-                    } else {
-                        TransactionTabRow tableRow = new TransactionTabRow();
-                        tableRow.setId(id);
-                        tableRow.setAmount(value.getAmount());
-                        tableRow.setCurrency(value.getCurrency());
-                        tableRow.setSource(value.getSource());
-                        tableRow.setTarget(value.getTarget());
-                        tableRow.setType("unknown");
-                        unapprovedList.add(tableRow);
-                    }
-                });
-                refreshTableViewItems(unapprovedTableView, unapprovedList);
-            }
-
-            private void refreshTableViewItems(TableView<TransactionTabRow> tableView, List<TransactionTabRow> itemList) {
-                Platform.runLater(() -> {
-                    tableView.getItems().clear();
-                    tableView.getItems().addAll(itemList);
-                });
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                LOGGER.error(e.getMessage());
-                if (e instanceof NodeClientException) {
-                    FormUtils.showError(NODE_ERROR);
-                } else {
-                    FormUtils.showError(ERR_GETTING_TRANSACTION_HISTORY);
-                }
-            }
-        };
+    public String timeMillsToLocalDateTimeString(Transaction transaction) {
+        final var instant = Instant.ofEpochMilli(transaction.getTimeCreation());
+        final var localDate = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+        return ISO_LOCAL_DATE_TIME.format(localDate).replace('T',' ');
     }
 
 
@@ -169,7 +125,6 @@ public class HistoryController extends AbstractController {
     @FXML
     private void handleRefresh() {
         fillApprovedTable();
-//        fillUnapprovedTable();
     }
 
     @Override

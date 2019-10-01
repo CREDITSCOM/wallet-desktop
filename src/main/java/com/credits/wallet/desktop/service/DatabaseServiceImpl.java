@@ -3,6 +3,7 @@ package com.credits.wallet.desktop.service;
 import com.credits.client.node.pojo.TransactionData;
 import com.credits.client.node.service.NodeApiService;
 import com.credits.general.util.Callback;
+import com.credits.general.util.GeneralConverter;
 import com.credits.wallet.desktop.database.DatabaseHelper;
 import com.credits.wallet.desktop.database.table.Transaction;
 import lombok.extern.slf4j.Slf4j;
@@ -79,7 +80,7 @@ public class DatabaseServiceImpl implements DatabaseService {
     private Transaction createTransactionDBEntity(TransactionData transactionData) {
         final var sender = database.getOrCreateWallet(encodeToBASE58(transactionData.getSource()));
         final var receiver = database.getOrCreateWallet(encodeToBASE58(transactionData.getTarget()));
-        final var amount = transactionData.getAmount().toString();
+        final var amount = GeneralConverter.toString(transactionData.getAmount());
         final var maxFee = transactionData.getMaxFee();
         final var timeCreation = transactionData.getTimeCreation();
         final var transactionType = database.getOrCreateTransactionType(transactionData.getType().toString());

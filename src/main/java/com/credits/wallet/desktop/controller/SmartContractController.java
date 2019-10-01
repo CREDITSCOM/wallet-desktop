@@ -356,14 +356,14 @@ public class SmartContractController extends AbstractController {
                     SmartTransInfoData smartInfo = transactionData.getSmartInfo();
                     SmartContractTransactionTabRow tableRow = new SmartContractTransactionTabRow();
 
-                    tableRow.setId(transactionData.getInnerId());
+                    tableRow.setId(transactionData.getBlockNumber() + "." + transactionData.getIndexIntoBlock());
                     tableRow.setAmount(GeneralConverter.toString(transactionData.getAmount()));
-                    tableRow.setSource(encodeToBASE58(transactionData.getSource()));
-                    tableRow.setTarget(encodeToBASE58(transactionData.getTarget()));
-                    tableRow.setBlockId(transactionData.getBlockNumber() + "." + transactionData.getIndexIntoBlock());
+                    tableRow.setSender(encodeToBASE58(transactionData.getSource()));
+                    tableRow.setReceiver(encodeToBASE58(transactionData.getTarget()));
+//                    tableRow.setBlockNumber(transactionData.getBlockNumber() + "." + transactionData.getIndexIntoBlock());
                     tableRow.setType(getTransactionDescType(transactionData));
-                    tableRow.setMethod(transactionData.getMethod());
-                    tableRow.setParams(transactionData.getParams());
+//                    tableRow.setMethod(transactionData.getMethod());
+//                    tableRow.setParams(transactionData.getParams());
                     tableRow.setSmartInfo(smartInfo);
 
                     if (smartInfo == null) {
@@ -402,14 +402,13 @@ public class SmartContractController extends AbstractController {
                         session.unapprovedTransactions.remove(id);
                     } else {
                         SmartContractTransactionTabRow tableRow = new SmartContractTransactionTabRow();
-                        tableRow.setId(id);
+                        tableRow.setId(value.getId());
                         tableRow.setAmount(value.getAmount());
-                        tableRow.setCurrency(value.getCurrency());
-                        tableRow.setSource(value.getSource());
-                        tableRow.setTarget(value.getTarget());
+                        tableRow.setSender(value.getSource());
+                        tableRow.setReceiver(value.getTarget());
                         tableRow.setType("unknown");
-                        tableRow.setMethod(value.getScMethod());
-                        tableRow.setParams(value.getScParams());
+//                        tableRow.setMethod(value.getScMethod());
+//                        tableRow.setParams(value.getScParams());
                         unapprovedList.add(tableRow);
                     }
                 });

@@ -11,17 +11,17 @@ import lombok.NoArgsConstructor;
 @DatabaseTable(tableName = "smart_contract")
 public class SmartContract {
     @DatabaseField(generatedId = true)
-    int id;
-    @DatabaseField(foreign = true, foreignColumnName = "address", foreignAutoCreate = true, foreignAutoRefresh = true, unique = true)
-    Wallet wallet;
+    private int id;
+    @DatabaseField(foreign = true, foreignColumnName = "address", foreignAutoCreate = true)
+    private Wallet wallet;
     @DatabaseField(columnName = "source_code")
-    String sourceCode;
-    @DatabaseField(columnName = "time_stamp")
-    long timeStamp;
+    private String sourceCode;
+    @DatabaseField(columnName = "time_creation")
+    private long timeCreation;
 
-    public SmartContract(Wallet wallet, String sourceCode, long timeStamp) {
+    public SmartContract(Wallet wallet, String sourceCode, long timeCreation) {
         this.wallet = wallet;
         this.sourceCode = sourceCode;
-        this.timeStamp = timeStamp;
+        this.timeCreation = timeCreation;
     }
 }

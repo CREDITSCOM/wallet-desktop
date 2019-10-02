@@ -14,9 +14,9 @@ import java.util.Date;
 public class Transaction {
     @DatabaseField(generatedId = true)
     private long id;
-    @DatabaseField(foreign = true, foreignColumnName = "address", foreignAutoRefresh = true, foreignAutoCreate = true)
+    @DatabaseField(foreign = true, foreignColumnName = "address", foreignAutoCreate = true)
     private Wallet sender;
-    @DatabaseField(foreign = true, foreignColumnName = "address", foreignAutoRefresh = true, foreignAutoCreate = true)
+    @DatabaseField(foreign = true, foreignColumnName = "address", foreignAutoCreate = true)
     private Wallet receiver;
     @DatabaseField
     private String amount;
@@ -26,11 +26,11 @@ public class Transaction {
     private Date timeCreation;
     @DatabaseField(columnName = "user_data")
     private String userData;
-    @DatabaseField(foreign = true, foreignColumnName = "name", foreignAutoRefresh = true, foreignAutoCreate = true)
+    @DatabaseField(foreign = true, foreignColumnName = "name", foreignAutoCreate = true)
     private TransactionType type;
     @DatabaseField(columnName = "block_number", index = true)
     private long blockNumber;
-    @DatabaseField
+    @DatabaseField(columnName = "index_into_block")
     private int indexIntoBlock;
 
     public Transaction(@NonNull Wallet sender,

@@ -3,18 +3,17 @@ package com.credits.wallet.desktop.database.table;
 import com.j256.ormlite.core.field.DatabaseField;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 
 @Data
 @NoArgsConstructor
-public class Wallet {
+public class Method {
     @DatabaseField(generatedId = true)
     private long id;
 
-    @DatabaseField(uniqueIndex = true)
-    private String address;
+    @DatabaseField
+    private String name;
 
-    public Wallet(@NonNull String address) {
-        this.address = address;
-    }
+    @DatabaseField(columnName = "return_type", foreign = true, foreignColumnName = "name", foreignAutoCreate = true)
+    private JavaObjectType returnType;
+
 }

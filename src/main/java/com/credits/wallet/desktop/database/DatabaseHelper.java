@@ -31,6 +31,8 @@ public class DatabaseHelper {
     private Dao<Transaction, Long> transactionDao;
     private Dao<ApplicationMetadata, Wallet> applicationMetadataDao;
     private Dao<TransactionType, ?> transactionTypeDao;
+    private Dao<JavaObjectType, ?> typeDao;
+    private Dao<Argument, ?> argumentDao;
 
     public DatabaseHelper(String databaseUrl) {
         this.databaseUrl = databaseUrl;
@@ -39,6 +41,8 @@ public class DatabaseHelper {
     public void connectAndInitialize() {
         try {
             connectionSource = new JdbcConnectionSource(databaseUrl);
+            argumentDao = createDao(connectionSource, Argument.class);
+            typeDao = createDao(connectionSource, JavaObjectType.class);
             smartContractDao = createDao(connectionSource, SmartContract.class);
             walletDao = createDao(connectionSource, Wallet.class);
             transactionDao = createDao(connectionSource, Transaction.class);
@@ -138,6 +142,12 @@ public class DatabaseHelper {
             createTable(TransactionType.class);
             createTable(Transaction.class);
             createTable(ApplicationMetadata.class);
+            createTable(JavaObjectType.class);
+            createTable(Argument.class);
+            createTable(ArgumentValue.class);
+            createTable(Method.class);
+            createTable(SmartContract.class);
+            createTable(SmartContractCall.class);
         });
     }
 

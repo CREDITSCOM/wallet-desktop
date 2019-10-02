@@ -11,10 +11,10 @@ import lombok.NonNull;
 @DatabaseTable(tableName = "transaction_type")
 public class TransactionType {
     @DatabaseField(generatedId = true)
-    long  id;
+    private long  id;
 
-    @DatabaseField(uniqueIndex = true,  indexName = "ix_transaction_type")
-    String name = "unknown";
+    @DatabaseField(uniqueIndex = true)
+    private String name = "unknown";
 
     public TransactionType(@NonNull String name) {
         this.name = name;

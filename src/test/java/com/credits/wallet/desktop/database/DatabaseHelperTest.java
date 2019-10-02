@@ -86,7 +86,7 @@ class DatabaseHelperTest extends DatabaseTest {
 
     @Test
     @CreateTables({Wallet.class, Transaction.class, TransactionType.class})
-    void testingTransactionManipulationMethods() throws SQLException {
+    void testingTransactionManipulationMethods() {
         db.createIfNotExistsTransaction(transaction1);
         db.createIfNotExistsTransaction(transaction2);
         db.createIfNotExistsTransaction(transaction3);

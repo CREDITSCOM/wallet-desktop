@@ -13,7 +13,7 @@ public class ApplicationMetadata {
     @DatabaseField(generatedId = true)
     private int id;
 
-    @DatabaseField(index = true, foreign = true, foreignAutoRefresh = true)
+    @DatabaseField(foreign = true, foreignAutoRefresh = true)
     private Wallet account;
 
     @DatabaseField(columnName = "amount_transactions")

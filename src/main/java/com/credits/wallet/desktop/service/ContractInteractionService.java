@@ -8,8 +8,6 @@ import com.credits.general.util.Callback;
 import com.credits.wallet.desktop.AppState;
 import com.credits.wallet.desktop.Session;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -26,7 +24,6 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 
 public class ContractInteractionService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ContractInteractionService.class);
     public static final String TRANSFER_METHOD = "transfer";
     public static final String BALANCE_OF_METHOD = "balanceOf";
     public static final String GET_NAME_METHOD = "getName";

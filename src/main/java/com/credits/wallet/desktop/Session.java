@@ -4,6 +4,7 @@ import com.credits.client.node.pojo.CompiledSmartContract;
 import com.credits.client.node.pojo.SmartContractTransactionData;
 import com.credits.client.node.util.ObjectKeeper;
 import com.credits.wallet.desktop.service.ContractInteractionService;
+import com.credits.wallet.desktop.service.SmartContractNamesDomainService;
 import com.credits.wallet.desktop.struct.DeploySmartListItem;
 import com.credits.wallet.desktop.struct.UnapprovedTransactionData;
 
@@ -21,6 +22,7 @@ public class Session {
     public String account;
     public ConcurrentHashMap<Long, UnapprovedTransactionData> unapprovedTransactions = new ConcurrentHashMap<>();
     public ContractInteractionService contractInteractionService = initializeContractInteractionService();
+    public SmartContractNamesDomainService smartContractNamesDomainService = SmartContractNamesDomainService.getInstance();
 
     public Session(String pubKey) {
         account = pubKey;

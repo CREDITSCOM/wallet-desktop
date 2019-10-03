@@ -74,7 +74,8 @@ public class WalletController extends AbstractController {
     @FXML
     private Label actualOfferedMaxFeeLabel;
     @FXML
-    public TextField usdSmart;
+    private TextField usdSmart;
+    private String tranToAddressFromScDomainNames;
 
     @FXML
     private void handleLogout() {
@@ -101,10 +102,10 @@ public class WalletController extends AbstractController {
 
     @FXML
     private void handleGenerate() {
-        String transactionAmount = amountField.getText();
-        String transactionFee = feeField.getText();
-        String transactionToAddress = addressField.getText();
-        String transactionText = transText.getText();
+        String tranAmount = amountField.getText();
+        String tranFee = feeField.getText();
+        String tranToAddress = tranToAddressFromScDomainNames == null ? addressField.getText() : tranToAddressFromScDomainNames;
+        String tranText = transText.getText();
         String usedSmartContracts = usdSmart.getText();
 
         // VALIDATE
@@ -118,17 +119,17 @@ public class WalletController extends AbstractController {
                 FormUtils.validateTable(coinsTableView, coinsErrorLabel, ERR_COIN, isValidationSuccessful);
             }
         }
-        if (transactionToAddress == null || transactionToAddress.isEmpty()) {
+        if (tranToAddress == null || tranToAddress.isEmpty()) {
             FormUtils.showErrorLabelAndPaintField(addressField, addressErrorLabel, ERR_TO_ADDRESS, isValidationSuccessful);
         }
-        if (GeneralConverter.toBigDecimal(transactionAmount).compareTo(BigDecimal.ZERO) <= 0) {
+        if (GeneralConverter.toBigDecimal(tranAmount).compareTo(BigDecimal.ZERO) <= 0) {
             FormUtils.showErrorLabelAndPaintField(amountField, amountErrorLabel, ERR_AMOUNT, isValidationSuccessful);
         }
-        if (GeneralConverter.toBigDecimal(transactionFee).compareTo(BigDecimal.ZERO) <= 0) {
+        if (GeneralConverter.toBigDecimal(tranFee).compareTo(BigDecimal.ZERO) <= 0) {
             FormUtils.showErrorLabelAndPaintField(feeField, feeErrorLabel, ERR_FEE, isValidationSuccessful);
         }
         try {
-            Validator.validateToAddress(transactionToAddress);
+            Validator.validateToAddress(tranToAddress);
         } catch (NodeClientException e) {
             FormUtils.showErrorLabelAndPaintField(addressField, addressErrorLabel, "Invalid Address", isValidationSuccessful);
         }
@@ -136,10 +137,10 @@ public class WalletController extends AbstractController {
         if (isValidationSuccessful.get()) {
             HashMap<String, Object> params = new HashMap<>();
             params.put("coinType", selectedCoin.getName());
-            params.put("transactionToAddress", transactionToAddress);
-            params.put("transactionAmount", transactionAmount);
-            params.put("transactionFee", transactionFee);
-            params.put("transactionText", transactionText);
+            params.put("tranToAddress", tranToAddress);
+            params.put("tranAmount", tranAmount);
+            params.put("tranFee", tranFee);
+            params.put("tranText", tranText);
             params.put("actualOfferedMaxFee16Bits", FormUtils.getActualOfferedMaxFee16Bits(feeField));
             params.put("usedSmartContracts", usedSmartContracts);
 
@@ -293,10 +294,10 @@ public class WalletController extends AbstractController {
         });
 
         if (objects != null) {
-            addressField.setText(objects.get("transactionToAddress").toString());
-            amountField.setText(objects.get("transactionAmount").toString());
-            feeField.setText(objects.get("transactionFee").toString());
-            transText.setText(objects.get("transactionText").toString());
+            addressField.setText(objects.get("tranToAddress").toString());
+            amountField.setText(objects.get("tranAmount").toString());
+            feeField.setText(objects.get("tranFee").toString());
+            transText.setText(objects.get("tranText").toString());
             int i = 0;
             for (CoinTabRow item : coinsTableView.getItems()) {
                 if (item.getName().equals(objects.get("coinType").toString())) {
@@ -306,6 +307,22 @@ public class WalletController extends AbstractController {
                 i++;
             }
         }
+
+        addressField.textProperty().addListener((obs, o, n)-> {
+            if (n.startsWith("@")) {
+                addressField.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+                if (session.smartContractNamesDomainService.isInitialized()) {
+                    String domainName = addressField.getText().substring(1);
+                    tranToAddressFromScDomainNames = session.smartContractNamesDomainService.executeGetContractAddress(domainName);
+                    if (tranToAddressFromScDomainNames != null) {
+                        addressField.setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
+                    }
+                }
+            } else {
+                addressField.setStyle(""); // default style
+                tranToAddressFromScDomainNames = null;
+            }
+        });
     }
 
     private void setFieldValue(TextField tf, String newValue) {

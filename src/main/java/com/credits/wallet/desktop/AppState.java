@@ -23,6 +23,7 @@ public class AppState {
     private static String pwd;
     private static Stage primaryStage;
     private static String jdkPath;
+    private static String smartContractNamesDomainAddress;
 
     public static void setNodeApiService(NodeApiService nodeApiService) {
         AppState.nodeApiService = nodeApiService;
@@ -70,4 +71,12 @@ public class AppState {
     public static String getJdkPath() { return jdkPath; }
 
     public static void setJdkPath(String jdkPath) { AppState.jdkPath = jdkPath; }
+
+    public static String getSmartContractNamesDomainAddress() {
+        return smartContractNamesDomainAddress;
+    }
+
+    public static void setSmartContractNamesDomainAddress(String smartContractNamesDomainAddress) {
+        AppState.smartContractNamesDomainAddress = smartContractNamesDomainAddress;
+    }
 }

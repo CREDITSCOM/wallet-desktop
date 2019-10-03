@@ -33,7 +33,7 @@
         <VBox prefHeight="83.0" prefWidth="500.0">
             <Label style="-fx-font-size: 16px;" styleClass="arrow" text="   Make a payment to address which opened on credits only">
             </Label>
-            <TextField fx:id="transactionToAddress" editable="false" maxHeight="45.0" maxWidth="500.0" minWidth="0.0" prefHeight="45.0" prefWidth="500.0" style="-fx-font-size: 16px; -fx-border-color: transparent;" styleClass="credits-textField" />
+            <TextField fx:id="tranToAddress" editable="false" maxHeight="45.0" maxWidth="500.0" minWidth="0.0" prefHeight="45.0" prefWidth="500.0" style="-fx-font-size: 16px; -fx-border-color: transparent;" styleClass="credits-textField" />
         </VBox>
     </HBox>
     <HBox alignment="TOP_RIGHT" layoutX="20.0" layoutY="220.0" prefHeight="75.0" prefWidth="885.0">
@@ -43,21 +43,21 @@
                 </Label>
                 <Label fx:id="coinType" style="-fx-font-size: 16;" text="Label" />
             </HBox>
-            <TextField fx:id="transactionAmount" editable="false" maxHeight="45.0" prefHeight="45.0" prefWidth="500.0" style="-fx-font-size: 16px; -fx-border-color: transparent;" styleClass="credits-textField" />
+            <TextField fx:id="tranAmount" editable="false" maxHeight="45.0" prefHeight="45.0" prefWidth="500.0" style="-fx-font-size: 16px; -fx-border-color: transparent;" styleClass="credits-textField" />
         </VBox>
     </HBox>
     <HBox alignment="TOP_RIGHT" layoutX="20.0" layoutY="320.0" prefHeight="75.0" prefWidth="885.0">
         <VBox prefHeight="83.0" prefWidth="500.0">
             <Label style="-fx-font-size: 16px;" styleClass="arrow" text="   Transaction fee">
             </Label>
-            <TextField fx:id="transactionFeeValue" editable="false" maxHeight="45.0" prefHeight="45.0" prefWidth="500.0" style="-fx-font-size: 16px; -fx-border-color: transparent;" styleClass="credits-textField">
+            <TextField fx:id="tranFee" editable="false" maxHeight="45.0" prefHeight="45.0" prefWidth="500.0" style="-fx-font-size: 16px; -fx-border-color: transparent;" styleClass="credits-textField">
             </TextField>
         </VBox>
     </HBox>
     <HBox alignment="TOP_RIGHT" layoutX="20.0" layoutY="420.0" prefHeight="75.0" prefWidth="885.0">
         <VBox prefHeight="83.0" prefWidth="500.0">
             <Label prefHeight="25.0" prefWidth="464.0" style="-fx-font-size: 16px;" styleClass="arrow" text="   User data. It's not necessary to fill in" />
-            <TextField fx:id="transactionText" editable="false" maxHeight="45.0" maxWidth="516.0" prefHeight="45.0" prefWidth="516.0" style="-fx-font-size: 16px; -fx-border-color: transparent;" styleClass="credits-textField" />
+            <TextField fx:id="tranText" editable="false" maxHeight="45.0" maxWidth="516.0" prefHeight="45.0" prefWidth="516.0" style="-fx-font-size: 16px; -fx-border-color: transparent;" styleClass="credits-textField" />
         </VBox>
     </HBox>
    <Label layoutX="404.0" layoutY="513.0" prefHeight="25.0" prefWidth="450.0" style="-fx-font-size: 16px;" styleClass="arrow" text="   Used smart-contracts. It's not necessary to fill in" />

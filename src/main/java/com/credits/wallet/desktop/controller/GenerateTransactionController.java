@@ -36,15 +36,15 @@ public class GenerateTransactionController extends AbstractController {
     public Label coinType;
 
     @FXML
-    private TextField transactionToAddress;
+    private TextField tranToAddress;
 
-    @FXML TextField transactionText;
-
-    @FXML
-    private TextField transactionAmount;
+    @FXML TextField tranText;
 
     @FXML
-    private TextField transactionFeeValue;
+    private TextField tranAmount;
+
+    @FXML
+    private TextField tranFee;
 
     @FXML
     private TextField usedSmartContracts;
@@ -54,10 +54,10 @@ public class GenerateTransactionController extends AbstractController {
     @FXML
     private void handleBack() {
         Map<String, Object> params = new HashMap<>();
-        params.put("transactionFee",transactionFeeValue.getText());
-        params.put("transactionToAddress",transactionToAddress.getText());
-        params.put("transactionAmount",transactionAmount.getText());
-        params.put("transactionText",transactionText.getText());
+        params.put("tranFee", tranFee.getText());
+        params.put("tranToAddress", tranToAddress.getText());
+        params.put("tranAmount", tranAmount.getText());
+        params.put("tranText", tranText.getText());
         params.put("coinType", coinType.getText());
         params.put("usedSmartContracts",usedSmartContracts.getText());
         VistaNavigator.loadVista(VistaNavigator.WALLET, params);
@@ -65,7 +65,7 @@ public class GenerateTransactionController extends AbstractController {
 
     @FXML
     private void handleGenerate() {
-        String toAddress = transactionToAddress.getText();
+        String toAddress = tranToAddress.getText();
         final var usedContracts = getSmartsListFromField(usedSmartContracts.getText());
         try {
             if(coinType.getText().equals(CREDITS_TOKEN_NAME)) {
@@ -74,13 +74,13 @@ public class GenerateTransactionController extends AbstractController {
                                                                                                                              toAddress,
                         true),threadPool)
                     .thenApply((transactionData) -> createTransaction(transactionData, GeneralConverter.toBigDecimal(
-                        transactionAmount.getText()), actualOfferedMaxFee16Bits, transactionText.getText(),usedContracts, session))
+                        tranAmount.getText()), actualOfferedMaxFee16Bits, tranText.getText(),usedContracts, session))
                     .whenComplete(handleCallback(handleTransactionResult()));
             } else {
                 session.coinsKeeper.getKeptObject().ifPresent(coinsMap ->
                     Optional.ofNullable(coinsMap.get(coinType.getText())).ifPresent(
                         coin -> session.contractInteractionService.transferTo(coin, toAddress, GeneralConverter.toBigDecimal(
-                            transactionAmount.getText()), actualOfferedMaxFee16Bits, handleTransferTokenResult())));
+                            tranAmount.getText()), actualOfferedMaxFee16Bits, handleTransferTokenResult())));
             }
         } catch (CreditsException e) {
             LOGGER.error(NODE_ERROR + ": " + e.getMessage(), e);
@@ -122,10 +122,10 @@ public class GenerateTransactionController extends AbstractController {
 
     @Override
     public void initializeForm(Map<String,Object> objects) {
-        transactionToAddress.setText(objects.get("transactionToAddress").toString());
-        transactionFeeValue.setText(objects.get("transactionFee").toString());
-        transactionAmount.setText(objects.get("transactionAmount").toString());
-        transactionText.setText(objects.get("transactionText").toString());
+        tranToAddress.setText(objects.get("tranToAddress").toString());
+        tranFee.setText(objects.get("tranFee").toString());
+        tranAmount.setText(objects.get("tranAmount").toString());
+        tranText.setText(objects.get("tranText").toString());
         coinType.setText(objects.get("coinType").toString());
         actualOfferedMaxFee16Bits = (Short)objects.get("actualOfferedMaxFee16Bits");
         usedSmartContracts.setText(objects.get("usedSmartContracts").toString());

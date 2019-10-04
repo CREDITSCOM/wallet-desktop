@@ -5,10 +5,14 @@ import com.credits.client.node.service.NodeApiService;
 import com.credits.general.util.Callback;
 import com.credits.general.util.GeneralConverter;
 import com.credits.wallet.desktop.database.DatabaseHelper;
+import com.credits.wallet.desktop.database.table.Bytecode;
+import com.credits.wallet.desktop.database.table.SmartContract;
+import com.credits.wallet.desktop.database.table.SmartContractHasBytecode;
 import com.credits.wallet.desktop.database.table.Transaction;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
@@ -20,7 +24,6 @@ import static com.credits.general.util.GeneralConverter.encodeToBASE58;
 import static java.lang.Math.min;
 import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
-import static java.util.stream.Collectors.toList;
 
 @Slf4j
 public class DatabaseServiceImpl implements DatabaseService {
@@ -52,8 +55,36 @@ public class DatabaseServiceImpl implements DatabaseService {
                 receivedTrx += response.getTransactionsList().size();
                 totalTrx = response.getAmountTotalTransactions();
                 final var transactions = response.getTransactionsList();
-                final var entities = transactions.stream().map(this::createTransactionDBEntity).collect(toList());
-                database.keepTransactionsList(entities);
+                final var transactionRelation = new ArrayList<Transaction>();
+                final var smartContractRelation = new ArrayList<SmartContract>();
+                final var bytecodeRelation = new ArrayList<Bytecode>();
+                final var smartContractHasByteCodeRelation = new ArrayList<SmartContractHasBytecode>();
+                for (final var transaction : transactions) {
+                    final var transactionEntity = createTransactionDBEntity(transaction);
+                    transactionRelation.add(transactionEntity);
+                    final var smartInfo = transaction.getSmartInfo();
+                    if (smartInfo != null) {
+                        final var wallet = transactionEntity.getReceiver();
+                        final var smartContract = nodeApiService.getSmartContract(wallet.getAddress());
+                        final var deployData = smartContract.getSmartContractDeployData();
+                        final var sourceCode = deployData.getSourceCode();
+                        final var timeCreation = smartContract.getTimeCreation();
+                        final var contractState = smartContract.getObjectState();
+                        final var smartContractEntity = new SmartContract(wallet, sourceCode, contractState, timeCreation);
+                        smartContractRelation.add(smartContractEntity);
+
+                        final var bytecodeObjects = deployData.getByteCodeObjects();
+                        bytecodeObjects.forEach(it -> {
+                            final var bytecodeEntity = new Bytecode(it.getName(), it.getByteCode());
+                            bytecodeRelation.add(bytecodeEntity);
+                            smartContractHasByteCodeRelation.add(new SmartContractHasBytecode(smartContractEntity, bytecodeEntity));
+                        });
+                    }
+                }
+                database.keepTransactionsList(transactionRelation);
+                database.keepBytecodeList(bytecodeRelation);
+                database.keepSmartContractList(smartContractRelation);
+                database.keepSmartContractHasByteCodeList(smartContractHasByteCodeRelation);
             }
             metadata.setAmountTransactions(receivedTrx);
             database.updateApplicationMetadata(metadata);
@@ -84,12 +115,10 @@ public class DatabaseServiceImpl implements DatabaseService {
         final var amount = GeneralConverter.toString(transactionData.getAmount());
         final var maxFee = transactionData.getMaxFee();
         final var timeCreation = new Date(transactionData.getTimeCreation());
-        final var transactionType = database.getOrCreateTransactionType(transactionData.getType().toString());
+        final var transactionType = transactionData.getType().toString();
         final var blockNumber = transactionData.getBlockNumber();
         final var trxIndex = transactionData.getIndexIntoBlock();
-        final var userData = transactionData.getCommentBytes() != null
-                             ? new String(transactionData.getCommentBytes(), StandardCharsets.UTF_8)
-                             : "";
+        final var userData = transactionData.getCommentBytes() != null ? new String(transactionData.getCommentBytes(), StandardCharsets.UTF_8) : "";
 
         return new Transaction(sender, receiver, amount, maxFee, timeCreation, userData, transactionType, blockNumber, trxIndex);
     }

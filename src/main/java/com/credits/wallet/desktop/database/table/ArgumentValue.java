@@ -12,7 +12,7 @@ public class ArgumentValue {
     @DatabaseField(generatedId = true)
     private long id;
 
-    @DatabaseField(foreign = true,  foreignColumnName = "id",  foreignAutoRefresh = true, foreignAutoCreate = true)
+    @DatabaseField(foreign = true, foreignAutoRefresh = true)
     private Argument argument;
 
     @DatabaseField

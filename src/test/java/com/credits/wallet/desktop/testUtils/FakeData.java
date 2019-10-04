@@ -33,6 +33,8 @@ public class FakeData {
 
     public static ApiResponseData successResponse = new ApiResponseData(ApiResponseCode.SUCCESS, "Success");
 
+    private static long timeCreation;
+
     static {
         TransactionData transactionData1;
         TransactionData transactionData2;
@@ -107,8 +109,8 @@ public class FakeData {
                                                 TokenStandardData.BASIC_STANDARD.getId()),
                      decodeFromBASE58(
                     "71RvDKeqeGEBtjQ5iGZeJ4EbRsD3m5cDs5vRW3DFmKiBmiH7pd4NJYyz19gNhqFFYXfZUXsnfrvyjx1jfYD7hvgsULq89VbGc7UQzdH9fzWiUupcqsBidsG6TtUue8R5y4B15R6oQqRtmiBxFcFf7pYZfTS1CECRv2rtaD75AQYg3kR7K5Gc5xSfqS8GVCE9LK3hQF6wNkYQ8QTHyqDUv1qsKT7ZJd9Q4F6XBkWxV6CXTfAWVdQC7LXxFLaCYiQdtQygJenvtPotWiwZHxYFYjQeqcSQZtgt7yjxR4ou73NP6neeZ4MyAgP7fYL5GoDjvsAjfr2wsom8inCrkeBdQ7nfsAyju2x6d7TgGe2qGPnbe7mPFx91b4Z6R2VC6njTnG2YSXv29LNDCDurEiwvA3jBd6vj3MsxozPhJUrNdcwaRN8bY9soEsT18vypXZdELG4jp8ytf2a52NUD7tDh6u1TtoKiDuQ1tmsERpmCpF1kBuDVdkdsE8LQEDNNNGos3Lgb8to4CDUdQQmusmWaZgq2K4JojWpM67oN7sGyYX4tQx9KgVrtJgLyyNqLzRjadfFNdoQ53sf537jG1h5MXJWUVw8XJHeGHWA1kXtoRoL68kReCDortDSSLBZqupTc7gUf5SZG23nJHhA88HnWRH2gV1QsWxB"),
-                        null
-                ));
+                        null,
+                                      timeCreation));
             smartContractDataList.add(
                 new SmartContractData(decodeFromBASE58("22222222222222222222222222222222222222222222"),
                     byteAddress, 
@@ -122,8 +124,8 @@ public class FakeData {
                     ),
                      decodeFromBASE58(
                     "71RvDKeqeGEBtjQ5iGZeJ4EbRsD3m5cDs5vRW3DFmKiBmiH7pd4NJYyz19gNhqFFYXfZUXsnfrvyjx1jfYD7hvgsULq89VbGc7UQzdH9fzWiUupcqsBidsG6TtUue8R5y4B15R6oQqRtmiBxFcFf7pYZfTS1CECRv2rtaD75AQYg3kR7K5Gc5xSfqS8GVCE9LK3hQF6wNkYQ8QTHyqDUv1qsKT7ZJd9Q4F6XBkWxV6CXTfAWVdQC7LXxFLaCYiQdtQygJenvtPotWiwZHxYFYjQeqcSQZtgt7yjxR4ou73NP6neeZ4MyAgP7fYL5GoDjvsAjfr2wsom8inCrkeBdQ7nfsAyju2x6d7TgGe2qGPnbe7mPFx91b4Z6R2VC6njTnG2YSXv29LNDCDurEiwvA3jBd6vj3MsxozPhJUrNdcwaRN8bY9soEsT18vypXZdELG4jp8ytf2a52NUD7tDh6u1TtoKiDuQ1tmsERpmCpF1kBuDVdkdsE8LQEDNNNGos3Lgb8to4CDUdQQmusmWaZgq2K4JojWpM67oN7sGyYX4tQx9KgVrtJgLyyNqLzRjadfFNdoQ53sf537jG1h5MXJWUVw8XJHeGHWA1kXtoRoL68kReCDortDSSLBZqupTc7gUf5SZG23nJHhA88HnWRH2gV1QsWxB"),
-                    null
-                ));
+                    null,
+                                      timeCreation));
             /*smartContractDataList.add(
                 new SmartContractData(decodeFromBASE58("33333333333333333333333333333333333333333333"),
                     byteAddress,
@@ -261,4 +263,5 @@ public class FakeData {
             e.printStackTrace();
         }
     }
+
 }

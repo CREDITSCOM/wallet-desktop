@@ -87,7 +87,7 @@ public class HistoryController extends AbstractController {
                     tableRow.setSender(transaction.getSender().getAddress());
                     tableRow.setReceiver(transaction.getReceiver().getAddress());
                     tableRow.setAmount(transaction.getAmount());
-                    tableRow.setType(transaction.getType().getName());
+                    tableRow.setType(transaction.getType());
                     approvedList.add(tableRow);
 
                 });

@@ -30,9 +30,9 @@ public class DatabaseHelper {
     private Dao<Wallet, Long> walletDao;
     private Dao<Transaction, Long> transactionDao;
     private Dao<ApplicationMetadata, Wallet> applicationMetadataDao;
-    private Dao<TransactionType, ?> transactionTypeDao;
-    private Dao<JavaObjectType, ?> typeDao;
     private Dao<Argument, ?> argumentDao;
+    private Dao<SmartContractHasBytecode, ?> smartContractHasBytecodeDao;
+    private Dao<Bytecode, ?> bytecodeDao;
 
     public DatabaseHelper(String databaseUrl) {
         this.databaseUrl = databaseUrl;
@@ -42,12 +42,13 @@ public class DatabaseHelper {
         try {
             connectionSource = new JdbcConnectionSource(databaseUrl);
             argumentDao = createDao(connectionSource, Argument.class);
-            typeDao = createDao(connectionSource, JavaObjectType.class);
             smartContractDao = createDao(connectionSource, SmartContract.class);
             walletDao = createDao(connectionSource, Wallet.class);
             transactionDao = createDao(connectionSource, Transaction.class);
             applicationMetadataDao = createDao(connectionSource, ApplicationMetadata.class);
-            transactionTypeDao = createDao(connectionSource, TransactionType.class);
+            argumentDao = createDao(connectionSource, Argument.class);
+            smartContractHasBytecodeDao = createDao(connectionSource, SmartContractHasBytecode.class);
+            bytecodeDao = createDao(connectionSource, Bytecode.class);
 
         } catch (SQLException e) {
             log.error("can't connect to database. Reason {}", e.getMessage());
@@ -61,6 +62,14 @@ public class DatabaseHelper {
 
     public void keepSmartContract(SmartContract smartContract) throws SQLException {
         smartContractDao.createIfNotExists(smartContract);
+    }
+
+    public void keepSmartContractList(List<SmartContract> smartContractList) {
+        rethrowWithDetailMessage(() -> smartContractDao.create(smartContractList));
+    }
+
+    public void keepSmartContractHasByteCodeList(List<SmartContractHasBytecode> smartContractHasBytecodeList) {
+        rethrowWithDetailMessage(() -> smartContractHasBytecodeDao.create(smartContractHasBytecodeList));
     }
 
     public SmartContract getSmartContract(String address) throws SQLException {
@@ -102,17 +111,6 @@ public class DatabaseHelper {
         });
     }
 
-    public TransactionType getOrCreateTransactionType(String type) {
-        return rethrowWithDetailMessage(() -> {
-            var transactionType = transactionTypeDao.queryBuilder().where().eq("name", type).queryForFirst();
-            if (transactionType == null) {
-                transactionType = new TransactionType(type);
-                transactionTypeDao.create(transactionType);
-            }
-            return transactionType;
-        });
-    }
-
     private Wallet findWalletByAddress(String address) throws SQLException {
         return walletDao.queryBuilder().where().eq("address", address).queryForFirst();
     }
@@ -136,18 +134,22 @@ public class DatabaseHelper {
                 .query());
     }
 
+    public void keepBytecodeList(List<Bytecode> bytecodeList) {
+        rethrowWithDetailMessage(() -> bytecodeDao.create(bytecodeList));
+    }
+
     public void createTablesIfNotExist() {
         rethrowWithDetailMessage(() -> {
             createTable(Wallet.class);
-            createTable(TransactionType.class);
             createTable(Transaction.class);
             createTable(ApplicationMetadata.class);
-            createTable(JavaObjectType.class);
             createTable(Argument.class);
             createTable(ArgumentValue.class);
             createTable(Method.class);
             createTable(SmartContract.class);
             createTable(SmartContractCall.class);
+            createTable(SmartContractHasBytecode.class);
+            createTable(Bytecode.class);
         });
     }
 

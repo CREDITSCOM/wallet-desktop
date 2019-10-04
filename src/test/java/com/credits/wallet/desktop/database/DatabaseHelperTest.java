@@ -1,6 +1,9 @@
 package com.credits.wallet.desktop.database;
 
-import com.credits.wallet.desktop.database.table.*;
+import com.credits.wallet.desktop.database.table.ApplicationMetadata;
+import com.credits.wallet.desktop.database.table.SmartContract;
+import com.credits.wallet.desktop.database.table.Transaction;
+import com.credits.wallet.desktop.database.table.Wallet;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +28,8 @@ class DatabaseHelperTest extends DatabaseTest {
     private Transaction transaction1;
     private Transaction transaction2;
     private Transaction transaction3;
+    private Wallet wallet;
+    private SmartContract contract;
 
     @BeforeEach
     void setUp(TestInfo testInfo) throws IOException {
@@ -34,7 +39,6 @@ class DatabaseHelperTest extends DatabaseTest {
         processingTestAnnotations(testInfo);
         address1 = db.getOrCreateWallet("address1");
         address2 = db.getOrCreateWallet("address2");
-        TransactionType transactionType = db.getOrCreateTransactionType("TT_NORMAL");
         final var currentTime = Date.from(Instant.now());
         transaction1 = new Transaction(address1,
                                        address2,
@@ -42,7 +46,7 @@ class DatabaseHelperTest extends DatabaseTest {
                                        0.1,
                                        currentTime,
                                                  "from address1 to address2",
-                                                 transactionType,
+                                                 "TT_NORMAL",
                                                  0,
                                                  0);
         transaction2 = new Transaction(address2,
@@ -51,7 +55,7 @@ class DatabaseHelperTest extends DatabaseTest {
                                        0.1,
                                        currentTime,
                                        "from address2 to address1",
-                                       transactionType,
+                                       "TT_NORMAL",
                                        0,
                                        1);
         transaction3 = new Transaction(address2,
@@ -60,9 +64,11 @@ class DatabaseHelperTest extends DatabaseTest {
                                        0.1,
                                        currentTime,
                                        "from address2 to address1",
-                                       transactionType,
+                                       "TT_NORMAL",
                                        0,
                                        2);
+        wallet = new Wallet("someAddress");
+        contract = new SmartContract(wallet, "someCode", new byte[0], System.currentTimeMillis());
     }
 
     @AfterEach
@@ -72,11 +78,8 @@ class DatabaseHelperTest extends DatabaseTest {
     }
 
     @Test
-    @CreateTables({ApplicationMetadata.class, Wallet.class, SmartContract.class, TransactionType.class})
+    @CreateTables({ApplicationMetadata.class, Wallet.class, SmartContract.class})
     void createTableThenAddAndGetSmartContract() throws SQLException {
-        final var wallet = new Wallet("someAddress");
-        final var contract = new SmartContract(wallet, "someCode", System.currentTimeMillis());
-
         db.keepSmartContract(contract);
 
         final var returnedContract = db.getSmartContract(contract.getWallet().getAddress());
@@ -85,7 +88,7 @@ class DatabaseHelperTest extends DatabaseTest {
     }
 
     @Test
-    @CreateTables({Wallet.class, Transaction.class, TransactionType.class})
+    @CreateTables({Wallet.class, Transaction.class})
     void testingTransactionManipulationMethods() {
         db.createIfNotExistsTransaction(transaction1);
         db.createIfNotExistsTransaction(transaction2);
@@ -102,7 +105,7 @@ class DatabaseHelperTest extends DatabaseTest {
     }
 
     @Test
-    @CreateTables({Wallet.class, Transaction.class, TransactionType.class})
+    @CreateTables({Wallet.class, Transaction.class})
     void keepSameTransactionTwice() {
         db.createIfNotExistsTransaction(transaction1);
         db.createIfNotExistsTransaction(transaction1);

@@ -26,8 +26,8 @@ public class Transaction {
     private Date timeCreation;
     @DatabaseField(columnName = "user_data")
     private String userData;
-    @DatabaseField(foreign = true, foreignColumnName = "name", foreignAutoCreate = true)
-    private TransactionType type;
+    @DatabaseField
+    private String type;
     @DatabaseField(columnName = "block_number", index = true)
     private long blockNumber;
     @DatabaseField(columnName = "index_into_block")
@@ -39,7 +39,7 @@ public class Transaction {
                        double maxFee,
                        @NonNull Date timeCreation,
                        @NonNull String userData,
-                       @NonNull TransactionType type,
+                       @NonNull String type,
                        long blockNumber,
                        int indexIntoBlock) {
         this.sender = sender;

@@ -172,8 +172,9 @@ public class SmartContractDeployController extends AbstractController {
                 long idWithoutFirstTwoBits = getIdWithoutFirstTwoBits(AppState.getNodeApiService(), session.account, true);
 
                 SmartContractData smartContractData = new SmartContractData(
-                    generateSmartContractAddress(decodeFromBASE58(session.account), idWithoutFirstTwoBits,
-                                                 byteCodeObjectDataList), decodeFromBASE58(session.account), smartContractDeployData, null, null);
+                        generateSmartContractAddress(decodeFromBASE58(session.account), idWithoutFirstTwoBits,
+                                                 byteCodeObjectDataList), decodeFromBASE58(session.account), smartContractDeployData, null, null,
+                        System.currentTimeMillis());
 
                 supplyAsync(() -> getCalcTransactionIdSourceTargetResult(AppState.getNodeApiService(), session.account,
                                                                          smartContractData.getBase58Address(), idWithoutFirstTwoBits), threadPool)

@@ -12,12 +12,23 @@ public class SmartContractCall {
     @DatabaseField(generatedId = true)
     private long id;
 
-    @DatabaseField(columnName = "smart_contract_id", foreign = true)
+    @DatabaseField(columnName = "smart_contract", foreign = true)
     private SmartContract smartContract;
 
-    @DatabaseField(foreign = true, foreignAutoCreate = true, foreignAutoRefresh = true)
-    private SmartContractCallHasMethod method;
+    @DatabaseField(foreign = true, foreignAutoRefresh = true)
+    private Method method;
 
-    @DatabaseField(foreign = true, foreignAutoCreate = true, foreignAutoRefresh = true)
-    private SmartContractCallHasArgumentValue argumentValue;
+    @DatabaseField(columnName = "operation_state")
+    private String operationState;
+
+    @DatabaseField(columnName = "return_value")
+    private String returnValue;
+
+    public SmartContractCall(SmartContract smartContract, Method method, String returnValue, String operationState) {
+        this.smartContract = smartContract;
+        this.method = method;
+        this.operationState = operationState;
+        this.returnValue = returnValue;
+    }
 }
+

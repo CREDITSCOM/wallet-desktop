@@ -3,6 +3,9 @@ package com.credits.wallet.desktop.database;
 import com.credits.general.exception.CreditsException;
 import com.credits.wallet.desktop.database.table.*;
 import com.j256.ormlite.core.dao.Dao;
+import com.j256.ormlite.core.logger.Logger;
+import com.j256.ormlite.core.logger.LoggerFactory;
+import com.j256.ormlite.core.stmt.QueryBuilder;
 import com.j256.ormlite.core.support.ConnectionSource;
 import com.j256.ormlite.core.table.TableUtils;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
@@ -14,6 +17,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import static com.credits.general.util.Utils.CheckedRunnable;
 import static com.credits.wallet.desktop.utils.GeneralUtils.getResourceAsStream;
@@ -33,6 +37,9 @@ public class DatabaseHelper {
     private Dao<Argument, ?> argumentDao;
     private Dao<SmartContractHasBytecode, ?> smartContractHasBytecodeDao;
     private Dao<Bytecode, ?> bytecodeDao;
+    private Dao<WalletHasSmartContract, ?> walletHasSmartContractDao;
+
+    private static Logger logger = LoggerFactory.getLogger(QueryBuilder.class);
 
     public DatabaseHelper(String databaseUrl) {
         this.databaseUrl = databaseUrl;
@@ -49,6 +56,7 @@ public class DatabaseHelper {
             argumentDao = createDao(connectionSource, Argument.class);
             smartContractHasBytecodeDao = createDao(connectionSource, SmartContractHasBytecode.class);
             bytecodeDao = createDao(connectionSource, Bytecode.class);
+            walletHasSmartContractDao = createDao(connectionSource, WalletHasSmartContract.class);
 
         } catch (SQLException e) {
             log.error("can't connect to database. Reason {}", e.getMessage());
@@ -84,6 +92,10 @@ public class DatabaseHelper {
         rethrowWithDetailMessage(() -> transactionDao.create(transactionList));
     }
 
+    public void keepWalletHasSmartContractList(List<WalletHasSmartContract> walletHasSmartContractList) {
+        rethrowWithDetailMessage(() -> walletHasSmartContractDao.create(walletHasSmartContractList));
+    }
+
     public Wallet getOrCreateWallet(String address) {
         return rethrowWithDetailMessage(() -> {
             var wallet = findWalletByAddress(address);
@@ -93,6 +105,16 @@ public class DatabaseHelper {
             }
             return wallet;
         });
+    }
+
+    public List<String> getSmartContractsAddressList(String address) {
+        var query = "select smart_contract.wallet_address as address from wallet_has_smart_contract join wallet on wallet_has_smart_contract" +
+                ".wallet_id = wallet.id join smart_contract on smart_contract.id = wallet_has_smart_contract.smart_contract_id where address = ?;";
+        return rethrowWithDetailMessage(() -> walletDao.queryRaw(query, walletDao.getRawRowMapper(), address)
+                .getResults()
+                .stream()
+                .map(Wallet::getAddress)
+                .collect(Collectors.toList()));
     }
 
     public void updateApplicationMetadata(ApplicationMetadata metadata) {
@@ -150,6 +172,7 @@ public class DatabaseHelper {
             createTable(SmartContractCall.class);
             createTable(SmartContractHasBytecode.class);
             createTable(Bytecode.class);
+            createTable(WalletHasSmartContract.class);
         });
     }
 

@@ -5,10 +5,7 @@ import com.credits.client.node.service.NodeApiService;
 import com.credits.general.util.Callback;
 import com.credits.general.util.GeneralConverter;
 import com.credits.wallet.desktop.database.DatabaseHelper;
-import com.credits.wallet.desktop.database.table.Bytecode;
-import com.credits.wallet.desktop.database.table.SmartContract;
-import com.credits.wallet.desktop.database.table.SmartContractHasBytecode;
-import com.credits.wallet.desktop.database.table.Transaction;
+import com.credits.wallet.desktop.database.table.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
@@ -58,6 +55,7 @@ public class DatabaseServiceImpl implements DatabaseService {
                 final var transactionRelation = new ArrayList<Transaction>();
                 final var smartContractRelation = new ArrayList<SmartContract>();
                 final var bytecodeRelation = new ArrayList<Bytecode>();
+                final var walletHasSmartContractsRelation = new ArrayList<WalletHasSmartContract>();
                 final var smartContractHasByteCodeRelation = new ArrayList<SmartContractHasBytecode>();
                 for (final var transaction : transactions) {
                     final var transactionEntity = createTransactionDBEntity(transaction);
@@ -72,6 +70,7 @@ public class DatabaseServiceImpl implements DatabaseService {
                         final var contractState = smartContract.getObjectState();
                         final var smartContractEntity = new SmartContract(wallet, sourceCode, contractState, timeCreation);
                         smartContractRelation.add(smartContractEntity);
+                        walletHasSmartContractsRelation.add(new WalletHasSmartContract(transactionEntity.getSender(), smartContractEntity));
 
                         final var bytecodeObjects = deployData.getByteCodeObjects();
                         bytecodeObjects.forEach(it -> {
@@ -85,6 +84,7 @@ public class DatabaseServiceImpl implements DatabaseService {
                 database.keepBytecodeList(bytecodeRelation);
                 database.keepSmartContractList(smartContractRelation);
                 database.keepSmartContractHasByteCodeList(smartContractHasByteCodeRelation);
+                database.keepWalletHasSmartContractList(walletHasSmartContractsRelation);
             }
             metadata.setAmountTransactions(receivedTrx);
             database.updateApplicationMetadata(metadata);
@@ -102,6 +102,11 @@ public class DatabaseServiceImpl implements DatabaseService {
     @Override
     public void getLastTransactions(String address, long blockNumber, long limit, Callback<List<Transaction>> handleResult) {
         asyncRead(() -> database.getLastTransactions(address, blockNumber, limit), handleResult);
+    }
+
+    @Override
+    public void getDeployerContractsAddressList(String deployer, Callback<List<String>> handleResult) {
+        asyncRead(() -> database.getSmartContractsAddressList(deployer), handleResult);
     }
 
     @Override

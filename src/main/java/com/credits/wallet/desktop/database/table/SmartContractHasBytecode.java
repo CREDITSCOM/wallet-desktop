@@ -12,7 +12,7 @@ public class SmartContractHasBytecode {
     @DatabaseField(generatedId = true)
     private int id;
 
-    @DatabaseField(columnName = "smart_contract", foreign = true)
+    @DatabaseField(columnName = "smart_contract_id", foreign = true)
     private SmartContract smartContract;
 
     @DatabaseField(foreign = true)

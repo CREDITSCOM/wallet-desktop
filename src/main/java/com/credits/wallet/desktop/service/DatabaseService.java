@@ -16,4 +16,6 @@ public interface DatabaseService {
     void getLastTransactions(String address, long limit, Callback<List<Transaction>> handleResult);
 
     void getLastTransactions(String address, long beginBlock, long limit, Callback<List<Transaction>> handleResult);
+
+    void getDeployerContractsAddressList(String deployerAddress, Callback<List<String>> addresses);
 }

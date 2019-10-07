@@ -31,6 +31,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.fxmisc.richtext.CodeArea;
 import org.slf4j.Logger;
@@ -51,9 +52,11 @@ import static com.credits.general.util.Utils.rethrowUnchecked;
 import static com.credits.general.util.Utils.threadPool;
 import static com.credits.general.util.variant.VariantConverter.toVariant;
 import static com.credits.wallet.desktop.AppState.NODE_ERROR;
+import static com.credits.wallet.desktop.AppState.getDatabase;
 import static com.credits.wallet.desktop.utils.ApiUtils.createSmartContractTransaction;
 import static com.credits.wallet.desktop.utils.FormUtils.*;
 import static com.credits.wallet.desktop.utils.SmartContractsUtils.getSmartsListFromField;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 
 
@@ -396,7 +399,9 @@ public class SmartContractController extends AbstractController {
 
                     if (smartContractTransactionDataList.stream().anyMatch(smartContractTransactionData -> {
                         SmartTransInfoData smartInfo = smartContractTransactionData.getSmartInfo();
-                        if (smartInfo == null) { return true; }
+                        if (smartInfo == null) {
+                            return true;
+                        }
                         return smartContractTransactionData.getInnerId() == id && !smartInfo.isSmartState();
                     })) {
                         session.unapprovedTransactions.remove(id);
@@ -556,7 +561,19 @@ public class SmartContractController extends AbstractController {
     }
 
     private void refreshContractsTab() {
-        async(() -> AppState.getNodeApiService().getSmartContracts(session.account), handleGetSmartContractsResult());
+        getDatabase().getDeployerContractsAddressList(session.account, new Callback<>() {
+            @Override
+            public void onSuccess(List<String> resultData) throws CreditsException {
+                smartContractTableView.getItems()
+                        .addAll(resultData.stream().map(address -> new SmartContractTabRow(address, new ToggleButton(), null)).collect(toList()));
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                LOGGER.error("can't read smart contract addresses from database. Reason:{}", ExceptionUtils.getRootCauseMessage(e));
+
+            }
+        });
     }
 
     private void refreshFavoriteContractsTab() {

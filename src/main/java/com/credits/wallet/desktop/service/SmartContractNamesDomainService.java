@@ -89,7 +89,7 @@ public class SmartContractNamesDomainService {
                     LOGGER.error("Smart-contract SmartContractNamesDomain state receiving error: {}", e.getMessage());
                 }
                 LOGGER.info("Smart-contract SmartContractNamesDomain state received successfully");
-            }, 0, 30, TimeUnit.SECONDS);
+            }, 0, 5, TimeUnit.MINUTES);
             LOGGER.info("SmartContractNamesDomainService initialized successfully");
         } catch (CreditsException | NoSuchMethodException e) {
             LOGGER.error("SmartContractNamesDomainService initializing error: SmartContractNamesDomain by address {} is not found", AppState.getSmartContractNamesDomainAddress());

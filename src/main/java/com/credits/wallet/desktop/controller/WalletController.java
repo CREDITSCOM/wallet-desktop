@@ -9,6 +9,7 @@ import com.credits.wallet.desktop.VistaNavigator;
 import com.credits.wallet.desktop.struct.CoinTabRow;
 import com.credits.wallet.desktop.utils.FormUtils;
 import javafx.application.Platform;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -29,6 +30,7 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -50,6 +52,9 @@ public class WalletController extends AbstractController {
     private final String ERROR_STATE_MESSAGE = "not available";
     private final DecimalFormat creditsDecimalFormat = new DecimalFormat("##0." + repeat('0', CREDITS_DECIMAL));
     ContextMenu contextMenu = new ContextMenu();
+    private String toAddressDomainName = null;
+    private String toAddressDomainAddress = null;
+
 
     @FXML
     private Label publicWalletID;
@@ -75,7 +80,6 @@ public class WalletController extends AbstractController {
     private Label actualOfferedMaxFeeLabel;
     @FXML
     private TextField usdSmart;
-    private String tranToAddressFromScDomainNames;
 
     @FXML
     private void handleLogout() {
@@ -101,10 +105,26 @@ public class WalletController extends AbstractController {
     }
 
     @FXML
+    private void onToAddressChange(ObservableValue observable, String oldValue, String newValue) {
+        if (newValue.startsWith("@") && session.smartContractNamesDomainService.isInitialized()) {
+            addressField.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+            toAddressDomainName = addressField.getText().substring(1);
+            toAddressDomainAddress = session.smartContractNamesDomainService.executeGetContractAddress(toAddressDomainName);
+            if (toAddressDomainAddress != null) {
+                addressField.setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
+            }
+        } else {
+            addressField.setStyle(""); // default style
+            toAddressDomainName = null;
+            toAddressDomainAddress = null;
+        }
+    }
+
+    @FXML
     private void handleGenerate() {
         String tranAmount = amountField.getText();
         String tranFee = feeField.getText();
-        String tranToAddress = tranToAddressFromScDomainNames == null ? addressField.getText() : tranToAddressFromScDomainNames;
+        String tranToAddress = Optional.ofNullable(toAddressDomainAddress).orElse(addressField.getText());
         String tranText = transText.getText();
         String usedSmartContracts = usdSmart.getText();
 
@@ -138,6 +158,7 @@ public class WalletController extends AbstractController {
             HashMap<String, Object> params = new HashMap<>();
             params.put("coinType", selectedCoin.getName());
             params.put("tranToAddress", tranToAddress);
+            params.put("tranToAddressDomainName", toAddressDomainAddress == null ? null : toAddressDomainName);
             params.put("tranAmount", tranAmount);
             params.put("tranFee", tranFee);
             params.put("tranText", tranText);
@@ -294,7 +315,11 @@ public class WalletController extends AbstractController {
         });
 
         if (objects != null) {
-            addressField.setText(objects.get("tranToAddress").toString());
+            Optional.ofNullable(objects.get("tranToAddressDomainName")).ifPresentOrElse(o -> {
+                addressField.setText(o.toString());
+            }, () -> {
+                addressField.setText(objects.get("tranToAddress").toString());
+            });
             amountField.setText(objects.get("tranAmount").toString());
             feeField.setText(objects.get("tranFee").toString());
             transText.setText(objects.get("tranText").toString());
@@ -307,22 +332,6 @@ public class WalletController extends AbstractController {
                 i++;
             }
         }
-
-        addressField.textProperty().addListener((obs, o, n)-> {
-            if (n.startsWith("@")) {
-                addressField.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
-                if (session.smartContractNamesDomainService.isInitialized()) {
-                    String domainName = addressField.getText().substring(1);
-                    tranToAddressFromScDomainNames = session.smartContractNamesDomainService.executeGetContractAddress(domainName);
-                    if (tranToAddressFromScDomainNames != null) {
-                        addressField.setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
-                    }
-                }
-            } else {
-                addressField.setStyle(""); // default style
-                tranToAddressFromScDomainNames = null;
-            }
-        });
     }
 
     private void setFieldValue(TextField tf, String newValue) {

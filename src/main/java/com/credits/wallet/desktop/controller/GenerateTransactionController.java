@@ -49,6 +49,9 @@ public class GenerateTransactionController extends AbstractController {
     @FXML
     private TextField usedSmartContracts;
 
+    @FXML
+    private TextField tranToAddressDomainName;
+
     private short actualOfferedMaxFee16Bits;
 
     @FXML
@@ -56,6 +59,8 @@ public class GenerateTransactionController extends AbstractController {
         Map<String, Object> params = new HashMap<>();
         params.put("tranFee", tranFee.getText());
         params.put("tranToAddress", tranToAddress.getText());
+        String tranToAddressDomainNameText = tranToAddressDomainName.getText();
+        params.put("tranToAddressDomainName", tranToAddressDomainNameText.isEmpty() ? null : tranToAddressDomainNameText);
         params.put("tranAmount", tranAmount.getText());
         params.put("tranText", tranText.getText());
         params.put("coinType", coinType.getText());
@@ -122,6 +127,11 @@ public class GenerateTransactionController extends AbstractController {
 
     @Override
     public void initializeForm(Map<String,Object> objects) {
+
+        Optional.ofNullable(objects.get("tranToAddressDomainName")).ifPresent(o -> {
+            tranToAddressDomainName.setText("@" + o.toString());
+            tranToAddressDomainName.setPrefWidth(tranToAddressDomainName.getText().length() * 70); // autosizing
+        });
         tranToAddress.setText(objects.get("tranToAddress").toString());
         tranFee.setText(objects.get("tranFee").toString());
         tranAmount.setText(objects.get("tranAmount").toString());

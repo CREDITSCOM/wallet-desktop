@@ -57,7 +57,7 @@
     <VBox layoutX="650.0" layoutY="110.0" maxHeight="491.0" minHeight="392.0" prefHeight="491.0" prefWidth="615.0">
         <Label styleClass="credits-not-padding-label" text="To address which opened on Credits (only)">
         </Label>
-        <TextField fx:id="addressField" maxHeight="45.0" minHeight="45.0" prefHeight="45.0" prefWidth="605.0" promptText="Put address here" styleClass="credits-textField" />
+        <TextField fx:id="addressField" maxHeight="45.0" minHeight="45.0" onTextChange="#onToAddressChange" prefHeight="45.0" prefWidth="605.0" promptText="Put address here" styleClass="credits-textField" />
         <Label fx:id="addressErrorLabel" maxHeight="45.0" minHeight="20.0" prefHeight="30.0" styleClass="credits--not-padding-labelError" />
         <Label styleClass="credits-not-padding-label" text="Amount">
         </Label>

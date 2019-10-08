@@ -1,6 +1,7 @@
 package com.credits.wallet.desktop.database;
 
 import com.credits.general.exception.CreditsException;
+import com.credits.general.pojo.ByteCodeObjectData;
 import com.credits.wallet.desktop.database.table.*;
 import com.j256.ormlite.core.dao.Dao;
 import com.j256.ormlite.core.logger.Logger;
@@ -108,12 +109,29 @@ public class DatabaseHelper {
     }
 
     public List<String> getSmartContractsAddressList(String address) {
-        var query = "select smart_contract.wallet_address as address from wallet_has_smart_contract join wallet on wallet_has_smart_contract" +
-                ".wallet_id = wallet.id join smart_contract on smart_contract.id = wallet_has_smart_contract.smart_contract_id where address = ?;";
+        final var query = "select smart_contract.wallet_address as address " +
+                "from wallet_has_smart_contract " +
+                "join wallet on wallet_has_smart_contract.wallet_id = wallet.id " +
+                "join smart_contract on smart_contract.id = wallet_has_smart_contract.smart_contract_id " +
+                "where address = ?";
         return rethrowWithDetailMessage(() -> walletDao.queryRaw(query, walletDao.getRawRowMapper(), address)
                 .getResults()
                 .stream()
                 .map(Wallet::getAddress)
+                .collect(Collectors.toList()));
+    }
+
+    public List<ByteCodeObjectData> getSmartContractBytecodeObjects(String address) {
+        final var query = "select * " +
+                "from bytecode " +
+                "join smart_contract_has_bytecode on bytecode.id = smart_contract_has_bytecode.bytecode_id " +
+                "join smart_contract on smart_contract_has_bytecode.smart_contract_id = smart_contract.id " +
+                "where smart_contract.wallet_address = ?";
+
+        return rethrowWithDetailMessage(() -> bytecodeDao.queryRaw(query, bytecodeDao.getRawRowMapper(), address)
+                .getResults()
+                .stream()
+                .map(it -> new ByteCodeObjectData(it.getClassName(), it.getBytecode()))
                 .collect(Collectors.toList()));
     }
 

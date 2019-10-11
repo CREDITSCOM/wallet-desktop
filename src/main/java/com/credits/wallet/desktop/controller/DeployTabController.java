@@ -138,7 +138,7 @@ public class DeployTabController extends AbstractController {
 
 
     @Override
-    public void initializeForm(Map<String, Object> objects) {
+    public void initialize(Map<String, ?> objects) {
         initConsoleOutput();
         initNewSmartTab();
         initSmartTab();
@@ -343,7 +343,7 @@ public class DeployTabController extends AbstractController {
     }
 
     @Override
-    public void formDeinitialize() {
+    public void deinitialize(){
         DeploySmartListItem item = getCurrentListItem(deployContractList);
         saveCodeFromTextArea(item);
         session.deployContractsKeeper.keepObject(new ArrayList<>(deployContractList.getItems()));

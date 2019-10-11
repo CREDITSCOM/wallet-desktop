@@ -42,7 +42,7 @@ public class SmartContractTransactionController extends AbstractController{
     private ListView listSmartInfo;
 
     @Override
-    public void initializeForm(Map<String, Object> objects) {
+    public void initialize(Map<String, ?> objects) {
         SmartContractTransactionTabRow selectedTransactionRow = (SmartContractTransactionTabRow) objects.get("selectedTransactionRow");
 
         labInnerId.setText(selectedTransactionRow.getId());
@@ -83,7 +83,7 @@ public class SmartContractTransactionController extends AbstractController{
     }
 
     @Override
-    public void formDeinitialize() {
+    public void deinitialize() {
 
     }
 }

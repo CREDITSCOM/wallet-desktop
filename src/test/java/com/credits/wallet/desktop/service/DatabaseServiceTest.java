@@ -1,8 +1,8 @@
 package com.credits.wallet.desktop.service;
 
 import com.credits.client.node.pojo.TransactionData;
+import com.credits.client.node.pojo.TransactionListByAddressData;
 import com.credits.client.node.pojo.TransactionTypeData;
-import com.credits.client.node.pojo.TransactionsAndAmountData;
 import com.credits.client.node.service.NodeApiService;
 import com.credits.wallet.desktop.database.DatabaseHelper;
 import com.credits.wallet.desktop.database.table.ApplicationMetadata;
@@ -44,7 +44,7 @@ class DatabaseServiceTest {
         configureNodeMockReturnTransactions(1, 0, 10);
         database.updateTransactionsOnAddress(address);
         Thread.sleep(100);
-        verify(mockNodeApi).getTransactionsAndAmount(address, 0, 10);
+        verify(mockNodeApi).getTransactionList(address, 0, 10);
     }
 
     @Test
@@ -56,8 +56,8 @@ class DatabaseServiceTest {
         database.updateTransactionsOnAddress(address);
         Thread.sleep(100);
 
-        verify(mockNodeApi).getTransactionsAndAmount(address, 0, 10);
-        verify(mockNodeApi).getTransactionsAndAmount(address, 10, 90);
+        verify(mockNodeApi).getTransactionList(address, 0, 10);
+        verify(mockNodeApi).getTransactionList(address, 10, 90);
     }
 
     @Test
@@ -70,10 +70,10 @@ class DatabaseServiceTest {
         database.updateTransactionsOnAddress(address);
         Thread.sleep(100);
 
-        verify(mockNodeApi).getTransactionsAndAmount(address, 0, 10);
-        verify(mockNodeApi).getTransactionsAndAmount(address, 10, 100);
-        verify(mockNodeApi).getTransactionsAndAmount(address, 110, 100);
-        verify(mockNodeApi).getTransactionsAndAmount(address, 210, 90);
+        verify(mockNodeApi).getTransactionList(address, 0, 10);
+        verify(mockNodeApi).getTransactionList(address, 10, 100);
+        verify(mockNodeApi).getTransactionList(address, 110, 100);
+        verify(mockNodeApi).getTransactionList(address, 210, 90);
     }
 
 
@@ -83,8 +83,8 @@ class DatabaseServiceTest {
         for (int i = 0; i < limit; i++) {
             responseTransactions.add(mockTransaction);
         }
-        final var transactionAndAmountData = new TransactionsAndAmountData(amountTotalTransactions, responseTransactions);
-        when(mockNodeApi.getTransactionsAndAmount("address", offset, limit)).thenReturn(transactionAndAmountData);
+        final var transactionAndAmountData = new TransactionListByAddressData(amountTotalTransactions, responseTransactions);
+        when(mockNodeApi.getTransactionList("address", offset, limit)).thenReturn(transactionAndAmountData);
     }
 
 }

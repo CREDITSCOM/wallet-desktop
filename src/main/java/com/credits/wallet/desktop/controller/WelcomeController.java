@@ -13,20 +13,20 @@ public class WelcomeController extends AbstractController {
 
     @FXML
     private void handleExistingAccount() {
-        VistaNavigator.loadVista(VistaNavigator.FORM_5);
+        VistaNavigator.reloadForm(VistaNavigator.FORM_5);
     }
 
     @FXML
     private void handleNewAccount() {
-        VistaNavigator.loadVista(VistaNavigator.FORM_1);
+        VistaNavigator.reloadForm(VistaNavigator.FORM_1);
     }
 
     @Override
-    public void initializeForm(Map<String, Object> objects) {
+    public void initialize(Map<String, ?> objects) {
     }
 
     @Override
-    public void formDeinitialize() {
+    public void deinitialize() {
 
     }
 }

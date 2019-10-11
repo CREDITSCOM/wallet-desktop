@@ -24,20 +24,18 @@ public class GenerateKeysController extends AbstractController {
 
     @FXML
     private void handleBack() {
-        VistaNavigator.loadVista(VistaNavigator.WELCOME);
+        VistaNavigator.reloadForm(VistaNavigator.WELCOME);
     }
 
     @FXML
     private void handleGenerate() {
         KeyPair keyPair = Ed25519.generateKeyPair();
-        AppState.setPublicKey(keyPair.getPublic());
-        AppState.setPrivateKey(keyPair.getPrivate());
         AppState.setPwd(txPassword.getText());
-        VistaNavigator.loadVista(VistaNavigator.FORM_4);
+        VistaNavigator.reloadForm(VistaNavigator.FORM_4);
     }
 
     @Override
-    public void initializeForm(Map<String, Object> objects) {
+    public void initialize(Map<String, ?> objects) {
         txPassword.setVisible(true);
         labPassword.setVisible(false);
 
@@ -61,11 +59,6 @@ public class GenerateKeysController extends AbstractController {
             txPassword.setVisible(true);
             labPassword.setVisible(false);
         });
-    }
-
-    @Override
-    public void formDeinitialize() {
-
     }
 }
 

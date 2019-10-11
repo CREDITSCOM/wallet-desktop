@@ -64,7 +64,7 @@ public class PutKeysController extends AbstractController {
 
     @FXML
     private void handleBack() {
-        VistaNavigator.loadVista(VistaNavigator.WELCOME);
+        VistaNavigator.reloadForm(VistaNavigator.WELCOME);
     }
 
     @FXML
@@ -146,7 +146,7 @@ public class PutKeysController extends AbstractController {
                 params.put(PutKeysController.SALT_KEY, salt);
                 params.put(PutKeysController.ENCRYPTED_PRIVKEY_KEY, privKey);
                 params.put(PutKeysController.PUBKEY_KEY, pubKey);
-                VistaNavigator.loadVista(VistaNavigator.CHECK_PRIVATE_KEY, params);
+                VistaNavigator.reloadForm(VistaNavigator.CHECK_PRIVATE_KEY, params);
             } else {
                 open(pubKey, privKey);
             }
@@ -154,7 +154,7 @@ public class PutKeysController extends AbstractController {
     }
 
     @Override
-    public void initializeForm(Map<String, Object> objects) {
+    public void initialize(Map<String, ?> objects) {
         clearLabErr();
         if (objects != null && objects.get("isNewAccount") != null) {
             hideElementsForUploadExistAccount();
@@ -212,6 +212,7 @@ public class PutKeysController extends AbstractController {
             LOGGER.error("failed!", e);
             //return;
         }
+        initializeNodeInteractionService(pubKey);
         try {
             byte[] publicKeyByteArr = GeneralConverter.decodeFromBASE58(pubKey);
             setPublicKey(Ed25519.bytesToPublicKey(publicKeyByteArr));
@@ -226,7 +227,7 @@ public class PutKeysController extends AbstractController {
         }
 
         if (validateKeys(pubKey, privKey)) {
-            VistaNavigator.loadVista(VistaNavigator.WALLET);
+            VistaNavigator.reloadForm(VistaNavigator.WALLET);
         }
     }
 
@@ -259,7 +260,7 @@ public class PutKeysController extends AbstractController {
     }
 
     @Override
-    public void formDeinitialize() {
+    public void deinitialize() {
 
     }
 }

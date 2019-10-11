@@ -49,7 +49,7 @@ public class DatabaseServiceImpl implements DatabaseService {
             var receivedTrx = metadata.getAmountTransactions();
             var totalTrx = metadata.getAmountTransactions();
             for (var diff = 10; diff > 0; diff = min(totalTrx - receivedTrx, 100)) {
-                final var response = nodeApiService.getTransactionsAndAmount(address, receivedTrx, diff);
+                final var response = nodeApiService.getTransactionList(address, receivedTrx, diff);
                 receivedTrx += response.getTransactionsList().size();
                 totalTrx = response.getAmountTotalTransactions();
                 final var transactions = response.getTransactionsList();
@@ -73,7 +73,7 @@ public class DatabaseServiceImpl implements DatabaseService {
                         smartContractRelation.add(smartContractEntity);
                         walletHasSmartContractsRelation.add(new WalletHasSmartContract(transactionEntity.getSender(), smartContractEntity));
 
-                        final var bytecodeObjects = deployData.getByteCodeObjects();
+                        final var bytecodeObjects = deployData.getByteCodeObjectDataList();
                         bytecodeObjects.forEach(it -> {
                             final var bytecodeEntity = new Bytecode(it.getName(), it.getByteCode());
                             bytecodeRelation.add(bytecodeEntity);

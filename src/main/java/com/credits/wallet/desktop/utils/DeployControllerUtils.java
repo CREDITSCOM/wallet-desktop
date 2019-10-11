@@ -4,7 +4,6 @@ import com.credits.wallet.desktop.controller.DeployTabController;
 import com.credits.wallet.desktop.controller.SmartContractDeployController;
 import com.credits.wallet.desktop.controller.TreeViewController;
 import com.credits.wallet.desktop.struct.DeploySmartListItem;
-import com.credits.wallet.desktop.struct.TokenStandardData;
 import com.credits.wallet.desktop.utils.sourcecode.building.BuildSourceCodeError;
 import com.credits.wallet.desktop.utils.sourcecode.codeArea.CodeAreaUtils;
 import com.credits.wallet.desktop.utils.sourcecode.codeArea.CreditsCodeArea;
@@ -21,18 +20,8 @@ import org.apache.commons.io.IOUtils;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.credits.wallet.desktop.struct.TokenStandardData.NOT_A_TOKEN;
-import static java.util.Arrays.stream;
-
 public class DeployControllerUtils {
 
-    public static int getTokenStandard(Class<?> contractClass) {
-        final var contractInterfaces = contractClass.getInterfaces();
-        return stream(TokenStandardData.values())
-                .filter(ts -> stream(contractInterfaces).anyMatch(ci -> ts.getTokenStandardClass().equals(ci)))
-                .findFirst()
-                .orElse(NOT_A_TOKEN).getId();
-    }
 
     public static String getContractFromTemplate(String template) {
         try {

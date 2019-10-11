@@ -39,7 +39,7 @@ public class HistoryController extends AbstractController {
 
 
     @Override
-    public void initializeForm(Map<String, Object> objects) {
+    public void initialize(Map<String, ?> objects) {
         initTable(approvedTableView);
         initTable(unapprovedTableView);
 
@@ -64,7 +64,7 @@ public class HistoryController extends AbstractController {
             if (tabRow != null) {
                 HashMap<String, Object> params = new HashMap<>();
                 params.put("selectedTransactionRow", tabRow);
-                showFormModal(TRANSACTION, params);
+                showModalForm(TRANSACTION, params);
             }
         }
     }
@@ -117,7 +117,7 @@ public class HistoryController extends AbstractController {
 
     @FXML
     private void handleBack() {
-        loadVista(WALLET);
+        reloadForm(WALLET);
     }
 
     @FXML
@@ -126,7 +126,7 @@ public class HistoryController extends AbstractController {
     }
 
     @Override
-    public void formDeinitialize() {
+    public void deinitialize() {
 
     }
 }

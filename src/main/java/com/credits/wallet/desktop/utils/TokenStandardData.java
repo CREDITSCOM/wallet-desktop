@@ -1,4 +1,4 @@
-package com.credits.wallet.desktop.struct;
+package com.credits.wallet.desktop.utils;
 
 
 import com.credits.scapi.v0.BasicStandard;

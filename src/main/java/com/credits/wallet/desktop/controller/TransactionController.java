@@ -35,7 +35,7 @@ public class TransactionController extends AbstractController{
     private ListView listParams;
 
     @Override
-    public void initializeForm(Map<String, Object> objects) {
+    public void initialize(Map<String, ?> objects) {
         TransactionTabRow selectedTransactionRow = (TransactionTabRow) objects.get("selectedTransactionRow");
 
         labTransactionId.setText(selectedTransactionRow.getId());
@@ -56,7 +56,7 @@ public class TransactionController extends AbstractController{
     }
 
     @Override
-    public void formDeinitialize() {
+    public void deinitialize() {
 
     }
 }

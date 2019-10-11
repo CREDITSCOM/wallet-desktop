@@ -53,7 +53,7 @@ public class WalletApp extends Application {
         stage.setScene(createScene(loadMainPane()));
         loadFirstForm(VistaNavigator.WELCOME);
         stage.setOnCloseRequest(event -> {
-            VistaNavigator.getCurrentVistaController().formDeinitialize();
+            VistaNavigator.getCurrentVistaController().deinitialize();
             AppState.getSessionMap().forEach((account, session) -> session.close());
             Platform.exit();
             System.exit(0);

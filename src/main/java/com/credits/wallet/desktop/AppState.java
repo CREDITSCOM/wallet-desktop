@@ -5,6 +5,7 @@ import com.credits.client.node.service.NodeApiServiceImpl;
 import com.credits.wallet.desktop.database.DatabaseHelper;
 import com.credits.wallet.desktop.service.DatabaseService;
 import com.credits.wallet.desktop.service.DatabaseServiceImpl;
+import com.credits.wallet.desktop.service.NodeInteractionService;
 import com.credits.wallet.desktop.utils.ApplicationProperties;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import static com.credits.wallet.desktop.utils.GeneralUtils.createDirectoryIfNotExist;
 
@@ -34,6 +36,7 @@ public class AppState {
     private static Stage primaryStage;
     private static String jdkPath;
     private static DatabaseService database;
+    private static NodeInteractionService nodeInteractionService;
 
     private AppState() {
     }
@@ -49,6 +52,14 @@ public class AppState {
     private static void initializeDatabase(String databasePath) {
         final var dbHelper = new DatabaseHelper(URI_SCHEME_JDBC_SQLITE + databasePath);
         database = new DatabaseServiceImpl(nodeApiService, dbHelper);
+    }
+
+    public static void initializeNodeInteractionService(String account) {
+        nodeInteractionService = new NodeInteractionService(nodeApiService, account, privateKey);
+    }
+
+    public static NodeInteractionService getNodeInteractionService() {
+        return Objects.requireNonNull(nodeInteractionService, "NodeInteractionService not initialized");
     }
 
     public static NodeApiService getNodeApiService() {

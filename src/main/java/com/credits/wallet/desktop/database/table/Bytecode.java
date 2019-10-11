@@ -11,7 +11,7 @@ public class Bytecode {
     @DatabaseField(generatedId = true)
     int id;
 
-    @DatabaseField
+    @DatabaseField(columnName = "class_name")
     String className;
 
     @DatabaseField(dataType = DataType.BYTE_ARRAY)

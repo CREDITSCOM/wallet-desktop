@@ -18,6 +18,7 @@
         <github.global.server>github</github.global.server>
         <github.owner>creditscom</github.owner>
         <github.project>wallet-desktop</github.project>
+        <repository.updatePolicy>interval:10080</repository.updatePolicy> <!-- 1 week: 10 080 minutes -->
     </properties>
 
     <distributionManagement>
@@ -146,15 +147,19 @@
 
     <repositories>
         <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
+            <id>sc-api-mvn-repo</id>
+            <url>https://raw.github.com/creditscom/sc-api/mvn-repo/</url>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>${repository.updatePolicy}</updatePolicy>
+            </snapshots>
         </repository>
         <repository>
             <id>wallet-desktop-mvn-repo</id>
             <url>https://raw.github.com/creditscom/wallet-desktop/mvn-repo/</url>
             <snapshots>
                 <enabled>true</enabled>
-                <updatePolicy>always</updatePolicy>
+                <updatePolicy>${repository.updatePolicy}</updatePolicy>
             </snapshots>
         </repository>
         <repository>
@@ -162,7 +167,7 @@
             <url>https://raw.github.com/creditscom/thrift-api-client/mvn-repo/</url>
             <snapshots>
                 <enabled>true</enabled>
-                <updatePolicy>always</updatePolicy>
+                <updatePolicy>${repository.updatePolicy}</updatePolicy>
             </snapshots>
         </repository>
     </repositories>
@@ -247,6 +252,12 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>2.19.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>RELEASE</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -448,12 +448,12 @@ public class SmartContractController extends AbstractController {
     private void initializeColumns(TableView<SmartContractTabRow> tableView) {
         TableColumn<SmartContractTabRow, String> idColumn = new TableColumn<>();
         idColumn.setPrefWidth(tableView.getPrefWidth() * 0.85);
-        idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
+        idColumn.setCellValueFactory(new PropertyValueFactory<>("contractAddress"));
         addTooltipToColumnCells(idColumn);
 
         TableColumn<SmartContractTabRow, String> favColumn = new TableColumn<>();
         favColumn.setPrefWidth(tableView.getPrefWidth() * 0.1);
-        favColumn.setCellValueFactory(new PropertyValueFactory<>("fav"));
+        favColumn.setCellValueFactory(new PropertyValueFactory<>("favoriteButton"));
 
         tableView.getColumns().add(idColumn);
         tableView.getColumns().add(favColumn);
@@ -516,7 +516,7 @@ public class SmartContractController extends AbstractController {
                 .stream()
                 .filter(row -> row.getContractAddress().equals(smartContractData.getBase58Address()))
                 .findFirst()
-                .ifPresent(row -> row.getButton().setSelected(isSelected));
+                .ifPresent(row -> row.getFavoriteButton().setSelected(isSelected));
         table.refresh();
     }
 

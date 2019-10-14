@@ -6,5 +6,5 @@ import lombok.Value;
 @Value
 public class SmartContractTabRow {
     private final String contractAddress;
-    private final ToggleButton button;
+    private final ToggleButton favoriteButton;
 }

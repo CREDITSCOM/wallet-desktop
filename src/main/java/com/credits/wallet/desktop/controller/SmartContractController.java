@@ -281,6 +281,7 @@ public class SmartContractController extends AbstractController {
 
         cbMethods.getItems().clear();
         cbMethods.getItems().addAll(methods);
+        cbMethods.getSelectionModel().selectFirst();
 
         Platform.runLater(() -> {
             codeArea.clear();

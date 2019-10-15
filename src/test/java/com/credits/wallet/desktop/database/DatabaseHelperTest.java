@@ -1,9 +1,6 @@
 package com.credits.wallet.desktop.database;
 
-import com.credits.wallet.desktop.database.table.ApplicationMetadata;
-import com.credits.wallet.desktop.database.table.SmartContract;
-import com.credits.wallet.desktop.database.table.Transaction;
-import com.credits.wallet.desktop.database.table.Wallet;
+import com.credits.wallet.desktop.database.table.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 
 import static java.nio.file.Files.*;
@@ -69,6 +67,7 @@ class DatabaseHelperTest extends DatabaseTest {
                                        2);
         wallet = new Wallet("someAddress");
         contract = new SmartContract(wallet, "someCode", new byte[0], System.currentTimeMillis());
+        contract.setByteCodeObjectList(Collections.emptyList());
     }
 
     @AfterEach
@@ -78,7 +77,7 @@ class DatabaseHelperTest extends DatabaseTest {
     }
 
     @Test
-    @CreateTables({ApplicationMetadata.class, Wallet.class, SmartContract.class})
+    @CreateTables({ApplicationMetadata.class, Wallet.class, SmartContract.class, Bytecode.class, SmartContractHasBytecode.class})
     void createTableThenAddAndGetSmartContract() throws SQLException {
         db.keepSmartContract(contract);
 

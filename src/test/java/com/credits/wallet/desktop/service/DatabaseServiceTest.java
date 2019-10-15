@@ -41,39 +41,36 @@ class DatabaseServiceTest {
 
     @Test
     void updateTransactions_return_1_transaction() throws InterruptedException {
-        configureNodeMockReturnTransactions(1, 0, 10);
+        configureNodeMockReturnTransactions(1, 0, 100);
         database.updateTransactionsOnAddress(address);
         Thread.sleep(100);
-        verify(mockNodeApi).getTransactionList(address, 0, 10);
+        verify(mockNodeApi).getTransactionList(address, 0, 100);
     }
 
     @Test
     void updateTransactions_return_100_transaction() throws InterruptedException {
 
-        configureNodeMockReturnTransactions(100, 0, 10);
-        configureNodeMockReturnTransactions(100, 10, 90);
+        configureNodeMockReturnTransactions(100, 0, 100);
 
         database.updateTransactionsOnAddress(address);
         Thread.sleep(100);
 
-        verify(mockNodeApi).getTransactionList(address, 0, 10);
-        verify(mockNodeApi).getTransactionList(address, 10, 90);
+        verify(mockNodeApi).getTransactionList(address, 0, 100);
     }
 
     @Test
     void updateTransactions_return_300_transaction() throws InterruptedException {
-        configureNodeMockReturnTransactions(300, 0, 10);
-        configureNodeMockReturnTransactions(300, 10, 100);
-        configureNodeMockReturnTransactions(300, 110, 100);
-        configureNodeMockReturnTransactions(300, 210, 90);
+        configureNodeMockReturnTransactions(300, 0, 100);
+        configureNodeMockReturnTransactions(300, 100, 100);
+        configureNodeMockReturnTransactions(300, 200, 100);
+        configureNodeMockReturnTransactions(300, 300, 100);
 
         database.updateTransactionsOnAddress(address);
         Thread.sleep(100);
 
-        verify(mockNodeApi).getTransactionList(address, 0, 10);
-        verify(mockNodeApi).getTransactionList(address, 10, 100);
-        verify(mockNodeApi).getTransactionList(address, 110, 100);
-        verify(mockNodeApi).getTransactionList(address, 210, 90);
+        verify(mockNodeApi).getTransactionList(address, 0, 100);
+        verify(mockNodeApi).getTransactionList(address, 100, 100);
+        verify(mockNodeApi).getTransactionList(address, 200, 100);
     }
 
 

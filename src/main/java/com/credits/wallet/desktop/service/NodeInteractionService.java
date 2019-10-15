@@ -103,6 +103,21 @@ public class NodeInteractionService {
                 });
     }
 
+    public void invokeContractGetter(String contractAddress,
+                                     String methodName,
+                                     List<Object> params,
+                                     List<String> usedContracts,
+                                     BiConsumer<? super String, ? super Throwable> handleResult) {
+        CompletableFuture
+                .supplyAsync(() -> nodeApi.invokeContractGetterMethod(account, contractAddress, methodName, params, usedContracts), threadPool)
+                .whenComplete((result, throwable) -> {
+                    if (throwable != null) handleResult.accept(throwable.getMessage(), throwable);
+                    else result
+                            .getContractResult()
+                            .ifPresent(variant -> handleResult.accept("" + toObject(variant), null));
+                });
+    }
+
     public ModifiedInnerIdSenderReceiver getActualIdSenderReceiver(String receiver) {
         final var transactionsCount = getActualTransactionsCount();
         return nodeApi.modifyInnerIdSenderReceiver(transactionsCount, account, receiver);

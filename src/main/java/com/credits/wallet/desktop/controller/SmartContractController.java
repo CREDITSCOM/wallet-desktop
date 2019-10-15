@@ -17,6 +17,7 @@ import com.credits.wallet.desktop.struct.SmartContractTabRow;
 import com.credits.wallet.desktop.struct.SmartContractTransactionTabRow;
 import com.credits.wallet.desktop.utils.sourcecode.SourceCodeUtils;
 import com.credits.wallet.desktop.utils.sourcecode.codeArea.CodeAreaUtils;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -281,8 +282,12 @@ public class SmartContractController extends AbstractController {
         cbMethods.getItems().clear();
         cbMethods.getItems().addAll(methods);
 
-        codeArea.clear();
-        codeArea.replaceText(0, 0, SourceCodeUtils.formatSourceCode(sourceCode));
+        Platform.runLater(() -> {
+            codeArea.clear();
+
+            final var formattedSourceCode = SourceCodeUtils.formatSourceCode(sourceCode);
+            codeArea.replaceText(0, 0, formattedSourceCode);
+        });
 
 //        findInFavoriteThenSelect(compiledSmartContract, tbFavorite);
 
@@ -497,7 +502,7 @@ public class SmartContractController extends AbstractController {
                 try {
                     final var smartContractClass = compileContractClass(smartContract.getByteCodeObjectList());
                     refreshSmartContractForm(smartContract.getSourceCode(), smartContractClass.getRootClass());
-                } catch (CompilationException e){
+                } catch (CompilationException e) {
                     LOGGER.error("can'r compile smart contract. Reason {}", ExceptionUtils.getRootCauseMessage(e));
                 }
             }

@@ -47,7 +47,7 @@ public class DatabaseServiceImpl implements DatabaseService {
             final var metadata = database.getOrCreateApplicationMetadata(address);
             var receivedTrx = metadata.getAmountTransactions();
             var totalTrx = metadata.getAmountTransactions();
-            for (var diff = 10; diff > 0; diff = min(totalTrx - receivedTrx, 100)) {
+            for (var diff = 100; diff > 0; diff = min(totalTrx - receivedTrx, 100)) {
                 final var response = nodeApiService.getTransactionList(address, receivedTrx, diff);
                 receivedTrx += response.getTransactionsList().size();
                 totalTrx = response.getAmountTotalTransactions();

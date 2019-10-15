@@ -67,8 +67,8 @@ public class NodeInteractionService {
         CompletableFuture
                 .supplyAsync(() -> getActualIdSenderReceiver(receiver), threadPool)
                 .thenApply(it -> nodeApi.submitTransferTransaction(it.getTransactionInnerId(),
-                                                                   it.getModifiedReceiverAddress(),
                                                                    it.getModifiedSenderAddress(),
+                                                                   it.getModifiedReceiverAddress(),
                                                                    amount,
                                                                    maxFee,
                                                                    usedContracts,

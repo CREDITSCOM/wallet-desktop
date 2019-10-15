@@ -75,7 +75,6 @@ public class WalletController extends AbstractController {
     private Label actualOfferedMaxFeeLabel;
     @FXML
     public TextField usdSmart;
-    private DatabaseService database;
 
     @FXML
     private void handleLogout() {
@@ -281,7 +280,7 @@ public class WalletController extends AbstractController {
         initializeTable(coinsTableView);
         updateCoins(coinsTableView);
 
-        database = getDatabase();
+        DatabaseService database = getDatabase();
         database.keepLogin(session.account);
         database.updateTransactionsOnAddress(session.account);
 

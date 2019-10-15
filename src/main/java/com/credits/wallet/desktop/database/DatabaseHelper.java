@@ -4,9 +4,6 @@ import com.credits.general.exception.CreditsException;
 import com.credits.general.pojo.ByteCodeObjectData;
 import com.credits.wallet.desktop.database.table.*;
 import com.j256.ormlite.core.dao.Dao;
-import com.j256.ormlite.core.logger.Logger;
-import com.j256.ormlite.core.logger.LoggerFactory;
-import com.j256.ormlite.core.stmt.QueryBuilder;
 import com.j256.ormlite.core.support.ConnectionSource;
 import com.j256.ormlite.core.table.TableUtils;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
@@ -18,12 +15,12 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import static com.credits.general.util.Utils.CheckedRunnable;
 import static com.credits.wallet.desktop.utils.GeneralUtils.getResourceAsStream;
 import static com.j256.ormlite.core.dao.DaoManager.createDao;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 @Slf4j
@@ -39,8 +36,6 @@ public class DatabaseHelper {
     private Dao<SmartContractHasBytecode, ?> smartContractHasBytecodeDao;
     private Dao<Bytecode, ?> bytecodeDao;
     private Dao<WalletHasSmartContract, ?> walletHasSmartContractDao;
-
-    private static Logger logger = LoggerFactory.getLogger(QueryBuilder.class);
 
     public DatabaseHelper(String databaseUrl) {
         this.databaseUrl = databaseUrl;
@@ -81,8 +76,13 @@ public class DatabaseHelper {
         rethrowWithDetailMessage(() -> smartContractHasBytecodeDao.create(smartContractHasBytecodeList));
     }
 
-    public SmartContract getSmartContract(String address) throws SQLException {
-        return smartContractDao.queryBuilder().where().eq("wallet_address", address).queryForFirst();
+    public SmartContract getSmartContract(String address) {
+        return rethrowWithDetailMessage(() -> {
+            final var smartContract = smartContractDao.queryBuilder().where().eq("wallet_address", address).queryForFirst();
+            final var bytecodeObjects = getSmartContractBytecodeObjects(address);
+            smartContract.setByteCodeObjectList(bytecodeObjects);
+            return smartContract;
+        });
     }
 
     public void createIfNotExistsTransaction(Transaction transaction) {
@@ -118,21 +118,21 @@ public class DatabaseHelper {
                 .getResults()
                 .stream()
                 .map(Wallet::getAddress)
-                .collect(Collectors.toList()));
+                .collect(toList()));
     }
 
     public List<ByteCodeObjectData> getSmartContractBytecodeObjects(String address) {
-        final var query = "select * " +
+        final var query = "select bytecode.* " +
                 "from bytecode " +
                 "join smart_contract_has_bytecode on bytecode.id = smart_contract_has_bytecode.bytecode_id " +
                 "join smart_contract on smart_contract_has_bytecode.smart_contract_id = smart_contract.id " +
                 "where smart_contract.wallet_address = ?";
 
-        return rethrowWithDetailMessage(() -> bytecodeDao.queryRaw(query, bytecodeDao.getRawRowMapper(), address)
+        return rethrowWithDetailMessage(() -> bytecodeDao.queryRaw(query, Bytecode.rowMapper, address)
                 .getResults()
                 .stream()
                 .map(it -> new ByteCodeObjectData(it.getClassName(), it.getBytecode()))
-                .collect(Collectors.toList()));
+                .collect(toList()));
     }
 
     public void updateApplicationMetadata(ApplicationMetadata metadata) {

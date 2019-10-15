@@ -2,7 +2,6 @@ package com.credits.wallet.desktop.service;
 
 import com.credits.client.node.pojo.TransactionData;
 import com.credits.client.node.service.NodeApiService;
-import com.credits.general.pojo.ByteCodeObjectData;
 import com.credits.general.util.Callback;
 import com.credits.general.util.GeneralConverter;
 import com.credits.wallet.desktop.database.DatabaseHelper;
@@ -111,8 +110,8 @@ public class DatabaseServiceImpl implements DatabaseService {
     }
 
     @Override
-    public void getSmartContractBytecodeObjects(String address, Callback<List<ByteCodeObjectData>> handleResult) {
-        asyncRead(() -> database.getSmartContractBytecodeObjects(address), handleResult);
+    public void getSmartContract(String address, Callback<SmartContract> handleResult) {
+        asyncRead(() -> database.getSmartContract(address), handleResult);
     }
 
     @Override

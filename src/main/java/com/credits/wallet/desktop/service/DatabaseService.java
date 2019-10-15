@@ -1,7 +1,7 @@
 package com.credits.wallet.desktop.service;
 
-import com.credits.general.pojo.ByteCodeObjectData;
 import com.credits.general.util.Callback;
+import com.credits.wallet.desktop.database.table.SmartContract;
 import com.credits.wallet.desktop.database.table.Transaction;
 
 import java.util.List;
@@ -20,5 +20,5 @@ public interface DatabaseService {
 
     void getDeployerContractsAddressList(String deployerAddress, Callback<List<String>> handleResult);
 
-    void getSmartContractBytecodeObjects(String address, Callback<List<ByteCodeObjectData>> handleResult);
+    void getSmartContract(String address, Callback<SmartContract> handleResult);
 }

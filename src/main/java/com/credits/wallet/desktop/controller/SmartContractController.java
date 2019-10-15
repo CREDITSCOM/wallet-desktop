@@ -6,13 +6,16 @@ import com.credits.general.exception.CreditsException;
 import com.credits.general.pojo.ByteCodeObjectData;
 import com.credits.general.thrift.generated.Variant;
 import com.credits.general.util.Callback;
+import com.credits.general.util.compiler.CompilationException;
 import com.credits.general.util.variant.VariantConverter;
 import com.credits.wallet.desktop.AppState;
 import com.credits.wallet.desktop.VistaNavigator;
+import com.credits.wallet.desktop.database.table.SmartContract;
 import com.credits.wallet.desktop.service.DatabaseService;
 import com.credits.wallet.desktop.struct.MethodData;
 import com.credits.wallet.desktop.struct.SmartContractTabRow;
 import com.credits.wallet.desktop.struct.SmartContractTransactionTabRow;
+import com.credits.wallet.desktop.utils.sourcecode.SourceCodeUtils;
 import com.credits.wallet.desktop.utils.sourcecode.codeArea.CodeAreaUtils;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.ActionEvent;
@@ -104,7 +107,6 @@ public class SmartContractController extends AbstractController {
     private TableView<SmartContractTransactionTabRow> approvedTableView;
     @FXML
     private TableView<SmartContractTransactionTabRow> unapprovedTableView;
-
 
     @FXML
     private void handleBack() {
@@ -259,7 +261,7 @@ public class SmartContractController extends AbstractController {
         };
     }
 
-    private void refreshSmartContractForm(String sourceCode, List<Class> contractClass) {
+    private void refreshSmartContractForm(String sourceCode, Class<?> rootClass) {
 //        if (compiledSmartContract == null || compiledSmartContract.getSmartContractDeployData().getByteCodeObjects().size() == 0 || compiledSmartContract.getAddress().length == 0) {
 //            tbFavorite.setVisible(false);
 //            showContractExecutionsControls(false);
@@ -270,6 +272,18 @@ public class SmartContractController extends AbstractController {
 
         tbFavorite.setOnAction(handleFavoriteButtonEvent(tbFavorite, selectedContract));
         tbFavorite.setVisible(true);
+
+        MethodData[] methods = Arrays.stream(rootClass.getMethods())
+                .filter(m -> !OBJECT_METHODS.contains(m.getName()))
+                .map(MethodData::new)
+                .toArray(MethodData[]::new);
+
+        cbMethods.getItems().clear();
+        cbMethods.getItems().addAll(methods);
+
+        codeArea.clear();
+        codeArea.replaceText(0, 0, SourceCodeUtils.formatSourceCode(sourceCode));
+
 //        findInFavoriteThenSelect(compiledSmartContract, tbFavorite);
 
 //        String sourceCode = compiledSmartContract.getSmartContractDeployData().getSourceCode();
@@ -470,18 +484,22 @@ public class SmartContractController extends AbstractController {
     private EventHandler<MouseEvent> getMouseEventRowHandler(TableRow<SmartContractTabRow> row) {
         return event -> {
             if (event.getClickCount() == 2 && (!row.isEmpty())) {
-                database.getSmartContractBytecodeObjects(row.getItem().getContractAddress(), handleGetSmartContract());
-//                refreshSmartContractForm(row.getItem().getContractAddress());
+                final var contractAddress = row.getItem().getContractAddress();
+                database.getSmartContract(contractAddress, handleGetSmartContract());
             }
         };
     }
 
-    private Callback<List<ByteCodeObjectData>> handleGetSmartContract() {
+    private Callback<SmartContract> handleGetSmartContract() {
         return new Callback<>() {
             @Override
-            public void onSuccess(List<ByteCodeObjectData> resultData) throws CreditsException {
-
-
+            public void onSuccess(SmartContract smartContract) throws CreditsException {
+                try {
+                    final var smartContractClass = compileContractClass(smartContract.getByteCodeObjectList());
+                    refreshSmartContractForm(smartContract.getSourceCode(), smartContractClass.getRootClass());
+                } catch (CompilationException e){
+                    LOGGER.error("can'r compile smart contract. Reason {}", ExceptionUtils.getRootCauseMessage(e));
+                }
             }
 
             @Override

@@ -1,11 +1,14 @@
 package com.credits.wallet.desktop.database.table;
 
 
+import com.credits.general.pojo.ByteCodeObjectData;
 import com.j256.ormlite.core.field.DataType;
 import com.j256.ormlite.core.field.DatabaseField;
 import com.j256.ormlite.core.table.DatabaseTable;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -21,6 +24,7 @@ public class SmartContract {
     private byte[] contractState;
     @DatabaseField(columnName = "time_creation")
     private long timeCreation;
+    private List<ByteCodeObjectData> byteCodeObjectList;
 
     public SmartContract(Wallet wallet, String sourceCode, byte[] contractState, long timeCreation) {
         this.wallet = wallet;

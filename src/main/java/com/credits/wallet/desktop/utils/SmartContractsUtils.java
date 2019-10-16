@@ -4,14 +4,12 @@ import com.credits.client.node.util.ObjectKeeper;
 import com.credits.general.crypto.Md5;
 import com.credits.general.exception.CreditsException;
 import com.credits.general.pojo.ByteCodeObjectData;
-import com.credits.general.util.GeneralConverter;
 import com.google.common.base.CharMatcher;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,9 +17,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.credits.general.crypto.Blake2S.generateHash;
-import static com.credits.general.util.GeneralConverter.byteArrayToHex;
-import static com.credits.general.util.GeneralConverter.toByteArray;
-import static com.credits.general.util.GeneralConverter.toByteArrayLittleEndian;
+import static com.credits.general.util.GeneralConverter.*;
 import static org.apache.commons.lang3.ArrayUtils.addAll;
 
 public class SmartContractsUtils {
@@ -30,17 +26,15 @@ public class SmartContractsUtils {
     private static byte[] bytes;
 
 
-    public static List<ByteBuffer> getSmartsListFromField(String field) {
+    public static List<String> getSmartsListFromField(String field) {
         try {
-            List<ByteBuffer> myList = new ArrayList<>();
+            List<String> myList = new ArrayList<>();
             if (!field.isEmpty()) {
                 String[] split = field.split(",");
                 for (String aSplit : split) {
                     String contractAddress = CharMatcher.is('\"').trimFrom(aSplit);
                     if (!contractAddress.isEmpty()) {
-                        byte[] bytes = GeneralConverter.decodeFromBASE58(contractAddress);
-                        myList.add(ByteBuffer.wrap(bytes));
-
+                        myList.add(contractAddress);
                     }
                 }
             }

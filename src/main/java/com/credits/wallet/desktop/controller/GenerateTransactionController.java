@@ -16,15 +16,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static com.credits.wallet.desktop.AppState.CREDITS_TOKEN_NAME;
 import static com.credits.wallet.desktop.AppState.NODE_ERROR;
 import static java.util.Optional.ofNullable;
-import static java.util.function.Predicate.not;
 
 
 public class GenerateTransactionController extends AbstractController {
@@ -68,11 +65,7 @@ public class GenerateTransactionController extends AbstractController {
         final var receiver = transactionToAddress.getText();
         final var amount = GeneralConverter.toBigDecimal(transactionAmount.getText());
         final var maxFee = GeneralConverter.toFloat(transactionFeeValue.getText());
-        final var usedContracts = Arrays
-                .stream(usedSmartContracts.getText().split(","))
-                .map(String::trim)
-                .filter(not(String::isEmpty))
-                .collect(Collectors.toList());
+        final var usedContracts = FormUtils.parseUsedContractsField(usedSmartContracts.getText());
         final var userData = transactionAmount.getText().getBytes(StandardCharsets.UTF_8);
         try {
             if (coinType.getText().equals(CREDITS_TOKEN_NAME)) {

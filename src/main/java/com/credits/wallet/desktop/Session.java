@@ -1,8 +1,8 @@
 package com.credits.wallet.desktop;
 
-import com.credits.client.node.pojo.CompiledSmartContract;
 import com.credits.client.node.pojo.SmartContractTransactionData;
 import com.credits.client.node.util.ObjectKeeper;
+import com.credits.wallet.desktop.pojo.CompiledSmartContract;
 import com.credits.wallet.desktop.struct.DeploySmartListItem;
 import com.credits.wallet.desktop.struct.UnapprovedTransactionData;
 import lombok.EqualsAndHashCode;

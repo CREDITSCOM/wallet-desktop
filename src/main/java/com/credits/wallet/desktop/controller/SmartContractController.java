@@ -1,6 +1,9 @@
 package com.credits.wallet.desktop.controller;
 
-import com.credits.client.node.pojo.*;
+import com.credits.client.node.pojo.SmartContractClass;
+import com.credits.client.node.pojo.SmartContractData;
+import com.credits.client.node.pojo.SmartContractTransactionData;
+import com.credits.client.node.pojo.TransactionFlowResultData;
 import com.credits.general.classload.ByteCodeContractClassLoader;
 import com.credits.general.exception.CreditsException;
 import com.credits.general.pojo.ByteCodeObjectData;
@@ -11,11 +14,11 @@ import com.credits.general.util.variant.VariantConverter;
 import com.credits.wallet.desktop.AppState;
 import com.credits.wallet.desktop.VistaNavigator;
 import com.credits.wallet.desktop.database.table.SmartContract;
+import com.credits.wallet.desktop.pojo.CompiledSmartContract;
 import com.credits.wallet.desktop.service.DatabaseService;
 import com.credits.wallet.desktop.struct.MethodData;
 import com.credits.wallet.desktop.struct.SmartContractTabRow;
 import com.credits.wallet.desktop.struct.SmartContractTransactionTabRow;
-import com.credits.wallet.desktop.utils.sourcecode.SourceCodeUtils;
 import com.credits.wallet.desktop.utils.sourcecode.codeArea.CodeAreaUtils;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -46,10 +49,10 @@ import static com.credits.client.node.service.NodeApiServiceImpl.async;
 import static com.credits.general.thrift.generated.Variant._Fields.V_STRING;
 import static com.credits.general.util.GeneralConverter.createObjectFromString;
 import static com.credits.general.util.GeneralConverter.toBigDecimal;
-import static com.credits.general.util.variant.VariantConverter.toVariant;
 import static com.credits.wallet.desktop.AppState.getDatabase;
+import static com.credits.wallet.desktop.AppState.getNodeInteractionService;
 import static com.credits.wallet.desktop.utils.FormUtils.*;
-import static com.credits.wallet.desktop.utils.SmartContractsUtils.getSmartsListFromField;
+import static com.credits.wallet.desktop.utils.sourcecode.SourceCodeUtils.formatSourceCode;
 import static java.util.stream.Collectors.toList;
 
 
@@ -75,7 +78,7 @@ public class SmartContractController extends AbstractController {
     @FXML
     private CheckBox cbStoreContractState;
     @FXML
-    public TextField usdSmart;
+    public TextField tfUsedContracts;
     @FXML
     public Tab myContractsTab;
     @FXML
@@ -129,32 +132,33 @@ public class SmartContractController extends AbstractController {
     private void handleExecute() {
         final short fee;
         final boolean isGetterMethod;
-        try {
-            if (storeContractState.getValue()) {
-                if (checkFeeFieldNotValid()) return;
-                fee = getActualOfferedMaxFee16Bits(feeField);
-                isGetterMethod = false;
-            } else {
-                fee = 0;
-                isGetterMethod = true;
-            }
+        if (storeContractState.getValue()) {
+            if (checkFeeFieldNotValid()) return;
+            fee = getActualOfferedMaxFee16Bits(feeField);
+            isGetterMethod = false;
+        } else {
+            fee = 0;
+            isGetterMethod = true;
+        }
 
-            final var usedContracts = getSmartsListFromField(usdSmart.getText());
-            final var params = getVariantsFromParamsFields();
+        final var contractAddress = selectedContract.getAddress();
+        final var methodName = currentMethod.getName();
+        final var params = getObjectsFromParamsField();
+        final var usedContracts = parseUsedContractsField(tfUsedContracts.getText());
 
+        if (isGetterMethod) {
+            getNodeInteractionService().invokeContractGetter(contractAddress, methodName, params, usedContracts, (result, error) -> {
+                if (error == null) {
+                    showPlatformInfo("address: " + contractAddress + "\n\n"
+                                             + "method: " + methodName + "\n"
+                                             + "params: " + params.toString() + "\n\n"
+                                             + "Result:" + "\n" + result);
+                } else {
+                    LOGGER.error("invoke getter method error. Reason {}", error.getMessage());
+                    showError(error.getMessage());
+                }
 
-//            supplyAsync(() -> calcTransactionIdSourceTarget(session.account, selectedContract.getAddress(), true),
-//                        threadPool)
-//                    .thenApply((transactionData) -> createSmartContractTransaction(
-//                            transactionData,
-//                            fee,
-//                            selectedContract,
-//                            usedContracts,
-//                            session))
-//                    .whenComplete(handleCallback(handleExecuteResult()));
-        } catch (CreditsException e) {
-            LOGGER.error("failed!", e);
-            showError(e.getMessage());
+            });
         }
     }
 
@@ -165,34 +169,53 @@ public class SmartContractController extends AbstractController {
 
     @FXML
     private void cbMethodsOnAction() {
-        this.pParams.setVisible(false);
-        final var selectedItem = this.cbMethods.getSelectionModel().getSelectedItem();
-        this.currentMethod = selectedItem != null ? selectedItem.getMethod() : null;
-        if (this.currentMethod == null) {
+        final var selectedItem = cbMethods.getSelectionModel().getSelectedItem();
+        if (selectedItem != null) {
+            currentMethod = selectedItem.getMethod();
+        } else {
+            currentMethod = null;
             return;
         }
-        Parameter[] params = this.currentMethod.getParameters();
-        this.pParamsContainer.getChildren().clear();
+
+        final var params = currentMethod.getParameters();
         if (params.length > 0) {
-            this.pParams.setVisible(true);
-            double layoutY = 10;
+            var layoutY = 10;
+            final var nodes = new ArrayList<Node>();
             for (Parameter param : params) {
-                TextField paramValueTextField = new TextField();
-                paramValueTextField.setLayoutX(250);
-                paramValueTextField.setLayoutY(layoutY);
-                paramValueTextField.setStyle(
-                        "-fx-background-color:  #fff; -fx-border-radius:15; -fx-border-width: 1; -fx-border-color:  #000; -fx-font-size: 16px");
-                paramValueTextField.setPrefSize(500, 30);
-                Label paramNameLabel = new Label(param.getType().getSimpleName() + " " + param.getName());
-                paramNameLabel.setLayoutX(10);
-                paramNameLabel.setLayoutY(layoutY + 5);
-                paramNameLabel.setStyle("-fx-font-size: 18px");
-                paramNameLabel.setLabelFor(paramValueTextField);
-                this.pParamsContainer.getChildren().addAll(paramNameLabel, paramValueTextField);
+                final var paramValueTextField = initParameterTextField(layoutY);
+                final var paramNameLabel = initParameterLabel(layoutY, param, paramValueTextField);
+                nodes.add(paramValueTextField);
+                nodes.add(paramNameLabel);
                 layoutY += 40;
             }
-            this.pParamsContainer.setPrefHeight(layoutY);
+
+            final var layoutMaxHeight = layoutY;
+
+            Platform.runLater(() -> {
+                pParamsContainer.getChildren().clear();
+                pParamsContainer.getChildren().addAll(nodes);
+                pParamsContainer.setPrefHeight(layoutMaxHeight);
+                pParams.setVisible(true);
+            });
         }
+    }
+
+    private Label initParameterLabel(double layoutY, Parameter param, TextField paramValueTextField) {
+        final var paramNameLabel = new Label(param.getType().getSimpleName() + " " + param.getName());
+        paramNameLabel.setLayoutX(10);
+        paramNameLabel.setLayoutY(layoutY + 5);
+        paramNameLabel.setStyle("-fx-font-size: 18px");
+        paramNameLabel.setLabelFor(paramValueTextField);
+        return paramNameLabel;
+    }
+
+    private TextField initParameterTextField(double layoutY) {
+        final var textField = new TextField();
+        textField.setLayoutX(250);
+        textField.setLayoutY(layoutY);
+        textField.setStyle("-fx-background-color:  #fff; -fx-border-radius:15; -fx-border-width: 1; -fx-border-color:  #000; -fx-font-size: 16px");
+        textField.setPrefSize(500, 30);
+        return textField;
     }
 
     @FXML
@@ -219,7 +242,7 @@ public class SmartContractController extends AbstractController {
         tbFavorite.setVisible(false);
         showContractExecutionsControls(false);
         hbFeeLayout.setVisible(false);
-        codeArea = CodeAreaUtils.initCodeArea(this.pCodePanel, true);
+        codeArea = CodeAreaUtils.initCodeArea(pCodePanel, true);
         codeArea.setEditable(false);
         codeArea.copy();
         favoriteContracts = session.favoriteContractsKeeper.getKeptObject().orElseGet(HashMap::new);
@@ -262,51 +285,33 @@ public class SmartContractController extends AbstractController {
         };
     }
 
-    private void refreshSmartContractForm(String contractAddress, String sourceCode, Class<?> rootClass) {
-//        if (compiledSmartContract == null || compiledSmartContract.getSmartContractDeployData().getByteCodeObjects().size() == 0 || compiledSmartContract.getAddress().length == 0) {
-//            tbFavorite.setVisible(false);
-//            showContractExecutionsControls(false);
-//        } else {
-//            selectedContract = compiledSmartContract;
-
-        tfAddress.setText(contractAddress);
-
-        showContractExecutionsControls(true);
-
-        tbFavorite.setOnAction(handleFavoriteButtonEvent(tbFavorite, selectedContract));
-        tbFavorite.setVisible(true);
-
-        MethodData[] methods = Arrays.stream(rootClass.getMethods())
+    private void refreshSmartContractForm() {
+        final var methods = Arrays
+                .stream(selectedContract.getContractClass().getMethods())
                 .filter(m -> !OBJECT_METHODS.contains(m.getName()))
                 .map(MethodData::new)
                 .toArray(MethodData[]::new);
 
-        cbMethods.getItems().clear();
-        cbMethods.getItems().addAll(methods);
-        cbMethods.getSelectionModel().selectFirst();
-
         Platform.runLater(() -> {
-            codeArea.clear();
+            showContractExecutionsControls(true);
 
-            final var formattedSourceCode = SourceCodeUtils.formatSourceCode(sourceCode);
+            tfAddress.setText(selectedContract.getAddress());
+
+            tbFavorite.setOnAction(handleFavoriteButtonEvent(tbFavorite, selectedContract));
+            tbFavorite.setVisible(true);
+
+            cbMethods.getItems().clear();
+            cbMethods.getItems().addAll(methods);
+            cbMethods.getSelectionModel().selectFirst();
+
+            codeArea.clear();
+            final var formattedSourceCode = formatSourceCode(selectedContract.getSourcecode());
             codeArea.replaceText(0, 0, formattedSourceCode);
+
+            findInFavoriteThenSelect(selectedContract.getAddress(), tbFavorite);
         });
 
-//        findInFavoriteThenSelect(compiledSmartContract, tbFavorite);
-
-//        String sourceCode = compiledSmartContract.getSmartContractDeployData().getSourceCode();
-//        MethodData[] methods = Arrays.stream(compiledSmartContract.getContractClass().getRootClass().getMethods())
-//                .filter(m -> !OBJECT_METHODS.contains(m.getName()))
-//                .map(MethodData::new)
-//                .toArray(MethodData[]::new);
-//        cbMethods.getItems().clear();
-//        cbMethods.getItems().addAll(methods);
-//
-//        codeArea.clear();
-//        codeArea.replaceText(0, 0, SourceCodeUtils.formatSourceCode(sourceCode));
-//
 //        fillTransactionsTables(compiledSmartContract.getBase58Address());
-//        }
     }
 
     private void showContractExecutionsControls(boolean isShow) {
@@ -502,10 +507,11 @@ public class SmartContractController extends AbstractController {
             @Override
             public void onSuccess(SmartContract smartContract) throws CreditsException {
                 try {
-                    final var smartContractClass = compileContractClass(smartContract.getByteCodeObjectList());
-                    refreshSmartContractForm(smartContract.getWallet().getAddress(),
-                                             smartContract.getSourceCode(),
-                                             smartContractClass.getRootClass());
+                    final var smartContractClass = compileContractClass(smartContract.getByteCodeObjectList()).getRootClass();
+                    final var contractAddress = smartContract.getWallet().getAddress();
+                    final var sourceCode = smartContract.getSourceCode();
+                    selectedContract = new CompiledSmartContract(contractAddress, sourceCode, smartContractClass);
+                    refreshSmartContractForm();
                 } catch (CompilationException e) {
                     LOGGER.error("can'r compile smart contract. Reason {}", ExceptionUtils.getRootCauseMessage(e));
                 }
@@ -579,8 +585,8 @@ public class SmartContractController extends AbstractController {
         return new SmartContractClass(contractClass, innerContractClasses);
     }
 
-    private void findInFavoriteThenSelect(SmartContractData smartContractData, ToggleButton tbFavorite) {
-        if (favoriteContracts.containsKey(smartContractData.getBase58Address())) {
+    private void findInFavoriteThenSelect(String contractAddress, ToggleButton tbFavorite) {
+        if (favoriteContracts.containsKey(contractAddress)) {
             tbFavorite.setSelected(true);
         } else {
             tbFavorite.setSelected(false);
@@ -624,19 +630,19 @@ public class SmartContractController extends AbstractController {
         return false;
     }
 
-    private ArrayList<Variant> getVariantsFromParamsFields() {
+    private ArrayList<Object> getObjectsFromParamsField() {
         final var params = currentMethod.getParameters();
         final var paramsValuesContainer = pParamsContainer.getChildren();
-        final var paramsAsVariant = new ArrayList<Variant>();
+        final var paramsAsObject = new ArrayList<>();
         for (int i = 0, j = 0; i < paramsValuesContainer.size(); i++) {
-            Node node = paramsValuesContainer.get(i);
+            final var node = paramsValuesContainer.get(i);
             if (node instanceof TextField) {
-                String paramValue = ((TextField) node).getText();
-                Parameter parameter = params[j++];
-                paramsAsVariant.add(toVariant(parameter.getType().getTypeName(), createObjectFromString(paramValue, parameter.getType())));
+                final var paramValue = ((TextField) node).getText();
+                final var parameter = params[j++];
+                paramsAsObject.add(createObjectFromString(paramValue, parameter.getType()));
             }
         }
-        return paramsAsVariant;
+        return paramsAsObject;
     }
 
     private Callback<Pair<Long, TransactionFlowResultData>> handleExecuteResult() {

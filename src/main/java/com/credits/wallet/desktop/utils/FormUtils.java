@@ -2,7 +2,6 @@ package com.credits.wallet.desktop.utils;
 
 import com.credits.client.node.pojo.TransactionData;
 import com.credits.general.util.Constants;
-import com.credits.client.node.pojo.TransactionData;
 import com.credits.general.util.GeneralConverter;
 import com.credits.wallet.desktop.struct.CoinTabRow;
 import javafx.application.Platform;
@@ -10,10 +9,14 @@ import javafx.scene.control.*;
 import javafx.stage.StageStyle;
 import javafx.util.Callback;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import static com.credits.general.util.Utils.calculateActualFee;
 import static com.credits.wallet.desktop.utils.NumberUtils.checkCorrectInputNumber;
+import static java.util.function.Predicate.not;
 
 
 public class FormUtils {
@@ -166,6 +169,14 @@ public class FormUtils {
             actualOfferedMaxFeeLabel.setText(GeneralConverter.toString(actualOfferedMaxFeePair.getLeft()));
         }
         feeField.setText(value);
+    }
+
+    public static List<String> parseUsedContractsField(String usedSmartContracts) {
+        return Arrays
+                .stream(usedSmartContracts.split(","))
+                .map(String::trim)
+                .filter(not(String::isEmpty))
+                .collect(Collectors.toList());
     }
 }
 

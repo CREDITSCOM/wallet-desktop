@@ -136,7 +136,7 @@
             </ImageView>
         </graphic>
     </Button>
-   <TextField fx:id="usdSmart" layoutX="92.0" layoutY="610.0" maxHeight="60.0" maxWidth="358.0" minHeight="30.0" minWidth="57.0" prefHeight="40.0" prefWidth="358.0" promptText="Used smart contracts" style="-fx-font-size: 12px;" styleClass="credits-textField" />
+   <TextField fx:id="tfUsedContracts" layoutX="92.0" layoutY="610.0" maxHeight="60.0" maxWidth="358.0" minHeight="30.0" minWidth="57.0" prefHeight="40.0" prefWidth="358.0" promptText="Used smart contracts" style="-fx-font-size: 12px;" styleClass="credits-textField" />
    <Button layoutX="1105.0" layoutY="590.0" onAction="#handleExecute" prefHeight="60.0" prefWidth="180.0" style="-fx-font-family: MontserratMontserrat; -fx-font-weight: bold;" styleClass="credits-button" text="EXECUTE" />
     <VBox layoutX="490.0" layoutY="576.0" maxHeight="73.0" minHeight="10.0" prefHeight="73.0" prefWidth="610.0">
         <CheckBox fx:id="cbStoreContractState" mnemonicParsing="false" onAction="#handleStoreContractState" prefHeight="18.0" prefWidth="379.0" style="-fx-border-radius: 10px;" text="save new contract state into the blockchain">

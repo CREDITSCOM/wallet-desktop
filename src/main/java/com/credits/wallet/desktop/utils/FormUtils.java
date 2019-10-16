@@ -20,16 +20,19 @@ import static java.util.function.Predicate.not;
 
 
 public class FormUtils {
-
-    public static void showError(String text) {
+    public static void showError(String title, String header, String message) {
         Platform.runLater(() -> {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.initStyle(StageStyle.UTILITY);
-            alert.setTitle("Error");
-            alert.setHeaderText("Error!");
-            alert.setContentText(cutMessage(text));
+            alert.setTitle(title);
+            alert.setHeaderText(header);
+            alert.setContentText(cutMessage(message));
             alert.showAndWait();
         });
+    }
+
+    public static void showError(String message) {
+        showError("Error", "Error", cutMessage(message));
     }
 
     public static void showInfo(String text) {
@@ -59,7 +62,7 @@ public class FormUtils {
     }
 
     public static void showPlatformInfo(String message) {
-        showPlatformInfo("Info", "Info", message);
+        showPlatformInfo("Info", message, "Info");
     }
 
     public static void showPlatformInfo(String title, String header, String message) {
@@ -109,8 +112,8 @@ public class FormUtils {
     }
 
     public static void validateTable(
-        TableView<CoinTabRow> tableView, Label errorLabel, String errorText,
-        AtomicBoolean validationFlag) {
+            TableView<CoinTabRow> tableView, Label errorLabel, String errorText,
+            AtomicBoolean validationFlag) {
         errorLabel.setText(errorText);
         tableView.getStyleClass().add("credits-border-red");
         validationFlag.set(false);
@@ -147,12 +150,17 @@ public class FormUtils {
     }
 
     public static String getTransactionDescType(TransactionData transactionData) {
-        switch (transactionData.getType()){
-            case TT_SmartDeploy: return "Deploy";
-            case TT_SmartState: return "State";
-            case TT_SmartExecute: return "Execute";
-            case TT_Normal: return "CS Transfer";
-            default: return "Unknown";
+        switch (transactionData.getType()) {
+            case TT_SmartDeploy:
+                return "Deploy";
+            case TT_SmartState:
+                return "State";
+            case TT_SmartExecute:
+                return "Execute";
+            case TT_Normal:
+                return "CS Transfer";
+            default:
+                return "Unknown";
         }
     }
 

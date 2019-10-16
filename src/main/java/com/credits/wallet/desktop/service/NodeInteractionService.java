@@ -85,7 +85,7 @@ public class NodeInteractionService {
         CompletableFuture
                 .supplyAsync(() -> nodeApi.getSmartContract(tokenAddress), threadPool)
                 .thenApply((sc) -> {
-                    final ModifiedInnerIdSenderReceiver actualData = getActualIdSenderReceiver(receiver);
+                    final var actualData = getActualIdSenderReceiver(receiver);
                     return nodeApi.submitInvokeTransaction(actualData.getTransactionInnerId(),
                                                            actualData.getModifiedSenderAddress(),
                                                            actualData.getModifiedReceiverAddress(),
@@ -103,6 +103,27 @@ public class NodeInteractionService {
                 });
     }
 
+    public void submitInvokeTransaction(String contractAddress,
+                                        float maxFee,
+                                        String method,
+                                        List<Object> params,
+                                        List<String> usedContacts,
+                                        BiConsumer<? super String, ? super Throwable> handleResult) {
+        CompletableFuture
+                .supplyAsync(() -> {
+                    final var actualData = getActualIdSenderReceiver(contractAddress);
+                    return nodeApi.submitInvokeTransaction(actualData.getTransactionInnerId(),
+                                                           actualData.getModifiedSenderAddress(),
+                                                           actualData.getModifiedReceiverAddress(),
+                                                           method,
+                                                           params,
+                                                           maxFee,
+                                                           usedContacts,
+                                                           privateKey);
+                })
+                .whenComplete(handleContractMethodResult(handleResult));
+    }
+
     public void invokeContractGetter(String contractAddress,
                                      String methodName,
                                      List<Object> params,
@@ -110,12 +131,16 @@ public class NodeInteractionService {
                                      BiConsumer<? super String, ? super Throwable> handleResult) {
         CompletableFuture
                 .supplyAsync(() -> nodeApi.invokeContractGetterMethod(account, contractAddress, methodName, params, usedContracts), threadPool)
-                .whenComplete((result, throwable) -> {
-                    if (throwable != null) handleResult.accept(throwable.getMessage(), throwable);
-                    else result
-                            .getContractResult()
-                            .ifPresent(variant -> handleResult.accept("" + toObject(variant), null));
-                });
+                .whenComplete(handleContractMethodResult(handleResult));
+    }
+
+    public BiConsumer<TransactionFlowResultData, Throwable> handleContractMethodResult(BiConsumer<? super String, ? super Throwable> handleResult) {
+        return (result, throwable) -> {
+            if (throwable != null) handleResult.accept(throwable.getMessage(), throwable);
+            else result
+                    .getContractResult()
+                    .ifPresent(variant -> handleResult.accept("" + toObject(variant), null));
+        };
     }
 
     public ModifiedInnerIdSenderReceiver getActualIdSenderReceiver(String receiver) {

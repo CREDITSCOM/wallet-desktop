@@ -45,6 +45,7 @@ import java.lang.reflect.Parameter;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 
 import static com.credits.client.node.service.NodeApiServiceImpl.async;
 import static com.credits.general.thrift.generated.Variant._Fields.V_STRING;
@@ -54,6 +55,7 @@ import static com.credits.wallet.desktop.AppState.getDatabase;
 import static com.credits.wallet.desktop.AppState.getNodeInteractionService;
 import static com.credits.wallet.desktop.utils.FormUtils.*;
 import static com.credits.wallet.desktop.utils.sourcecode.SourceCodeUtils.formatSourceCode;
+import static java.lang.Float.parseFloat;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
@@ -132,11 +134,11 @@ public class SmartContractController extends AbstractController {
 
     @FXML
     private void handleExecute() {
-        final short fee;
+        var fee = 0f;
         final boolean isGetterMethod;
         if (storeContractState.getValue()) {
             if (checkFeeFieldNotValid()) return;
-            fee = getActualOfferedMaxFee16Bits(feeField);
+            fee = parseFloat(feeField.getText());
             isGetterMethod = false;
         } else {
             fee = 0;
@@ -147,23 +149,31 @@ public class SmartContractController extends AbstractController {
         final var methodName = selectedMethod.getName();
         final var params = getObjectsFromParamsField();
         final var usedContracts = parseUsedContractsField(tfUsedContracts.getText());
+        final var nodeCall = getNodeInteractionService();
 
         if (isGetterMethod) {
-            getNodeInteractionService().invokeContractGetter(contractAddress, methodName, params, usedContracts, (result, error) -> {
-                if (error == null) {
-                    showPlatformInfo("Smart-contract invocation",
-                                     "Invoke getter method",
-                                     "address: " + contractAddress + "\n\n"
-                                             + "method: " + methodName + "\n"
-                                             + "params: " + params.toString() + "\n\n"
-                                             + "Result:" + "\n" + result);
-                } else {
-                    LOGGER.error("invoke getter method error. Reason {}", error.getMessage());
-                    showError(error.getMessage());
-                }
-
-            });
+            nodeCall.invokeContractGetter(contractAddress, methodName, params, usedContracts,
+                                                             handleContractMethodResult(contractAddress, methodName, params));
+        } else {
+            nodeCall.submitInvokeTransaction(contractAddress, fee, methodName, params, usedContracts,
+                                                                handleContractMethodResult(contractAddress, methodName, params));
         }
+    }
+
+    private BiConsumer<String, Throwable> handleContractMethodResult(String contractAddress, String methodName, ArrayList<Object> params) {
+        return (result, error) -> {
+            if (error == null) {
+                showPlatformInfo("Smart-contract invocation response",
+                                 "Response from \"" + contractAddress + "\"",
+                                 "method: " + methodName + "\n"
+                                         + "params: " + params.toString() + "\n\n"
+                                         + "return value:" + "\n" + result);
+            } else {
+                LOGGER.error("smart contract invocation error. Reason {}", error.getMessage());
+                showError("Smart-contract invocation", "Error invocation", error.getMessage());
+            }
+
+        };
     }
 
     @FXML

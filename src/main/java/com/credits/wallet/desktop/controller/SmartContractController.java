@@ -153,10 +153,10 @@ public class SmartContractController extends AbstractController {
 
         if (isGetterMethod) {
             nodeCall.invokeContractGetter(contractAddress, methodName, params, usedContracts,
-                                                             handleContractMethodResult(contractAddress, methodName, params));
+                                          handleContractMethodResult(contractAddress, methodName, params));
         } else {
             nodeCall.submitInvokeTransaction(contractAddress, fee, methodName, params, usedContracts,
-                                                                handleContractMethodResult(contractAddress, methodName, params));
+                                             handleContractMethodResult(contractAddress, methodName, params));
         }
     }
 
@@ -164,8 +164,9 @@ public class SmartContractController extends AbstractController {
         return (result, error) -> {
             if (error == null) {
                 showPlatformInfo("Smart-contract invocation response",
-                                 "Response from \"" + contractAddress + "\"",
-                                 "method: " + methodName + "\n"
+                                 "Success invocation",
+                                 "address: \"" + contractAddress + "\"\n" +
+                                         "method: " + methodName + "\n"
                                          + "params: " + params.toString() + "\n\n"
                                          + "return value:" + "\n" + result);
             } else {

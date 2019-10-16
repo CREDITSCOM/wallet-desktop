@@ -573,6 +573,10 @@
     -fx-text-fill: white;
 }
 
+#pParams *{
+    -fx-background-color: #ffffff
+}
+
 .credits-PaneInTab {
     -fx-border-color: black;
     -fx-background-radius: 15;

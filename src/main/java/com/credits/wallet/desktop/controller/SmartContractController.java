@@ -262,12 +262,14 @@ public class SmartContractController extends AbstractController {
         };
     }
 
-    private void refreshSmartContractForm(String sourceCode, Class<?> rootClass) {
+    private void refreshSmartContractForm(String contractAddress, String sourceCode, Class<?> rootClass) {
 //        if (compiledSmartContract == null || compiledSmartContract.getSmartContractDeployData().getByteCodeObjects().size() == 0 || compiledSmartContract.getAddress().length == 0) {
 //            tbFavorite.setVisible(false);
 //            showContractExecutionsControls(false);
 //        } else {
 //            selectedContract = compiledSmartContract;
+
+        tfAddress.setText(contractAddress);
 
         showContractExecutionsControls(true);
 
@@ -293,7 +295,6 @@ public class SmartContractController extends AbstractController {
 //        findInFavoriteThenSelect(compiledSmartContract, tbFavorite);
 
 //        String sourceCode = compiledSmartContract.getSmartContractDeployData().getSourceCode();
-//        tfAddress.setText(compiledSmartContract.getBase58Address());
 //        MethodData[] methods = Arrays.stream(compiledSmartContract.getContractClass().getRootClass().getMethods())
 //                .filter(m -> !OBJECT_METHODS.contains(m.getName()))
 //                .map(MethodData::new)
@@ -502,7 +503,9 @@ public class SmartContractController extends AbstractController {
             public void onSuccess(SmartContract smartContract) throws CreditsException {
                 try {
                     final var smartContractClass = compileContractClass(smartContract.getByteCodeObjectList());
-                    refreshSmartContractForm(smartContract.getSourceCode(), smartContractClass.getRootClass());
+                    refreshSmartContractForm(smartContract.getWallet().getAddress(),
+                                             smartContract.getSourceCode(),
+                                             smartContractClass.getRootClass());
                 } catch (CompilationException e) {
                     LOGGER.error("can'r compile smart contract. Reason {}", ExceptionUtils.getRootCauseMessage(e));
                 }

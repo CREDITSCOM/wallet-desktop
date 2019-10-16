@@ -44,6 +44,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.credits.client.node.service.NodeApiServiceImpl.async;
 import static com.credits.general.thrift.generated.Variant._Fields.V_STRING;
@@ -53,6 +54,7 @@ import static com.credits.wallet.desktop.AppState.getDatabase;
 import static com.credits.wallet.desktop.AppState.getNodeInteractionService;
 import static com.credits.wallet.desktop.utils.FormUtils.*;
 import static com.credits.wallet.desktop.utils.sourcecode.SourceCodeUtils.formatSourceCode;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 
@@ -65,7 +67,7 @@ public class SmartContractController extends AbstractController {
     private final DatabaseService database = getDatabase();
 
     private CodeArea codeArea;
-    private Method currentMethod;
+    private Method selectedMethod;
     private HashMap<String, CompiledSmartContract> favoriteContracts;
 
     private final List<SmartContractTransactionTabRow> unapprovedList = new ArrayList<>();
@@ -142,14 +144,16 @@ public class SmartContractController extends AbstractController {
         }
 
         final var contractAddress = selectedContract.getAddress();
-        final var methodName = currentMethod.getName();
+        final var methodName = selectedMethod.getName();
         final var params = getObjectsFromParamsField();
         final var usedContracts = parseUsedContractsField(tfUsedContracts.getText());
 
         if (isGetterMethod) {
             getNodeInteractionService().invokeContractGetter(contractAddress, methodName, params, usedContracts, (result, error) -> {
                 if (error == null) {
-                    showPlatformInfo("address: " + contractAddress + "\n\n"
+                    showPlatformInfo("Smart-contract invocation",
+                                     "Invoke getter method",
+                                     "address: " + contractAddress + "\n\n"
                                              + "method: " + methodName + "\n"
                                              + "params: " + params.toString() + "\n\n"
                                              + "Result:" + "\n" + result);
@@ -168,36 +172,49 @@ public class SmartContractController extends AbstractController {
     }
 
     @FXML
-    private void cbMethodsOnAction() {
-        final var selectedItem = cbMethods.getSelectionModel().getSelectedItem();
-        if (selectedItem != null) {
-            currentMethod = selectedItem.getMethod();
-        } else {
-            currentMethod = null;
-            return;
-        }
+    private void handleMethodsCheckBoxAction() {
+        if (methodIsNotSelected()) return;
 
-        final var params = currentMethod.getParameters();
+        final var params = selectedMethod.getParameters();
+        final var layoutY = new AtomicInteger(10);
+        final var paramRow = new ArrayList<Node>();
+        buildParamsLayout(params, layoutY, paramRow);
+        Platform.runLater(() -> refreshParametersPane(paramRow, layoutY.get()));
+    }
+
+    private boolean methodIsNotSelected() {
+        final var selectedItem = cbMethods.getSelectionModel().getSelectedItem();
+        if (selectedItem == null) {
+            selectedMethod = null;
+            return true;
+        } else {
+            selectedMethod = selectedItem.getMethod();
+        }
+        return false;
+    }
+
+    private void buildParamsLayout(Parameter[] params, AtomicInteger layoutY, ArrayList<Node> nodes) {
         if (params.length > 0) {
-            var layoutY = 10;
-            final var nodes = new ArrayList<Node>();
             for (Parameter param : params) {
-                final var paramValueTextField = initParameterTextField(layoutY);
-                final var paramNameLabel = initParameterLabel(layoutY, param, paramValueTextField);
+                final var paramValueTextField = initParameterTextField(layoutY.get());
+                final var paramNameLabel = initParameterLabel(layoutY.get(), param, paramValueTextField);
                 nodes.add(paramValueTextField);
                 nodes.add(paramNameLabel);
-                layoutY += 40;
+                layoutY.getAndAdd(40);
             }
 
-            final var layoutMaxHeight = layoutY;
-
-            Platform.runLater(() -> {
-                pParamsContainer.getChildren().clear();
-                pParamsContainer.getChildren().addAll(nodes);
-                pParamsContainer.setPrefHeight(layoutMaxHeight);
-                pParams.setVisible(true);
-            });
         }
+    }
+
+    private void refreshParametersPane(List<Node> nodes, int layoutMaxHeight) {
+        clearParametersContainer();
+        pParamsContainer.getChildren().addAll(nodes);
+        pParamsContainer.setPrefHeight(layoutMaxHeight);
+        pParams.setVisible(true);
+    }
+
+    private void clearParametersContainer() {
+        pParamsContainer.getChildren().clear();
     }
 
     private Label initParameterLabel(double layoutY, Parameter param, TextField paramValueTextField) {
@@ -295,23 +312,32 @@ public class SmartContractController extends AbstractController {
         Platform.runLater(() -> {
             showContractExecutionsControls(true);
 
+
             tfAddress.setText(selectedContract.getAddress());
 
             tbFavorite.setOnAction(handleFavoriteButtonEvent(tbFavorite, selectedContract));
             tbFavorite.setVisible(true);
 
-            cbMethods.getItems().clear();
-            cbMethods.getItems().addAll(methods);
-            cbMethods.getSelectionModel().selectFirst();
-
-            codeArea.clear();
-            final var formattedSourceCode = formatSourceCode(selectedContract.getSourcecode());
-            codeArea.replaceText(0, 0, formattedSourceCode);
+            refreshParametersPane(emptyList(), 0);
+            fillMethodsCheckBox(methods);
+            refreshCodeArea();
 
             findInFavoriteThenSelect(selectedContract.getAddress(), tbFavorite);
         });
 
 //        fillTransactionsTables(compiledSmartContract.getBase58Address());
+    }
+
+    private void fillMethodsCheckBox(MethodData[] methods) {
+        cbMethods.getItems().clear();
+        cbMethods.getItems().addAll(methods);
+        cbMethods.getSelectionModel().selectFirst();
+    }
+
+    private void refreshCodeArea() {
+        codeArea.clear();
+        final var formattedSourceCode = formatSourceCode(selectedContract.getSourcecode());
+        codeArea.replaceText(0, 0, formattedSourceCode);
     }
 
     private void showContractExecutionsControls(boolean isShow) {
@@ -631,7 +657,7 @@ public class SmartContractController extends AbstractController {
     }
 
     private ArrayList<Object> getObjectsFromParamsField() {
-        final var params = currentMethod.getParameters();
+        final var params = selectedMethod.getParameters();
         final var paramsValuesContainer = pParamsContainer.getChildren();
         final var paramsAsObject = new ArrayList<>();
         for (int i = 0, j = 0; i < paramsValuesContainer.size(); i++) {

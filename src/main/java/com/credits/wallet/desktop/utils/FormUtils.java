@@ -33,14 +33,7 @@ public class FormUtils {
     }
 
     public static void showInfo(String text) {
-        Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.initStyle(StageStyle.UTILITY);
-            alert.setTitle("Information");
-            alert.setHeaderText("Information");
-            alert.setContentText(cutMessage(text));
-            alert.showAndWait();
-        });
+        showPlatformInfo(text, "Information", "Information");
     }
 
     public static void showPlatformWarning(String content) {
@@ -66,11 +59,15 @@ public class FormUtils {
     }
 
     public static void showPlatformInfo(String message) {
+        showPlatformInfo("Info", "Info", message);
+    }
+
+    public static void showPlatformInfo(String title, String header, String message) {
         Platform.runLater(() -> {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.initStyle(StageStyle.UTILITY);
-            alert.setTitle("Info");
-            alert.setHeaderText("Info");
+            alert.setTitle(title);
+            alert.setHeaderText(header);
             alert.setContentText(cutMessage(message));
             alert.showAndWait();
         });

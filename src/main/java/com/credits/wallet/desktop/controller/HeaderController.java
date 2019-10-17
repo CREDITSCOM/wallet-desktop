@@ -116,7 +116,7 @@ public class HeaderController implements Initializable {
     private Pair<Long, Integer> calculateBlockAndSyncPercent(SyncStateInfoData syncStateInfo) {
         final var blockchainCurrentBlockNumber = syncStateInfo.getBlockchainCurrentBlockNumber();
         final var nodeCurrentBlockNumber = syncStateInfo.getNodeCurrentBlockNumber();
-        final int percent = (int) (nodeCurrentBlockNumber / (blockchainCurrentBlockNumber / 100));
+        final int percent = (int) (blockchainCurrentBlockNumber / nodeCurrentBlockNumber * 100);
         return Pair.of(blockchainCurrentBlockNumber, percent);
 
     }

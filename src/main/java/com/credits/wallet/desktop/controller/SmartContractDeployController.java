@@ -3,6 +3,7 @@ package com.credits.wallet.desktop.controller;
 import com.credits.client.node.pojo.SmartContractData;
 import com.credits.client.node.pojo.TransactionFlowResultData;
 import com.credits.general.classload.ByteCodeContractClassLoader;
+import com.credits.general.exception.CreditsException;
 import com.credits.general.pojo.ByteCodeObjectData;
 import com.credits.general.util.Callback;
 import com.credits.general.util.compiler.model.CompilationPackage;
@@ -28,14 +29,22 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 import static com.credits.general.util.Callback.handleCallback;
+import static com.credits.general.util.GeneralConverter.compilationPackageToByteCodeObjectsData;
 import static com.credits.general.util.GeneralConverter.encodeToBASE58;
-import static com.credits.wallet.desktop.VistaNavigator.SMART_CONTRACT;
-import static com.credits.wallet.desktop.VistaNavigator.reloadForm;
+import static com.credits.wallet.desktop.AppState.NODE_ERROR;
+import static com.credits.wallet.desktop.AppState.getNodeInteractionService;
+import static com.credits.wallet.desktop.VistaNavigator.*;
+import static com.credits.wallet.desktop.utils.ApiUtils.getTokenStandard;
+import static com.credits.wallet.desktop.utils.FormUtils.*;
+import static com.credits.wallet.desktop.utils.SmartContractsUtils.getSmartsListFromField;
 import static com.credits.wallet.desktop.utils.SmartContractsUtils.saveSmartInTokenList;
+import static com.credits.wallet.desktop.utils.sourcecode.SourceCodeUtils.normalizeSourceCode;
 import static com.credits.wallet.desktop.utils.sourcecode.building.SourceCodeBuilder.compileSmartSourceCode;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
@@ -68,15 +77,15 @@ public class SmartContractDeployController extends AbstractController {
     }
 
     public void handleBuild(
-        CreditsCodeArea codeArea, TableView<BuildSourceCodeError> errorTableView, VBox bottomPane,
-        TabPane bottomTabPane, Tab bottomErrorTab) {
+            CreditsCodeArea codeArea, TableView<BuildSourceCodeError> errorTableView, VBox bottomPane,
+            TabPane bottomTabPane, Tab bottomErrorTab) {
         deployTabController.smartBuildButton.setText(COMPILING);
         deployTabController.smartBuildButton.setDisable(true);
         errorTableView.setVisible(false);
         codeArea.setDisable(true);
         setFocusOnFeeField();
         supplyAsync(() -> compileSmartSourceCode(codeArea.getText()))
-            .whenComplete(handleCallback(handleBuildResult(codeArea, errorTableView, bottomPane, bottomTabPane, bottomErrorTab)));
+                .whenComplete(handleCallback(handleBuildResult(codeArea, errorTableView, bottomPane, bottomTabPane, bottomErrorTab)));
     }
 
     public void setFocusOnFeeField() {
@@ -86,8 +95,8 @@ public class SmartContractDeployController extends AbstractController {
     }
 
     private Callback<CompilationResult> handleBuildResult(
-        CreditsCodeArea codeArea,
-        TableView<BuildSourceCodeError> errorTableView, VBox bottomPane, TabPane bottomTabPane, Tab bottomErrorTab) {
+            CreditsCodeArea codeArea,
+            TableView<BuildSourceCodeError> errorTableView, VBox bottomPane, TabPane bottomTabPane, Tab bottomErrorTab) {
         return new Callback<CompilationResult>() {
             @Override
             @SuppressWarnings("unchecked")
@@ -111,7 +120,7 @@ public class SmartContractDeployController extends AbstractController {
                     deployTabController.smartCodeArea.setDisable(false);
                     deployTabController.smartBuildButton.setDisable(false);
                     deployTabController.smartBuildButton.setText(BUILD);
-                    FormUtils.showPlatformError(e.getMessage());
+                    showPlatformError(e.getMessage());
                 });
                 LOGGER.error("failed!", e);
             }
@@ -119,8 +128,8 @@ public class SmartContractDeployController extends AbstractController {
     }
 
     boolean checkNotError(
-        VBox smartErrorPanel, TableView<BuildSourceCodeError> tableView,
-        CompilationResult compilationResult, TabPane bottomTabPane, Tab bottomErrorTab) {
+            VBox smartErrorPanel, TableView<BuildSourceCodeError> tableView,
+            CompilationResult compilationResult, TabPane bottomTabPane, Tab bottomErrorTab) {
         List<BuildSourceCodeError> errorsList = compilationResult.getErrors();
         if (errorsList.size() > 0) {
             Platform.runLater(() -> {
@@ -137,65 +146,110 @@ public class SmartContractDeployController extends AbstractController {
     }
 
     public void handleDeploy() {
-//        clearLabErr();
-//        String transactionFee = deployTabController.feeField.getText();
-//        if (toBigDecimal(transactionFee).compareTo(BigDecimal.ZERO) <= 0) {
-//            FormUtils.setErrorStyle(deployTabController.feeField);
-//            setFocusOnFeeField();
-//            return;
-//        }
-//        try {
-//            List<ByteBuffer> usedSmartsListFromField = getSmartsListFromField(deployTabController.usdSmarts.getText());
-//            String javaCode = SourceCodeUtils.normalizeSourceCode(deployTabController.smartCodeArea.getText());
-//            if (compilationPackage == null) {
-//                deployTabController.smartBuildButton.setDisable(false);
-//                deployTabController.smartDeployButton.setDisable(true);
-//                throw new CreditsException("Source code is not compiled");
-//            } else {
-//                List<ByteCodeObjectData> byteCodeObjectDataList = compilationPackageToByteCodeObjectsData(compilationPackage);
-//
-//                Class<?> contractClass = compileSmartContractByteCode(byteCodeObjectDataList);
-//                int tokenStandardId = getTokenStandard(contractClass);
-//
-//                SmartContractDeployData smartContractDeployData =
-//                    new SmartContractDeployData(javaCode, byteCodeObjectDataList, tokenStandardId);
-//
-//                long idWithoutFirstTwoBits = getIdWithoutFirstTwoBits(AppState.getNodeApiService(), session.account, true);
-//
-//                SmartContractData smartContractData = new SmartContractData(
-//                        generateSmartContractAddress(decodeFromBASE58(session.account), idWithoutFirstTwoBits,
-//                                                 byteCodeObjectDataList), decodeFromBASE58(session.account), smartContractDeployData, null, null,
-//                        System.currentTimeMillis());
-//
-//                supplyAsync(() -> modifyInnerIdSenderReceiver(AppState.getNodeApiService(), session.account,
-//                                                              smartContractData.getBase58Address(), idWithoutFirstTwoBits), threadPool)
-//                    .thenApply((transactionData) -> createSmartContractTransaction(
-//                            transactionData,
-//                            FormUtils.getActualOfferedMaxFee16Bits(deployTabController.feeField),
-//                            smartContractData,
-//                            usedSmartsListFromField,
-//                            session))
-//                    .whenComplete(handleCallback(handleDeployResult(getTokenInfo(contractClass, smartContractData))));
-//                reloadForm(WALLET);
-//            }
-//        } catch (Exception e) {
-//            LOGGER.error("failed!", e);
-//            FormUtils.showError(NODE_ERROR + ": " + e.getMessage());
-//        }
+        clearLabErr();
+        final var maxFee = Float.parseFloat(deployTabController.feeField.getText());
+        if (maxFee <= 0) {
+            setErrorStyle(deployTabController.feeField);
+            setFocusOnFeeField();
+            return;
+        }
+        try {
+
+            if (compilationPackage == null) {
+                deployTabController.smartBuildButton.setDisable(false);
+                deployTabController.smartDeployButton.setDisable(true);
+                throw new CreditsException("Source code is not compiled");
+            } else {
+
+                final var interactionService = getNodeInteractionService();
+
+                final var byteCodeObjectDataList = compilationPackageToByteCodeObjectsData(compilationPackage);
+                final var contractClass = compileSmartContractByteCode(byteCodeObjectDataList);
+                final var contractAddress = interactionService.generateSmartContractAddress(byteCodeObjectDataList);
+                final var tokenStandardId = getTokenStandard(contractClass);
+                final var sourceCode = normalizeSourceCode(deployTabController.smartCodeArea.getText());
+                final var usedContracts = getSmartsListFromField(deployTabController.usdSmarts.getText());
+
+                interactionService.submitDeployTransaction(contractAddress, sourceCode, byteCodeObjectDataList, maxFee, tokenStandardId,
+                                                           usedContracts,
+                                                           ((result, error) -> {
+                                                               if (error == null) {
+                                                                   FormUtils.showPlatformInfo("Smart-contract deploy",
+                                                                                              "smart-contract has been deploy successfully",
+                                                                                              "contract address: " + contractAddress);
+                                                               } else {
+                                                                   FormUtils.showPlatformInfo("Smart-contract deploy",
+                                                                                              "Fail deploy contract ",
+                                                                                              "contract address: " + contractAddress + "\n"
+                                                                                                      + "error message: " + error);
+                                                               }
+                                                           }));
+                reloadForm(WALLET);
+            }
+        } catch (Exception e) {
+            LOGGER.error("failed!", e);
+            showError(NODE_ERROR + ": " + e.getMessage());
+        }
+
     }
 
+//    @FXML
+//    private void handleExecute() {
+//        var fee = 0f;
+//        final boolean isGetterMethod;
+//        if (storeContractState.getValue()) {
+//            if (checkFeeFieldNotValid()) return;
+//            fee = parseFloat(feeField.getText());
+//            isGetterMethod = false;
+//        } else {
+//            fee = 0;
+//            isGetterMethod = true;
+//        }
+//
+//        final var contractAddress = selectedContract.getAddress();
+//        final var methodName = selectedMethod.getName();
+//        final var params = getObjectsFromParamsField();
+//        final var usedContracts = parseUsedContractsField(tfUsedContracts.getText());
+//        final var nodeCall = getNodeInteractionService();
+//
+//        if (isGetterMethod) {
+//            nodeCall.invokeContractGetter(contractAddress, methodName, params, usedContracts,
+//                                          handleContractMethodResult(contractAddress, methodName, params));
+//        } else {
+//            nodeCall.submitInvokeTransaction(contractAddress, fee, methodName, params, usedContracts,
+//                                             handleContractMethodResult(contractAddress, methodName, params));
+//        }
+//    }
+
+
+    private BiConsumer<String, Throwable> handleContractMethodResult(String contractAddress, String methodName, ArrayList<Object> params) {
+        return (result, error) -> {
+            if (error == null) {
+                showPlatformInfo("Smart-contract invocation response",
+                                 "Success invocation",
+                                 "address: \"" + contractAddress + "\"\n" +
+                                         "method: " + methodName + "\n"
+                                         + "params: " + params.toString() + "\n\n"
+                                         + "return value:" + "\n" + result);
+            } else {
+                LOGGER.error("smart contract invocation error. Reason {}", error.getMessage());
+                showError("Smart-contract invocation", "Error invocation", error.getMessage());
+            }
+
+        };
+    }
 
     private TokenInfoData getTokenInfo(Class<?> contractClass, SmartContractData smartContractData) {
         if (smartContractData.getSmartContractDeployData().getTokenStandardId() != TokenStandardData.NOT_A_TOKEN.getId()) {
             try {
                 Object contractInstance = contractClass.getDeclaredConstructor(String.class)
-                    .newInstance(encodeToBASE58(smartContractData.getDeployer()));
+                        .newInstance(encodeToBASE58(smartContractData.getDeployer()));
                 Field initiator = contractClass.getSuperclass().getDeclaredField("initiator");
                 initiator.setAccessible(true);
                 initiator.set(contractInstance, session.account);
                 String tokenName = (String) contractClass.getMethod("getName").invoke(contractInstance);
                 String balance = (String) contractClass.getMethod("balanceOf", String.class)
-                    .invoke(contractInstance, session.account);
+                        .invoke(contractInstance, session.account);
                 return new TokenInfoData(smartContractData.getBase58Address(), tokenName, new BigDecimal(balance));
             } catch (Exception e) {
                 LOGGER.warn("token \"{}\" can't be add to the balances list. Reason: {}",
@@ -227,8 +281,8 @@ public class SmartContractDeployController extends AbstractController {
                 StringSelection selection = new StringSelection(target);
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 clipboard.setContents(selection, selection);
-                FormUtils.showPlatformInfo(String.format("%s%n%nSmart-contract address%n%n%s%n%ncopied to clipboard",
-                                                         transactionFlowResultData.getMessage(), target));
+                showPlatformInfo(String.format("%s%n%nSmart-contract address%n%n%s%n%ncopied to clipboard",
+                                               transactionFlowResultData.getMessage(), target));
                 if (tokenInfoData != null) {
                     saveSmartInTokenList(session.coinsKeeper, tokenInfoData.name, tokenInfoData.balance,
                                          tokenInfoData.address);
@@ -238,7 +292,7 @@ public class SmartContractDeployController extends AbstractController {
             @Override
             public void onError(Throwable e) {
                 LOGGER.error("failed!", e);
-                FormUtils.showPlatformError(e.getMessage());
+                showPlatformError(e.getMessage());
             }
         };
     }
@@ -250,7 +304,7 @@ public class SmartContractDeployController extends AbstractController {
 
 
     private void clearLabErr() {
-        FormUtils.clearErrorStyle(deployTabController.feeField);
+        clearErrorStyle(deployTabController.feeField);
     }
 
 

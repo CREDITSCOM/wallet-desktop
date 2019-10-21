@@ -8,7 +8,6 @@ import com.credits.general.pojo.ByteCodeObjectData;
 import com.credits.general.util.Callback;
 import com.credits.general.util.compiler.model.CompilationPackage;
 import com.credits.wallet.desktop.struct.TokenInfoData;
-import com.credits.wallet.desktop.utils.FormUtils;
 import com.credits.wallet.desktop.utils.TokenStandardData;
 import com.credits.wallet.desktop.utils.sourcecode.building.BuildSourceCodeError;
 import com.credits.wallet.desktop.utils.sourcecode.building.CompilationResult;
@@ -29,10 +28,8 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
 
 import static com.credits.general.util.Callback.handleCallback;
 import static com.credits.general.util.GeneralConverter.compilationPackageToByteCodeObjectsData;
@@ -97,9 +94,8 @@ public class SmartContractDeployController extends AbstractController {
     private Callback<CompilationResult> handleBuildResult(
             CreditsCodeArea codeArea,
             TableView<BuildSourceCodeError> errorTableView, VBox bottomPane, TabPane bottomTabPane, Tab bottomErrorTab) {
-        return new Callback<CompilationResult>() {
+        return new Callback<>() {
             @Override
-            @SuppressWarnings("unchecked")
             public void onSuccess(CompilationResult compilationResult) {
                 Platform.runLater(() -> {
                     codeArea.setDisable(false);
@@ -174,14 +170,18 @@ public class SmartContractDeployController extends AbstractController {
                                                            usedContracts,
                                                            ((result, error) -> {
                                                                if (error == null) {
-                                                                   FormUtils.showPlatformInfo("Smart-contract deploy",
-                                                                                              "smart-contract has been deploy successfully",
-                                                                                              "contract address: " + contractAddress);
+                                                                   LOGGER.debug("contract deploy {} success", contractAddress);
+                                                                   showPlatformInfo("Smart-contract deploy",
+                                                                                    "smart-contract has been deploy successfully",
+                                                                                    "contract address: " + contractAddress);
                                                                } else {
-                                                                   FormUtils.showPlatformInfo("Smart-contract deploy",
-                                                                                              "Fail deploy contract ",
-                                                                                              "contract address: " + contractAddress + "\n"
-                                                                                                      + "error message: " + error);
+                                                                   LOGGER.debug("contract deploy {} failed. Reason: {}",
+                                                                                contractAddress,
+                                                                                error.getMessage());
+                                                                   showPlatformInfo("Smart-contract deploy",
+                                                                                    "Fail deploy contract ",
+                                                                                    "contract address: " + contractAddress + "\n"
+                                                                                            + "error message: " + error);
                                                                }
                                                            }));
                 reloadForm(WALLET);
@@ -191,52 +191,6 @@ public class SmartContractDeployController extends AbstractController {
             showError(NODE_ERROR + ": " + e.getMessage());
         }
 
-    }
-
-//    @FXML
-//    private void handleExecute() {
-//        var fee = 0f;
-//        final boolean isGetterMethod;
-//        if (storeContractState.getValue()) {
-//            if (checkFeeFieldNotValid()) return;
-//            fee = parseFloat(feeField.getText());
-//            isGetterMethod = false;
-//        } else {
-//            fee = 0;
-//            isGetterMethod = true;
-//        }
-//
-//        final var contractAddress = selectedContract.getAddress();
-//        final var methodName = selectedMethod.getName();
-//        final var params = getObjectsFromParamsField();
-//        final var usedContracts = parseUsedContractsField(tfUsedContracts.getText());
-//        final var nodeCall = getNodeInteractionService();
-//
-//        if (isGetterMethod) {
-//            nodeCall.invokeContractGetter(contractAddress, methodName, params, usedContracts,
-//                                          handleContractMethodResult(contractAddress, methodName, params));
-//        } else {
-//            nodeCall.submitInvokeTransaction(contractAddress, fee, methodName, params, usedContracts,
-//                                             handleContractMethodResult(contractAddress, methodName, params));
-//        }
-//    }
-
-
-    private BiConsumer<String, Throwable> handleContractMethodResult(String contractAddress, String methodName, ArrayList<Object> params) {
-        return (result, error) -> {
-            if (error == null) {
-                showPlatformInfo("Smart-contract invocation response",
-                                 "Success invocation",
-                                 "address: \"" + contractAddress + "\"\n" +
-                                         "method: " + methodName + "\n"
-                                         + "params: " + params.toString() + "\n\n"
-                                         + "return value:" + "\n" + result);
-            } else {
-                LOGGER.error("smart contract invocation error. Reason {}", error.getMessage());
-                showError("Smart-contract invocation", "Error invocation", error.getMessage());
-            }
-
-        };
     }
 
     private TokenInfoData getTokenInfo(Class<?> contractClass, SmartContractData smartContractData) {

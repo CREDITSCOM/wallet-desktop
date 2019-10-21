@@ -63,7 +63,7 @@ public class DatabaseHelper {
         }
     }
 
-    private  <T, ID> Dao<T, ID> createDaoAndAddToCollection(Class<T> table) throws SQLException {
+    private <T, ID> Dao<T, ID> createDaoAndAddToCollection(Class<T> table) throws SQLException {
         final Dao<T, ID> dao = createDao(connectionSource, table);
         daoCollection.add(dao);
         return dao;
@@ -179,7 +179,7 @@ public class DatabaseHelper {
         return rethrowWithDetailMessage(() -> transactionDao.queryBuilder()
                 .limit(limit > 0 ? limit : null)
                 .orderBy("block_number", false)
-                .where().eq("sender_address", address).and().ge("block_number", blockNumber)
+                .where().eq("sender_address", address).or().eq("receiver_address", address).and().ge("block_number", blockNumber)
                 .query());
     }
 

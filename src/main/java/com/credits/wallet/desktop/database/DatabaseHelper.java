@@ -13,6 +13,7 @@ import org.apache.commons.io.IOUtils;
 import java.io.IOException;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -32,32 +33,40 @@ public class DatabaseHelper {
     private Dao<Wallet, Long> walletDao;
     private Dao<Transaction, Long> transactionDao;
     private Dao<ApplicationMetadata, Wallet> applicationMetadataDao;
-    private Dao<Argument, ?> argumentDao;
-    private Dao<SmartContractHasBytecode, ?> smartContractHasBytecodeDao;
-    private Dao<Bytecode, ?> bytecodeDao;
-    private Dao<WalletHasSmartContract, ?> walletHasSmartContractDao;
+    private Dao<Argument, Long> argumentDao;
+    private Dao<SmartContractHasBytecode, Integer> smartContractHasBytecodeDao;
+    private Dao<Bytecode, Integer> bytecodeDao;
+    private Dao<WalletHasSmartContract, Long> walletHasSmartContractDao;
+    private List<Dao<?, ?>> daoCollection;
 
     public DatabaseHelper(String databaseUrl) {
         this.databaseUrl = databaseUrl;
+        daoCollection = new ArrayList<>();
     }
 
     public void connectAndInitialize() {
         try {
             connectionSource = new JdbcConnectionSource(databaseUrl);
-            argumentDao = createDao(connectionSource, Argument.class);
-            smartContractDao = createDao(connectionSource, SmartContract.class);
-            walletDao = createDao(connectionSource, Wallet.class);
-            transactionDao = createDao(connectionSource, Transaction.class);
-            applicationMetadataDao = createDao(connectionSource, ApplicationMetadata.class);
-            argumentDao = createDao(connectionSource, Argument.class);
-            smartContractHasBytecodeDao = createDao(connectionSource, SmartContractHasBytecode.class);
-            bytecodeDao = createDao(connectionSource, Bytecode.class);
-            walletHasSmartContractDao = createDao(connectionSource, WalletHasSmartContract.class);
+
+            smartContractDao = createDaoAndAddToCollection(SmartContract.class);
+            walletDao = createDaoAndAddToCollection(Wallet.class);
+            transactionDao = createDaoAndAddToCollection(Transaction.class);
+            applicationMetadataDao = createDaoAndAddToCollection(ApplicationMetadata.class);
+            argumentDao = createDaoAndAddToCollection(Argument.class);
+            smartContractHasBytecodeDao = createDaoAndAddToCollection(SmartContractHasBytecode.class);
+            bytecodeDao = createDaoAndAddToCollection(Bytecode.class);
+            walletHasSmartContractDao = createDaoAndAddToCollection(WalletHasSmartContract.class);
 
         } catch (SQLException e) {
             log.error("can't connect to database. Reason {}", e.getMessage());
             throw new RuntimeException(e);
         }
+    }
+
+    private  <T, ID> Dao<T, ID> createDaoAndAddToCollection(Class<T> table) throws SQLException {
+        final Dao<T, ID> dao = createDao(connectionSource, table);
+        daoCollection.add(dao);
+        return dao;
     }
 
     public void createTable(Class<?> clazz) throws SQLException {
@@ -179,19 +188,7 @@ public class DatabaseHelper {
     }
 
     public void createTablesIfNotExist() {
-        rethrowWithDetailMessage(() -> {
-            createTable(Wallet.class);
-            createTable(Transaction.class);
-            createTable(ApplicationMetadata.class);
-            createTable(Argument.class);
-            createTable(ArgumentValue.class);
-            createTable(Method.class);
-            createTable(SmartContract.class);
-            createTable(SmartContractCall.class);
-            createTable(SmartContractHasBytecode.class);
-            createTable(Bytecode.class);
-            createTable(WalletHasSmartContract.class);
-        });
+        daoCollection.forEach(dao -> rethrowWithDetailMessage(() -> createTable(dao.getDataClass())));
     }
 
     public void createSchemeFromResourceFile(String path) {
@@ -223,6 +220,10 @@ public class DatabaseHelper {
         } catch (Exception e) {
             throw new DatabaseHelperException(getRootCauseMessage(e));
         }
+    }
+
+    public void clearAllTables() {
+        daoCollection.forEach(dao -> rethrowWithDetailMessage(() -> TableUtils.clearTable(connectionSource, dao.getDataClass())));
     }
 
     public static class DatabaseHelperException extends CreditsException {

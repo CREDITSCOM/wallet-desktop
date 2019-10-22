@@ -28,9 +28,9 @@ public class Transaction {
     private String userData;
     @DatabaseField
     private String type;
-    @DatabaseField(columnName = "block_number", index = true)
+    @DatabaseField(columnName = "block_number", uniqueCombo = true, index = true)
     private long blockNumber;
-    @DatabaseField(columnName = "index_into_block")
+    @DatabaseField(columnName = "index_into_block", uniqueCombo = true)
     private int indexIntoBlock;
 
     public Transaction(@NonNull Wallet sender,
@@ -52,4 +52,5 @@ public class Transaction {
         this.blockNumber = blockNumber;
         this.indexIntoBlock = indexIntoBlock;
     }
+
 }

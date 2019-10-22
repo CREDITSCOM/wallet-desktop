@@ -31,7 +31,7 @@ public class DatabaseHelper {
     private ConnectionSource connectionSource;
     private Dao<SmartContract, Long> smartContractDao;
     private Dao<Wallet, Long> walletDao;
-    private Dao<Transaction, Long> transactionDao;
+    private Dao<Transaction, String> transactionDao;
     private Dao<ApplicationMetadata, Wallet> applicationMetadataDao;
     private Dao<Argument, Long> argumentDao;
     private Dao<SmartContractHasBytecode, Integer> smartContractHasBytecodeDao;

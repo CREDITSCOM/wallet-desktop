@@ -54,7 +54,7 @@ public class DatabaseServiceImpl implements DatabaseService {
                 });
     }
 
-    public Runnable requestTransactionsListThenUpdateDatabase(String address) {
+    private Runnable requestTransactionsListThenUpdateDatabase(String address) {
         return writeLock(() -> {
             final var metadata = database.getOrCreateApplicationMetadata(address);
             var stored = metadata.getAmountTransactions();
@@ -85,13 +85,7 @@ public class DatabaseServiceImpl implements DatabaseService {
         });
     }
 
-    public void clearDBIfNotActual(int amountStoredTransactions, int amountTotalTransaction) {
-        if (amountTotalTransaction < amountStoredTransactions) {
-            database.clearAllTables();
-        }
-    }
-
-    public void parseTransactionsThenUpdateDB(TransactionListByAddressData response) {
+    private void parseTransactionsThenUpdateDB(TransactionListByAddressData response) {
         final var transactions = response.getTransactionsList();
         final var transactionRelation = new ArrayList<Transaction>();
         final var smartContractRelation = new ArrayList<SmartContract>();

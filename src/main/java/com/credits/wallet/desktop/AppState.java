@@ -6,6 +6,7 @@ import com.credits.wallet.desktop.database.DatabaseHelper;
 import com.credits.wallet.desktop.service.DatabaseService;
 import com.credits.wallet.desktop.service.DatabaseServiceImpl;
 import com.credits.wallet.desktop.service.NodeInteractionService;
+import com.credits.wallet.desktop.service.UpdateDatabaseService;
 import com.credits.wallet.desktop.utils.ApplicationProperties;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,12 @@ public class AppState {
     private static DatabaseService database;
     private static NodeInteractionService nodeInteractionService;
 
+    public static UpdateDatabaseService getUpdateDatabaseService() {
+        return updateDatabaseService;
+    }
+
+    private static UpdateDatabaseService updateDatabaseService;
+
     private AppState() {
     }
 
@@ -47,6 +54,7 @@ public class AppState {
         final var databasePath = properties.getDatabasePath();
         createDirectoryIfNotExist(databasePath);
         initializeDatabase(databasePath);
+        updateDatabaseService = new UpdateDatabaseService(database);
     }
 
     private static void initializeDatabase(String databasePath) {

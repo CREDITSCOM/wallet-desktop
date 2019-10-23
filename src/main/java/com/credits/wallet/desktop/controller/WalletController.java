@@ -6,7 +6,6 @@ import com.credits.general.util.Callback;
 import com.credits.general.util.GeneralConverter;
 import com.credits.wallet.desktop.AppState;
 import com.credits.wallet.desktop.VistaNavigator;
-import com.credits.wallet.desktop.service.DatabaseService;
 import com.credits.wallet.desktop.struct.CoinTabRow;
 import com.credits.wallet.desktop.utils.FormUtils;
 import javafx.application.Platform;
@@ -280,9 +279,8 @@ public class WalletController extends AbstractController {
         initializeTable(coinsTableView);
         updateCoins(coinsTableView);
 
-        DatabaseService database = getDatabase();
-        database.keepLogin(session.account);
-        database.updateTransactionsOnAddress(session.account);
+        getDatabase().keepLogin(session.account);
+        configureUpdateDatabaseService();
 
         publicWalletID.setText(session.account);
 
@@ -308,6 +306,15 @@ public class WalletController extends AbstractController {
                 }
                 i++;
             }
+        }
+    }
+
+    public void configureUpdateDatabaseService() {
+        final var updateService = getUpdateDatabaseService();
+        if(!updateService.daemonIsStarted()){
+            updateService.startUpdateDatabaseDaemon(session.account);
+        }else {
+            updateService.changeUpdateAddress(session.account);
         }
     }
 

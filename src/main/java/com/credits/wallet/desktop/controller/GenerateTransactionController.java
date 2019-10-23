@@ -71,7 +71,9 @@ public class GenerateTransactionController extends AbstractController {
             if (coinType.getText().equals(CREDITS_TOKEN_NAME)) {
                 nodeService.transferCsTo(receiver, amount, maxFee, usedContracts, userData, (result, error) -> {
                     if (error == null) {
-                        FormUtils.showPlatformInfo("Transaction to address \"" + receiver + "\" created successfully");
+                        FormUtils.showPlatformInfo("Transaction creation result",
+                                                   "Transaction created successfully",
+                                                   "cs moved to address " + receiver);
                     } else {
                         FormUtils.showPlatformError("Transaction to address \"" + receiver + "\" failed. Reason:\n" + error.getMessage());
                     }

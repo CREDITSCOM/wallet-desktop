@@ -171,14 +171,14 @@ public class SmartContractDeployController extends AbstractController {
                                                            ((result, error) -> {
                                                                if (error == null) {
                                                                    LOGGER.debug("contract deploy {} success", contractAddress);
-                                                                   showPlatformInfo("Smart-contract deploy",
+                                                                   showPlatformInfo("Smart-contract deploy result",
                                                                                     "smart-contract has been deploy successfully",
                                                                                     "contract address: " + contractAddress);
                                                                } else {
                                                                    LOGGER.debug("contract deploy {} failed. Reason: {}",
                                                                                 contractAddress,
                                                                                 error.getMessage());
-                                                                   showPlatformInfo("Smart-contract deploy",
+                                                                   showPlatformInfo("Smart-contract deploy result",
                                                                                     "Fail deploy contract ",
                                                                                     "contract address: " + contractAddress + "\n"
                                                                                             + "error message: " + error);

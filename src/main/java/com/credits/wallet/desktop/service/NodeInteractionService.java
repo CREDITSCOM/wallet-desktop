@@ -19,6 +19,7 @@ import static com.credits.general.crypto.Blake2S.generateHash;
 import static com.credits.general.util.GeneralConverter.*;
 import static com.credits.general.util.Utils.threadPool;
 import static com.credits.general.util.variant.VariantConverter.toObject;
+import static com.credits.general.util.variant.VariantConverter.toVariant;
 import static java.util.Collections.emptyList;
 
 
@@ -181,9 +182,7 @@ public class NodeInteractionService {
     private BiConsumer<TransactionFlowResultData, Throwable> handleContractResult(BiConsumer<? super String, ? super Throwable> handleResult) {
         return (result, throwable) -> {
             if (throwable != null) handleResult.accept(throwable.getMessage(), throwable);
-            else result
-                    .getContractResult()
-                    .ifPresent(variant -> handleResult.accept("" + toObject(variant), null));
+            else handleResult.accept("" + toObject(result.getContractResult().orElse(toVariant(null))), null);
         };
     }
 

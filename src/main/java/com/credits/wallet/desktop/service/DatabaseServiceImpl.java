@@ -60,29 +60,35 @@ public class DatabaseServiceImpl implements DatabaseService {
             var stored = metadata.getAmountTransactions();
             var limit = 100;
             var added = stored;
-            var needUpdateMetadata = false;
             var total = nodeApiService.getTransactionList(address, 0, 1).getAmountTotalTransactions();
             var diff = 0;
+            added = resetDatabaseIfNotActual(total, added, metadata);
             while ((diff = total - added) > 0) {
                 final var response = nodeApiService.getTransactionList(address, max(diff - limit, 0), min(limit, diff));
                 total = response.getAmountTotalTransactions();
                 final var amountRequestTransactions = response.getTransactionsList().size();
 
                 if (total != stored) {
-                    if (total < stored) {
-                        database.clearAllTables();
-                        stored = added = 0;
-                    }
                     parseTransactionsThenUpdateDB(response);
                     added += amountRequestTransactions;
-                    needUpdateMetadata = true;
+                    updateAmountTransactions(added, metadata);
                 }
             }
-            if (needUpdateMetadata) {
-                metadata.setAmountTransactions(added);
-                database.updateApplicationMetadata(metadata);
-            }
         });
+    }
+
+    private int resetDatabaseIfNotActual(int total, int added, ApplicationMetadata metadata) {
+        if (total - added < 0) {
+            database.clearAllTables();
+            added = 0;
+            updateAmountTransactions(added, metadata);
+        }
+        return added;
+    }
+
+    private void updateAmountTransactions(int amount, ApplicationMetadata metadata) {
+        metadata.setAmountTransactions(amount);
+        database.updateApplicationMetadata(metadata);
     }
 
     private void parseTransactionsThenUpdateDB(TransactionListByAddressData response) {

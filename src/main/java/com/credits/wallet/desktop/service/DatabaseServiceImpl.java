@@ -13,7 +13,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -46,16 +45,7 @@ public class DatabaseServiceImpl implements DatabaseService {
 
     @Override
     public void updateTransactionsOnAddress(String address) {
-        CompletableFuture
-                .runAsync(requestTransactionsListThenUpdateDatabase(address))
-                .exceptionally(exception -> {
-                    log.error("error occurred while update transactions table. Reason: {}", exception.getMessage());
-                    return null;
-                });
-    }
-
-    private Runnable requestTransactionsListThenUpdateDatabase(String address) {
-        return writeLock(() -> {
+        writeLock(() -> {
             final var metadata = database.getOrCreateApplicationMetadata(address);
             var stored = metadata.getAmountTransactions();
             var limit = 100;
@@ -74,7 +64,7 @@ public class DatabaseServiceImpl implements DatabaseService {
                     updateAmountTransactions(added, metadata);
                 }
             }
-        });
+        }).run();
     }
 
     private int resetDatabaseIfNotActual(int total, int added, ApplicationMetadata metadata) {

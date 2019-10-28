@@ -1,13 +1,18 @@
 package com.credits.wallet.desktop.service;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
+@Slf4j
 public class UpdateDatabaseService {
     public static final int databaseUpdateInterval = 5;
     private final ScheduledExecutorService updateDbService;
@@ -18,10 +23,15 @@ public class UpdateDatabaseService {
 
     public UpdateDatabaseService(DatabaseService database) {
         this.database = database;
-        updateDbService = Executors.newSingleThreadScheduledExecutor();
+        final var threadFactory = new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "db-update-thread");
+            }
+        };
+        updateDbService = Executors.newSingleThreadScheduledExecutor(threadFactory);
         readWriteLock = new ReentrantReadWriteLock();
     }
-
 
     public void startUpdateDatabaseDaemon(String address) {
         updateAddress = address;
@@ -29,9 +39,14 @@ public class UpdateDatabaseService {
     }
 
     private void updateTask() {
-        final var address= getUpdateAddress();
+        final var address = getUpdateAddress();
         if (address != null) {
-            database.updateTransactionsOnAddress(address);
+            try {
+                database.updateTransactionsOnAddress(address);
+            } catch (Exception e) {
+                log.warn("can't update database. Reason {}", getRootCauseMessage(e));
+            }
+
         }
     }
 
@@ -40,17 +55,17 @@ public class UpdateDatabaseService {
         try {
             lock.lock();
             return updateAddress;
-        }finally {
+        } finally {
             lock.unlock();
         }
     }
 
-    public synchronized void changeUpdateAddress(String address){
+    public synchronized void changeUpdateAddress(String address) {
         final var lock = readWriteLock.writeLock();
         try {
             lock.lock();
             updateAddress = address;
-        }finally {
+        } finally {
             lock.unlock();
         }
     }

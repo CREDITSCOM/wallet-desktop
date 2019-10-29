@@ -8,7 +8,6 @@ import com.credits.general.exception.CreditsException;
 import com.credits.general.pojo.ByteCodeObjectData;
 import com.credits.general.util.Callback;
 import com.credits.general.util.compiler.CompilationException;
-import com.credits.wallet.desktop.AppState;
 import com.credits.wallet.desktop.VistaNavigator;
 import com.credits.wallet.desktop.database.table.SmartContract;
 import com.credits.wallet.desktop.pojo.CompiledSmartContract;
@@ -45,8 +44,7 @@ import java.util.function.BiConsumer;
 import static com.credits.client.node.service.NodeApiServiceImpl.async;
 import static com.credits.general.util.GeneralConverter.createObjectFromString;
 import static com.credits.general.util.GeneralConverter.toBigDecimal;
-import static com.credits.wallet.desktop.AppState.getDatabase;
-import static com.credits.wallet.desktop.AppState.getNodeInteractionService;
+import static com.credits.wallet.desktop.AppState.*;
 import static com.credits.wallet.desktop.utils.FormUtils.*;
 import static com.credits.wallet.desktop.utils.sourcecode.SourceCodeUtils.formatSourceCode;
 import static java.lang.Float.parseFloat;
@@ -123,8 +121,10 @@ public class SmartContractController extends AbstractController {
 
     @FXML
     private void handleSearch() {
-        String address = tfSearchAddress.getText();
-        async(() -> AppState.getNodeApiService().getSmartContract(address), handleGetSmartContractResult());
+        final var address = tfSearchAddress.getText();
+        Optional.ofNullable(compiledContracts.get(address))
+                .ifPresentOrElse(this::refreshSmartContractForm,
+                                 () -> async(() -> getNodeApiService().getSmartContract(address), handleGetSmartContractFromNode(address)));
     }
 
     @FXML
@@ -283,17 +283,22 @@ public class SmartContractController extends AbstractController {
         compiledContracts = new HashMap<>();
     }
 
-    private Callback<SmartContractData> handleGetSmartContractResult() {
+    private Callback<SmartContractData> handleGetSmartContractFromNode(String contractAddress) {
         return new Callback<>() {
+
             @Override
             public void onSuccess(SmartContractData contractData) throws CreditsException {
-//                refreshSmartContractForm(compileSmartContract(contractData));
+                final var sourceCode = contractData.getSmartContractDeployData().getSourceCode();
+                final var byteCodeObjectDataList = contractData.getSmartContractDeployData().getByteCodeObjectDataList();
+                final var smartContractClass = compileContractClass(byteCodeObjectDataList).getRootClass();
+                final var compiledSmartContract = new CompiledSmartContract(contractAddress, sourceCode, smartContractClass);
+                refreshSmartContractForm(compiledSmartContract);
             }
 
             @Override
             public void onError(Throwable e) {
-                LOGGER.error("failed!", e);
-                showError("Can't get smart-contract from the node. Reason: " + e.getMessage());
+                LOGGER.error("can't get smart contract from node. Reason: {}", e.getMessage());
+                showError("Request smart-contract result", "smart-contract not found", "address:\n" + contractAddress);
             }
         };
     }
@@ -425,12 +430,13 @@ public class SmartContractController extends AbstractController {
             if (event.getClickCount() == 2 && (!row.isEmpty())) {
                 final var contractAddress = row.getItem().getContractAddress();
                 Optional.ofNullable(compiledContracts.get(contractAddress))
-                        .ifPresentOrElse(this::refreshSmartContractForm, () -> database.getSmartContract(contractAddress, handleGetSmartContract()));
+                        .ifPresentOrElse(this::refreshSmartContractForm,
+                                         () -> database.getSmartContract(contractAddress, handleGetSmartContractFromDatabase()));
             }
         };
     }
 
-    private Callback<SmartContract> handleGetSmartContract() {
+    private Callback<SmartContract> handleGetSmartContractFromDatabase() {
         return new Callback<>() {
             @Override
             public void onSuccess(SmartContract smartContract) throws CreditsException {

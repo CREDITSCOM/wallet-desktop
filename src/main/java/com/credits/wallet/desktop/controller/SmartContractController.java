@@ -31,7 +31,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.fxmisc.richtext.CodeArea;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,24 +52,25 @@ import static com.credits.wallet.desktop.utils.sourcecode.SourceCodeUtils.format
 import static java.lang.Float.parseFloat;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 
 public class SmartContractController extends AbstractController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SmartContractController.class);
     private static final String ERR_FEE = "Fee must be greater than 0";
-    private static final String ERR_GETTING_TRANSACTION_HISTORY = "Error getting transaction history";
     private static final Set<String> OBJECT_METHODS = Set.of("getClass", "hashCode", "equals", "toString", "notify", "notifyAll", "wait", "finalize");
-    private final DatabaseService database = getDatabase();
 
+    private DatabaseService database;
     private CodeArea codeArea;
-    private Method selectedMethod;
-    private HashMap<String, CompiledSmartContract> favoriteContracts;
-
+    private HashMap<String, CompiledSmartContract> compiledContracts;
+    private HashSet<String> favoriteContractAddresses;
+    private HashSet<String> deployedContractAddresses;
     private final List<SmartContractTransactionTabRow> unapprovedList = new ArrayList<>();
     private final List<SmartContractTransactionTabRow> approvedList = new ArrayList<>();
     private CompiledSmartContract selectedSmartContract;
-    private SimpleBooleanProperty storeContractState = new SimpleBooleanProperty();
+    private Method selectedMethod;
+    private SimpleBooleanProperty isStoreContractState;
 
     @FXML
     private HBox hbFeeLayout;
@@ -110,7 +110,6 @@ public class SmartContractController extends AbstractController {
     private TableView<SmartContractTransactionTabRow> approvedTableView;
     @FXML
     private TableView<SmartContractTransactionTabRow> unapprovedTableView;
-    private HashMap<String, CompiledSmartContract> compiledContractsCache;
 
     @FXML
     private void handleBack() {
@@ -132,7 +131,7 @@ public class SmartContractController extends AbstractController {
     private void handleExecute() {
         var fee = 0f;
         final boolean isGetterMethod;
-        if (storeContractState.getValue()) {
+        if (isStoreContractState.getValue()) {
             if (checkFeeFieldNotValid()) return;
             fee = parseFloat(feeField.getText());
             isGetterMethod = false;
@@ -249,7 +248,7 @@ public class SmartContractController extends AbstractController {
 
     @FXML
     private void handleStoreContractState(ActionEvent actionEvent) {
-        hbFeeLayout.setVisible(storeContractState.getValue());
+        hbFeeLayout.setVisible(isStoreContractState.getValue());
     }
 
     @FXML
@@ -265,26 +264,23 @@ public class SmartContractController extends AbstractController {
 
     @Override
     public void initialize(Map<String, ?> objects) {
+        database = getDatabase();
+        isStoreContractState = new SimpleBooleanProperty();
         tbFavorite.setVisible(false);
         showContractExecutionsControls(false);
         hbFeeLayout.setVisible(false);
         codeArea = CodeAreaUtils.initCodeArea(pCodePanel, true);
         codeArea.setEditable(false);
         codeArea.copy();
-        initializeContractsTable(smartContractTableView);
         initializeContractsTable(favoriteContractTableView);
+        initializeContractsTable(smartContractTableView);
         refreshFavoriteContractsTab();
         initFeeField(feeField, actualOfferedMaxFeeLabel);
         initTransactionHistoryTable(approvedTableView);
         initTransactionHistoryTable(unapprovedTableView);
-        cbStoreContractState.selectedProperty().bindBidirectional(storeContractState);
-        favoriteContracts = new HashMap<>();
-        compiledContractsCache = new HashMap<>();
-    }
-
-    @Override
-    public void deinitialize() {
-
+        cbStoreContractState.selectedProperty().bindBidirectional(isStoreContractState);
+        favoriteContractAddresses = new HashSet<>();
+        compiledContracts = new HashMap<>();
     }
 
     private Callback<SmartContractData> handleGetSmartContractResult() {
@@ -315,8 +311,8 @@ public class SmartContractController extends AbstractController {
 
             tfAddress.setText(selectedSmartContract.getAddress());
 
-            tbFavorite.setOnAction(handleFavoriteButtonEvent(tbFavorite, compiledSmartContract));
-            tbFavorite.setSelected(favoriteContracts.containsKey(selectedSmartContract.getAddress()));
+            tbFavorite.setOnAction(handleSetFavorite(tbFavorite, compiledSmartContract.getAddress()));
+            tbFavorite.setSelected(favoriteContractAddresses.contains(selectedSmartContract.getAddress()));
             tbFavorite.setVisible(true);
 
             refreshParametersPane(emptyList(), 0);
@@ -428,7 +424,7 @@ public class SmartContractController extends AbstractController {
         return event -> {
             if (event.getClickCount() == 2 && (!row.isEmpty())) {
                 final var contractAddress = row.getItem().getContractAddress();
-                Optional.ofNullable(compiledContractsCache.get(contractAddress))
+                Optional.ofNullable(compiledContracts.get(contractAddress))
                         .ifPresentOrElse(this::refreshSmartContractForm, () -> database.getSmartContract(contractAddress, handleGetSmartContract()));
             }
         };
@@ -443,10 +439,10 @@ public class SmartContractController extends AbstractController {
                     final var contractAddress = smartContract.getWallet().getAddress();
                     final var sourceCode = smartContract.getSourceCode();
                     final var compiledSmartContract = new CompiledSmartContract(contractAddress, sourceCode, smartContractClass);
-                    compiledContractsCache.put(smartContract.getWallet().getAddress(), compiledSmartContract);
+                    compiledContracts.put(smartContract.getWallet().getAddress(), compiledSmartContract);
                     refreshSmartContractForm(compiledSmartContract);
                 } catch (CompilationException e) {
-                    LOGGER.error("can't compile smart contract. Reason: {}", ExceptionUtils.getRootCauseMessage(e));
+                    LOGGER.error("can't compile smart contract. Reason: {}", getRootCauseMessage(e));
                 }
             }
 
@@ -457,28 +453,25 @@ public class SmartContractController extends AbstractController {
         };
     }
 
-    private EventHandler<ActionEvent> handleFavoriteButtonEvent(ToggleButton pressedButton, CompiledSmartContract compiledSmartContract) {
-        return event -> toggleContractAsFavorite(pressedButton, compiledSmartContract);
+    private EventHandler<ActionEvent> handleSetFavorite(ToggleButton pressedButton, String contractAddress) {
+        return event -> {
+            if (favoriteContractAddresses.contains(contractAddress)) {
+                favoriteContractAddresses.remove(contractAddress);
+                switchFavoriteButton(pressedButton, false, contractAddress);
+                database.deleteFavoriteContract(session.account, contractAddress);
+            } else {
+                favoriteContractAddresses.add(contractAddress);
+                switchFavoriteButton(tbFavorite, true, contractAddress);
+                database.keepFavoriteContract(session.account, contractAddress);
+            }
+            refreshFavoriteContractsTab();
+        };
     }
 
-    private void toggleContractAsFavorite(ToggleButton favoriteButton, CompiledSmartContract compiledSmartContract) {
-        final var contractAddress = compiledSmartContract.getAddress();
-        if (favoriteContracts.containsKey(contractAddress)) {
-            favoriteContracts.remove(contractAddress);
-            switchFavoriteButton(favoriteButton, false, compiledSmartContract);
-            database.deleteFavoriteContract(session.account, compiledSmartContract.getAddress());
-        } else {
-            favoriteContracts.put(contractAddress, compiledSmartContract);
-            switchFavoriteButton(tbFavorite, true, compiledSmartContract);
-            database.keepFavoriteContract(session.account, compiledSmartContract.getAddress());
-        }
-        refreshFavoriteContractsTab();
-    }
-
-    private void switchFavoriteButton(ToggleButton favoriteButton, boolean isSelected, CompiledSmartContract contract) {
+    private void switchFavoriteButton(ToggleButton favoriteButton, boolean isSelected, String contractAddress) {
         favoriteButton.setSelected(isSelected);
-        setFavoriteCurrentContract(contract, isSelected);
-        switchFavoriteStateTabRow(smartContractTableView, contract.getAddress(), isSelected);
+        setFavoriteCurrentContract(contractAddress, isSelected);
+        switchFavoriteStateTabRow(smartContractTableView, contractAddress, isSelected);
     }
 
     private void switchFavoriteStateTabRow(TableView<SmartContractTabRow> table, String contractAddress, boolean isSelected) {
@@ -490,8 +483,8 @@ public class SmartContractController extends AbstractController {
         table.refresh();
     }
 
-    private void setFavoriteCurrentContract(CompiledSmartContract smartContractData, boolean isSelected) {
-        if (selectedSmartContract != null && smartContractData.getAddress().equals(selectedSmartContract.getAddress())) {
+    private void setFavoriteCurrentContract(String contractAddress, boolean isSelected) {
+        if (selectedSmartContract != null && contractAddress.equals(selectedSmartContract.getAddress())) {
             tbFavorite.setSelected(isSelected);
         } else {
             tbFavorite.setSelected(false);
@@ -517,21 +510,17 @@ public class SmartContractController extends AbstractController {
     private void refreshContractsTab() {
         database.getDeployerContractsAddressList(session.account, new Callback<>() {
             @Override
-            public void onSuccess(List<String> resultData) throws CreditsException {
-                smartContractTableView.getItems().clear();
-                smartContractTableView.getItems()
-                        .addAll(resultData.stream().map(address -> {
-                            final var favoriteButton = new ToggleButton();
-                            favoriteButton.setSelected(favoriteContracts.containsKey(address));
-                            favoriteButton.setOnAction(handleFavoriteButtonEvent(favoriteButton, selectedSmartContract));
-                            return new SmartContractTabRow(address, favoriteButton);
-                        }).collect(toList()));
+            public void onSuccess(List<String> addressList) throws CreditsException {
+                final var addressesRowList = smartContractTableView.getItems();
+                if (addressesRowList.size() < addressList.size()) {
+                    addressesRowList.clear();
+                    addressesRowList.addAll(addressList.stream().map(address -> buildSmartContractTabRow(address)).collect(toList()));
+                }
             }
 
             @Override
             public void onError(Throwable e) {
-                smartContractTableView.getItems().clear();
-                LOGGER.error("can't read smart contract addresses from database. Reason:{}", ExceptionUtils.getRootCauseMessage(e));
+                LOGGER.error("can't get smart contract addresses from database. Reason:{}", getRootCauseMessage(e));
             }
         });
     }
@@ -544,21 +533,25 @@ public class SmartContractController extends AbstractController {
                 final var smartContractTabRowList = resultData
                         .stream()
                         .map(address -> {
-                            favoriteContracts.putIfAbsent(address, null);
-                            final var favoriteButton = new ToggleButton();
-                            favoriteButton.setSelected(true);
-                            favoriteButton.setOnAction(handleFavoriteButtonEvent(favoriteButton, selectedSmartContract));
-                            return new SmartContractTabRow(address, favoriteButton);
+                            favoriteContractAddresses.add(address);
+                            return buildSmartContractTabRow(address);
                         }).collect(toList());
                 favoriteContractTableView.getItems().addAll(smartContractTabRowList);
             }
 
             @Override
             public void onError(Throwable e) {
-                favoriteContractTableView.getItems().clear();
-                LOGGER.error("can't get favorite contract addresses from database. Reason:{}", ExceptionUtils.getRootCauseMessage(e));
+                LOGGER.error("can't get favorite contract addresses from database. Reason:{}", getRootCauseMessage(e));
             }
         });
+    }
+
+    public SmartContractTabRow buildSmartContractTabRow(String address) {
+        final var favoriteButton = new ToggleButton();
+        final var isFavorite = favoriteContractAddresses.contains(address);
+        favoriteButton.setSelected(isFavorite);
+        favoriteButton.setOnAction(handleSetFavorite(favoriteButton, address));
+        return new SmartContractTabRow(address, favoriteButton);
     }
 
     private boolean checkFeeFieldNotValid() {

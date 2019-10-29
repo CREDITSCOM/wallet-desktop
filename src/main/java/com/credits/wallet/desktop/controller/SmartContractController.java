@@ -254,10 +254,12 @@ public class SmartContractController extends AbstractController {
 
     @FXML
     private void updateSelectedTab() {
-        if (myContractsTab != null && myContractsTab.isSelected()) {
-            refreshContractsTab();
-        } else if (favoriteContractsTab != null && favoriteContractsTab.isSelected()) {
-            refreshFavoriteContractsTab();
+        if (session != null) {
+            if (myContractsTab != null && myContractsTab.isSelected()) {
+                refreshContractsTab();
+            } else if (favoriteContractsTab != null && favoriteContractsTab.isSelected()) {
+                refreshFavoriteContractsTab();
+            }
         }
     }
 
@@ -311,16 +313,15 @@ public class SmartContractController extends AbstractController {
         Platform.runLater(() -> {
             showContractExecutionsControls(true);
 
-            tfAddress.setText(this.selectedSmartContract.getAddress());
+            tfAddress.setText(selectedSmartContract.getAddress());
 
-            tbFavorite.setOnAction(handleFavoriteButtonEvent(tbFavorite, this.selectedSmartContract));
+            tbFavorite.setOnAction(handleFavoriteButtonEvent(tbFavorite, compiledSmartContract));
+            tbFavorite.setSelected(favoriteContracts.containsKey(selectedSmartContract.getAddress()));
             tbFavorite.setVisible(true);
 
             refreshParametersPane(emptyList(), 0);
             fillMethodsCheckBox(methods);
             refreshCodeArea();
-
-            findInFavoriteThenToggleButton(this.selectedSmartContract.getAddress(), tbFavorite);
         });
 
 //        fillTransactionsTables(compiledSmartContract.getBase58Address());
@@ -457,17 +458,19 @@ public class SmartContractController extends AbstractController {
     }
 
     private EventHandler<ActionEvent> handleFavoriteButtonEvent(ToggleButton pressedButton, CompiledSmartContract compiledSmartContract) {
-        return event -> setContractAsFavorite(pressedButton, compiledSmartContract);
+        return event -> toggleContractAsFavorite(pressedButton, compiledSmartContract);
     }
 
-    private void setContractAsFavorite(ToggleButton favoriteButton, CompiledSmartContract compiledSmartContract) {
+    private void toggleContractAsFavorite(ToggleButton favoriteButton, CompiledSmartContract compiledSmartContract) {
         final var contractAddress = compiledSmartContract.getAddress();
         if (favoriteContracts.containsKey(contractAddress)) {
             favoriteContracts.remove(contractAddress);
             switchFavoriteButton(favoriteButton, false, compiledSmartContract);
+            database.deleteFavoriteContract(session.account, compiledSmartContract.getAddress());
         } else {
             favoriteContracts.put(contractAddress, compiledSmartContract);
             switchFavoriteButton(tbFavorite, true, compiledSmartContract);
+            database.keepFavoriteContract(session.account, compiledSmartContract.getAddress());
         }
         refreshFavoriteContractsTab();
     }
@@ -510,24 +513,24 @@ public class SmartContractController extends AbstractController {
         return new SmartContractClass(contractClass, innerContractClasses);
     }
 
-    private void findInFavoriteThenToggleButton(String contractAddress, ToggleButton tbFavorite) {
-        if (favoriteContracts.containsKey(contractAddress)) {
-            tbFavorite.setSelected(true);
-        } else {
-            tbFavorite.setSelected(false);
-        }
-    }
 
     private void refreshContractsTab() {
         database.getDeployerContractsAddressList(session.account, new Callback<>() {
             @Override
             public void onSuccess(List<String> resultData) throws CreditsException {
+                smartContractTableView.getItems().clear();
                 smartContractTableView.getItems()
-                        .addAll(resultData.stream().map(address -> new SmartContractTabRow(address, new ToggleButton())).collect(toList()));
+                        .addAll(resultData.stream().map(address -> {
+                            final var favoriteButton = new ToggleButton();
+                            favoriteButton.setSelected(favoriteContracts.containsKey(address));
+                            favoriteButton.setOnAction(handleFavoriteButtonEvent(favoriteButton, selectedSmartContract));
+                            return new SmartContractTabRow(address, favoriteButton);
+                        }).collect(toList()));
             }
 
             @Override
             public void onError(Throwable e) {
+                smartContractTableView.getItems().clear();
                 LOGGER.error("can't read smart contract addresses from database. Reason:{}", ExceptionUtils.getRootCauseMessage(e));
             }
         });
@@ -537,14 +540,22 @@ public class SmartContractController extends AbstractController {
         database.getFavoriteContractsList(session.account, new Callback<>() {
             @Override
             public void onSuccess(List<String> resultData) throws CreditsException {
+                favoriteContractTableView.getItems().clear();
                 final var smartContractTabRowList = resultData
                         .stream()
-                        .map(address -> new SmartContractTabRow(address, new ToggleButton())).collect(toList());
+                        .map(address -> {
+                            favoriteContracts.putIfAbsent(address, null);
+                            final var favoriteButton = new ToggleButton();
+                            favoriteButton.setSelected(true);
+                            favoriteButton.setOnAction(handleFavoriteButtonEvent(favoriteButton, selectedSmartContract));
+                            return new SmartContractTabRow(address, favoriteButton);
+                        }).collect(toList());
                 favoriteContractTableView.getItems().addAll(smartContractTabRowList);
             }
 
             @Override
             public void onError(Throwable e) {
+                favoriteContractTableView.getItems().clear();
                 LOGGER.error("can't get favorite contract addresses from database. Reason:{}", ExceptionUtils.getRootCauseMessage(e));
             }
         });

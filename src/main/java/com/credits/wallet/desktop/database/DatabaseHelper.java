@@ -38,6 +38,7 @@ public class DatabaseHelper {
     private Dao<Bytecode, Integer> bytecodeDao;
     private Dao<WalletHasSmartContract, Long> walletHasSmartContractDao;
     private List<Dao<?, ?>> daoCollection;
+    private Dao<WalletHasFavoriteContract, Integer> walletHasFavoriteContractDao;
 
     public DatabaseHelper(String databaseUrl) {
         this.databaseUrl = databaseUrl;
@@ -56,6 +57,7 @@ public class DatabaseHelper {
             smartContractHasBytecodeDao = createDaoAndAddToCollection(SmartContractHasBytecode.class);
             bytecodeDao = createDaoAndAddToCollection(Bytecode.class);
             walletHasSmartContractDao = createDaoAndAddToCollection(WalletHasSmartContract.class);
+            walletHasFavoriteContractDao = createDaoAndAddToCollection(WalletHasFavoriteContract.class);
 
         } catch (SQLException e) {
             log.error("can't connect to database. Reason {}", e.getMessage());
@@ -185,6 +187,48 @@ public class DatabaseHelper {
 
     public void keepBytecodeList(List<Bytecode> bytecodeList) {
         rethrowWithDetailMessage(() -> bytecodeDao.create(bytecodeList));
+    }
+
+    public void keepFavoriteContract(String walletAddress, String contractAddress) {
+        final var query = "insert into wallet_has_favorite_contract (wallet_id, smart_contract_id) " +
+                "select wallet.id, " +
+                "(select id from smart_contract where smart_contract.wallet_address = ?) " +
+                "from wallet " +
+                "where wallet.address = ?";
+        rethrowWithDetailMessage(() -> walletHasFavoriteContractDao.updateRaw(query, contractAddress, walletAddress));
+    }
+
+    public void deleteFavoriteContract(String account, String contractAddress) {
+        rethrowWithDetailMessage(() -> {
+            final var walletHasFavoriteQB = walletHasFavoriteContractDao.queryBuilder();
+            final var walletQB = walletDao.queryBuilder();
+            final var contractQB = smartContractDao.queryBuilder();
+
+            walletQB.where().eq("address", account);
+            contractQB.where().eq("wallet_address", contractAddress);
+
+            walletHasFavoriteQB
+                    .join(walletQB)
+                    .join(contractQB).prepareStatementString();
+            walletHasFavoriteQB.selectColumns("id");
+
+            final var walletHasFavoriteDB = walletHasFavoriteContractDao.deleteBuilder();
+            walletHasFavoriteDB.where().in("id", walletHasFavoriteQB).prepare();
+            walletHasFavoriteDB.delete();
+        });
+    }
+
+    public List<String> getFavoriteContractsList(String address) {
+        final var query = "select smart_contract.wallet_address as address " +
+                "from wallet_has_favorite_contract " +
+                "join wallet on wallet_has_favorite_contract.wallet_id = wallet.id " +
+                "join smart_contract on smart_contract.id = wallet_has_favorite_contract.smart_contract_id " +
+                "where address = ?";
+        return rethrowWithDetailMessage(() -> walletDao.queryRaw(query, walletDao.getRawRowMapper(), address)
+                .getResults()
+                .stream()
+                .map(Wallet::getAddress)
+                .collect(toList()));
     }
 
     public void createTablesIfNotExist() {

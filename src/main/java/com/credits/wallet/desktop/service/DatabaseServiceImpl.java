@@ -45,40 +45,40 @@ public class DatabaseServiceImpl implements DatabaseService {
 
     @Override
     public void updateTransactionsOnAddress(String address) {
-        writeLock(() -> {
-            final var metadata = database.getOrCreateApplicationMetadata(address);
-            var stored = metadata.getAmountTransactions();
-            var limit = 100;
-            var added = stored;
-            var total = nodeApiService.getTransactionList(address, 0, 1).getAmountTotalTransactions();
-            var diff = 0;
-            added = resetDatabaseIfNotActual(total, added, metadata);
-            while ((diff = total - added) > 0) {
-                final var response = nodeApiService.getTransactionList(address, max(diff - limit, 0), min(limit, diff));
-                total = response.getAmountTotalTransactions();
-                final var amountRequestTransactions = response.getTransactionsList().size();
+        final var metadata = database.getOrCreateApplicationMetadata(address);
+        var stored = metadata.getAmountTransactions();
+        var limit = 100;
+        var added = stored;
+        var total = nodeApiService.getTransactionList(address, 0, 1).getAmountTotalTransactions();
+        var diff = 0;
+        added = resetDatabaseIfNotActual(total, added, metadata);
+        while ((diff = total - added) > 0) {
+            final var response = nodeApiService.getTransactionList(address, max(diff - limit, 0), min(limit, diff));
+            total = response.getAmountTotalTransactions();
+            final var amountRequestTransactions = response.getTransactionsList().size();
 
-                if (total != stored) {
-                    parseTransactionsThenUpdateDB(response);
-                    added += amountRequestTransactions;
-                    updateAmountTransactions(added, metadata);
-                }
+            if (total != stored) {
+                parseTransactionsThenUpdateDB(response);
+                added += amountRequestTransactions;
+                updateAmountTransactions(added, metadata);
             }
-        }).run();
+        }
     }
 
     private int resetDatabaseIfNotActual(int total, int added, ApplicationMetadata metadata) {
         if (total - added < 0) {
-            database.clearAllTables();
+            writeLock(() -> {
+                database.clearAllTables();
+                updateAmountTransactions(0, metadata);
+            });
             added = 0;
-            updateAmountTransactions(added, metadata);
         }
         return added;
     }
 
     private void updateAmountTransactions(int amount, ApplicationMetadata metadata) {
         metadata.setAmountTransactions(amount);
-        database.updateApplicationMetadata(metadata);
+        writeLock(() -> database.updateApplicationMetadata(metadata));
     }
 
     private void parseTransactionsThenUpdateDB(TransactionListByAddressData response) {
@@ -111,11 +111,13 @@ public class DatabaseServiceImpl implements DatabaseService {
                 });
             }
         }
-        database.keepTransactionsList(transactionRelation);
-        database.keepBytecodeList(bytecodeRelation);
-        database.keepSmartContractList(smartContractRelation);
-        database.keepSmartContractHasByteCodeList(smartContractHasByteCodeRelation);
-        database.keepWalletHasSmartContractList(walletHasSmartContractsRelation);
+        writeLock(() -> {
+            database.keepTransactionsList(transactionRelation);
+            database.keepBytecodeList(bytecodeRelation);
+            database.keepSmartContractList(smartContractRelation);
+            database.keepSmartContractHasByteCodeList(smartContractHasByteCodeRelation);
+            database.keepWalletHasSmartContractList(walletHasSmartContractsRelation);
+        });
     }
 
     @Override
@@ -136,6 +138,21 @@ public class DatabaseServiceImpl implements DatabaseService {
     @Override
     public void getSmartContract(String address, Callback<SmartContract> handleResult) {
         asyncRead(() -> database.getSmartContract(address), handleResult);
+    }
+
+    @Override
+    public void getFavoriteContractsList(String address, Callback<List<String>> handleResult) {
+        asyncRead(() -> database.getFavoriteContractsList(address), handleResult);
+    }
+
+    @Override
+    public void deleteFavoriteContract(String account, String contractAddress) {
+        database.deleteFavoriteContract(account, contractAddress);
+    }
+
+    @Override
+    public void keepFavoriteContract(String accountAddress, String contractAddress) {
+        asyncWrite(() -> database.keepFavoriteContract(accountAddress, contractAddress));
     }
 
     @Override
@@ -165,6 +182,10 @@ public class DatabaseServiceImpl implements DatabaseService {
         supplyAsync(writeLock(supplier)).whenComplete(Callback.handleCallback(handleResult));
     }
 
+    private void asyncWrite(Runnable runnable) {
+        runAsync(() -> writeLock(runnable));
+    }
+
     private <R> Supplier<R> writeLock(Supplier<R> supplier) {
         return wrapLock(lock.writeLock(), supplier);
     }
@@ -173,23 +194,21 @@ public class DatabaseServiceImpl implements DatabaseService {
         return wrapLock(lock.readLock(), supplier);
     }
 
-    private Runnable writeLock(Runnable runnable) {
-        return wrapLock(lock.writeLock(), runnable);
+    private void writeLock(Runnable runnable) {
+        wrapLock(lock.writeLock(), runnable);
     }
 
-    private Runnable readLock(Runnable runnable) {
-        return wrapLock(lock.readLock(), runnable);
+    private void readLock(Runnable runnable) {
+        wrapLock(lock.readLock(), runnable);
     }
 
-    private Runnable wrapLock(Lock lock, Runnable runnable) {
-        return () -> {
-            try {
-                lock.lock();
-                runnable.run();
-            } finally {
-                lock.unlock();
-            }
-        };
+    private void wrapLock(Lock lock, Runnable runnable) {
+        try {
+            lock.lock();
+            runnable.run();
+        } finally {
+            lock.unlock();
+        }
     }
 
     private <R> Supplier<R> wrapLock(Lock lock, Supplier<R> supplier) {

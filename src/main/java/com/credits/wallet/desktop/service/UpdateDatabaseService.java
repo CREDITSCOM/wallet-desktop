@@ -1,5 +1,6 @@
 package com.credits.wallet.desktop.service;
 
+import com.credits.client.node.exception.NodeClientException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.Executors;
@@ -9,6 +10,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static com.credits.general.thrift.ThriftClientPool.ThriftClientException;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
@@ -43,8 +45,10 @@ public class UpdateDatabaseService {
         if (address != null) {
             try {
                 database.updateTransactionsOnAddress(address);
+            } catch (NodeClientException | ThriftClientException e) {
+                log.error("node unreachable. Reason {}", getRootCauseMessage(e));
             } catch (Exception e) {
-                log.warn("can't update database. Reason {}", getRootCauseMessage(e));
+                log.error("can't update database. Reason {}", getRootCauseMessage(e));
             }
 
         }

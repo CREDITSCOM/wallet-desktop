@@ -12,6 +12,8 @@ public interface DatabaseService {
 
     void updateTransactionsOnAddress(String address);
 
+    void keepFavoriteContract(String accountAddress, String contractAddress);
+
     void getTransactions(String address, Callback<List<Transaction>> handleResult);
 
     void getLastTransactions(String address, long limit, Callback<List<Transaction>> handleResult);
@@ -21,4 +23,8 @@ public interface DatabaseService {
     void getDeployerContractsAddressList(String deployerAddress, Callback<List<String>> handleResult);
 
     void getSmartContract(String address, Callback<SmartContract> handleResult);
+
+    void getFavoriteContractsList(String address,  Callback<List<String>> handleResult);
+
+    void deleteFavoriteContract(String account, String contractAddress);
 }

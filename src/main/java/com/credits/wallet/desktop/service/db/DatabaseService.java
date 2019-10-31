@@ -1,5 +1,6 @@
-package com.credits.wallet.desktop.service;
+package com.credits.wallet.desktop.service.db;
 
+import com.credits.client.node.pojo.SmartContractData;
 import com.credits.general.util.Callback;
 import com.credits.wallet.desktop.database.table.SmartContract;
 import com.credits.wallet.desktop.database.table.Transaction;
@@ -10,9 +11,11 @@ public interface DatabaseService {
 
     void keepLogin(String address);
 
-    void updateTransactionsOnAddress(String address);
+    void syncUpdateAccountDatabase(String address);
 
     void keepFavoriteContract(String accountAddress, String contractAddress);
+
+    void keepSmartContract(SmartContractData smartContractData);
 
     void getTransactions(String address, Callback<List<Transaction>> handleResult);
 

@@ -37,12 +37,13 @@ import static com.credits.general.util.GeneralConverter.encodeToBASE58;
 import static com.credits.wallet.desktop.AppState.NODE_ERROR;
 import static com.credits.wallet.desktop.AppState.getNodeInteractionService;
 import static com.credits.wallet.desktop.VistaNavigator.*;
-import static com.credits.wallet.desktop.utils.ApiUtils.getTokenStandard;
 import static com.credits.wallet.desktop.utils.FormUtils.*;
 import static com.credits.wallet.desktop.utils.SmartContractsUtils.getSmartsListFromField;
 import static com.credits.wallet.desktop.utils.SmartContractsUtils.saveSmartInTokenList;
+import static com.credits.wallet.desktop.utils.TokenStandardData.NOT_A_TOKEN;
 import static com.credits.wallet.desktop.utils.sourcecode.SourceCodeUtils.normalizeSourceCode;
 import static com.credits.wallet.desktop.utils.sourcecode.building.SourceCodeBuilder.compileSmartSourceCode;
+import static java.util.Arrays.stream;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 
@@ -162,7 +163,7 @@ public class SmartContractDeployController extends AbstractController {
                 final var byteCodeObjectDataList = compilationPackageToByteCodeObjectsData(compilationPackage);
                 final var contractClass = compileSmartContractByteCode(byteCodeObjectDataList);
                 final var contractAddress = interactionService.generateSmartContractAddress(byteCodeObjectDataList);
-                final var tokenStandardId = getTokenStandard(contractClass);
+                final int tokenStandardId = getTokenStandardId(contractClass);
                 final var sourceCode = normalizeSourceCode(deployTabController.smartCodeArea.getText());
                 final var usedContracts = getSmartsListFromField(deployTabController.usdSmarts.getText());
 
@@ -191,6 +192,14 @@ public class SmartContractDeployController extends AbstractController {
             showError(NODE_ERROR + ": " + e.getMessage());
         }
 
+    }
+
+    public int getTokenStandardId(Class<?> contractClass) {
+        final var contractInterfaces = contractClass.getInterfaces();
+        return stream(TokenStandardData.values())
+                        .filter(ts -> stream(contractInterfaces).anyMatch(ci -> ts.getTokenStandardClass().equals(ci)))
+                        .findFirst()
+                        .orElse(NOT_A_TOKEN).getId();
     }
 
     private TokenInfoData getTokenInfo(Class<?> contractClass, SmartContractData smartContractData) {

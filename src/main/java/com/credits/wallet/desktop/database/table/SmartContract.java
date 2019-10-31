@@ -19,7 +19,7 @@ import java.util.List;
 public class SmartContract {
     @DatabaseField(generatedId = true)
     private int id;
-    @DatabaseField(foreign = true, foreignColumnName = "address", foreignAutoCreate = true)
+    @DatabaseField(foreign = true, foreignColumnName = "address", foreignAutoRefresh = true)
     private Wallet wallet;
     @DatabaseField(columnName = "source_code")
     private String sourceCode;

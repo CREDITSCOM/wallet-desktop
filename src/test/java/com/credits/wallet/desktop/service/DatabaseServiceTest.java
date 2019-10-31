@@ -7,6 +7,8 @@ import com.credits.client.node.service.NodeApiService;
 import com.credits.wallet.desktop.database.DatabaseHelper;
 import com.credits.wallet.desktop.database.table.ApplicationMetadata;
 import com.credits.wallet.desktop.database.table.Wallet;
+import com.credits.wallet.desktop.service.db.DatabaseService;
+import com.credits.wallet.desktop.service.db.DatabaseServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -42,7 +44,7 @@ class DatabaseServiceTest {
     @Test
     void updateTransactions_return_1_transaction() throws InterruptedException {
         configureNodeMockReturnTransactions(1, 0, 100);
-        database.updateTransactionsOnAddress(address);
+        database.syncUpdateAccountDatabase(address);
         Thread.sleep(100);
         verify(mockNodeApi).getTransactionList(address, 0, 100);
     }
@@ -52,7 +54,7 @@ class DatabaseServiceTest {
 
         configureNodeMockReturnTransactions(100, 0, 100);
 
-        database.updateTransactionsOnAddress(address);
+        database.syncUpdateAccountDatabase(address);
         Thread.sleep(100);
 
         verify(mockNodeApi).getTransactionList(address, 0, 100);
@@ -65,7 +67,7 @@ class DatabaseServiceTest {
         configureNodeMockReturnTransactions(300, 200, 100);
         configureNodeMockReturnTransactions(300, 300, 100);
 
-        database.updateTransactionsOnAddress(address);
+        database.syncUpdateAccountDatabase(address);
         Thread.sleep(100);
 
         verify(mockNodeApi).getTransactionList(address, 0, 100);

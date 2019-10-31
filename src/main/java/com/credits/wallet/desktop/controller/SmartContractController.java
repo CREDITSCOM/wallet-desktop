@@ -11,13 +11,14 @@ import com.credits.general.util.compiler.CompilationException;
 import com.credits.wallet.desktop.VistaNavigator;
 import com.credits.wallet.desktop.database.table.SmartContract;
 import com.credits.wallet.desktop.pojo.CompiledSmartContract;
-import com.credits.wallet.desktop.service.DatabaseService;
+import com.credits.wallet.desktop.service.db.DatabaseService;
 import com.credits.wallet.desktop.struct.MethodData;
 import com.credits.wallet.desktop.struct.SmartContractTabRow;
 import com.credits.wallet.desktop.struct.SmartContractTransactionTabRow;
 import com.credits.wallet.desktop.utils.sourcecode.codeArea.CodeAreaUtils;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -288,17 +289,19 @@ public class SmartContractController extends AbstractController {
 
             @Override
             public void onSuccess(SmartContractData contractData) throws CreditsException {
-                final var sourceCode = contractData.getSmartContractDeployData().getSourceCode();
-                final var byteCodeObjectDataList = contractData.getSmartContractDeployData().getByteCodeObjectDataList();
+                final var smartContractDeployData = contractData.getSmartContractDeployData();
+                final var sourceCode = smartContractDeployData.getSourceCode();
+                final var byteCodeObjectDataList = smartContractDeployData.getByteCodeObjectDataList();
                 final var smartContractClass = compileContractClass(byteCodeObjectDataList).getRootClass();
                 final var compiledSmartContract = new CompiledSmartContract(contractAddress, sourceCode, smartContractClass);
+                database.keepSmartContract(contractData);
                 refreshSmartContractForm(compiledSmartContract);
             }
 
             @Override
             public void onError(Throwable e) {
                 LOGGER.error("can't get smart contract from node. Reason: {}", e.getMessage());
-                showError("Request smart-contract result", "smart-contract not found", "address:\n" + contractAddress);
+                showError("Request smart-contract result", "smart-contract not found", "contract address:\n" + contractAddress);
             }
         };
     }
@@ -534,21 +537,35 @@ public class SmartContractController extends AbstractController {
     private void refreshFavoriteContractsTab() {
         database.getFavoriteContractsList(session.account, new Callback<>() {
             @Override
-            public void onSuccess(List<String> resultData) throws CreditsException {
-                favoriteContractTableView.getItems().clear();
-                final var smartContractTabRowList = resultData
-                        .stream()
-                        .map(address -> {
-                            favoriteContractAddresses.add(address);
-                            return buildSmartContractTabRow(address);
-                        }).collect(toList());
-                favoriteContractTableView.getItems().addAll(smartContractTabRowList);
+            public void onSuccess(List<String> addressesList) throws CreditsException {
+                updateFavoriteContracts(addressesList, favoriteContractTableView.getItems());
             }
 
             @Override
             public void onError(Throwable e) {
                 LOGGER.error("can't get favorite contract addresses from database. Reason:{}", getRootCauseMessage(e));
             }
+        });
+    }
+
+    public void updateFavoriteContracts(List<String> addressesList, ObservableList<SmartContractTabRow> favoriteContractRowList) {
+        if (addressesList == null || favoriteContractRowList == null || favoriteContractAddresses == null) return;
+        if (addressesList.size() != favoriteContractRowList.size()) {
+            final var smartContractTabRowList = addressesList
+                    .stream()
+                    .map(address -> {
+                        favoriteContractAddresses.add(address);
+                        return buildSmartContractTabRow(address);
+                    }).collect(toList());
+            renderFavoriteContractsTab(favoriteContractRowList, smartContractTabRowList);
+        }
+    }
+
+    private void renderFavoriteContractsTab(ObservableList<SmartContractTabRow> favoriteContractRowList,
+                                            List<SmartContractTabRow> favoriteContractRows) {
+        Platform.runLater(() -> {
+            favoriteContractRowList.clear();
+            favoriteContractRowList.addAll(favoriteContractRows);
         });
     }
 

@@ -1,4 +1,4 @@
-package com.credits.wallet.desktop.service;
+package com.credits.wallet.desktop.service.db;
 
 import com.credits.client.node.exception.NodeClientException;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +44,7 @@ public class UpdateDatabaseService {
         final var address = getUpdateAddress();
         if (address != null) {
             try {
-                database.updateTransactionsOnAddress(address);
+                database.syncUpdateAccountDatabase(address);
             } catch (NodeClientException | ThriftClientException e) {
                 log.error("node unreachable. Reason {}", getRootCauseMessage(e));
             } catch (Exception e) {

@@ -97,7 +97,15 @@ public class DatabaseHelper {
     }
 
     public void createIfNotExistsTransaction(Transaction transaction) {
-        rethrowWithDetailMessage(() -> transactionDao.createIfNotExists(transaction));
+        log.debug("create transaction {}", transaction.toString());
+        try {
+            transactionDao.createIfNotExists(transaction);
+        } catch (SQLException e) {
+            final var cause = getRootCauseMessage(e);
+            if (!cause.contains("UNIQUE constraint failed")) {
+                throw new DatabaseHelperException(cause);
+            }
+        }
     }
 
     public void keepTransactionsList(List<Transaction> transactionList) {

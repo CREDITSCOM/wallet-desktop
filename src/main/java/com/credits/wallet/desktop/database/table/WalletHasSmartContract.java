@@ -10,13 +10,13 @@ import lombok.NoArgsConstructor;
 @DatabaseTable(tableName = "wallet_has_smart_contract")
 public class WalletHasSmartContract {
     @DatabaseField(generatedId = true)
-    long id;
+    private long id;
 
     @DatabaseField(foreign = true)
-    Wallet wallet;
+    private Wallet wallet;
 
     @DatabaseField(columnName = "smart_contract_id", foreign = true)
-    SmartContract smartContract;
+    private SmartContract smartContract;
 
     public WalletHasSmartContract(Wallet wallet, SmartContract smartContract) {
         this.wallet = wallet;

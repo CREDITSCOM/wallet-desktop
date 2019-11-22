@@ -236,7 +236,7 @@
         <dependency>
             <groupId>com.credits.client</groupId>
             <artifactId>node_client</artifactId>
-            <version>1.6</version>
+            <version>2.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -322,12 +322,6 @@
             <artifactId>junit-jupiter</artifactId>
             <version>RELEASE</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.credits.client</groupId>
-            <artifactId>node_client</artifactId>
-            <version>2.0</version>
-            <scope>compile</scope>
         </dependency>
     </dependencies>
 

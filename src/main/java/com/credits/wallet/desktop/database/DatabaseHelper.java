@@ -102,14 +102,12 @@ public class DatabaseHelper {
             transactionDao.createIfNotExists(transaction);
         } catch (SQLException e) {
             final var cause = getRootCauseMessage(e);
-            if (!cause.contains("UNIQUE constraint failed")) {
-                throw new DatabaseHelperException(cause);
-            }
+            log.error("can't add transaction {}.{} Reason: {}", transaction.getIndexIntoBlock(), transaction.getId(), cause);
         }
     }
 
     public void keepTransactionsList(List<Transaction> transactionList) {
-        rethrowWithDetailMessage(() -> transactionDao.create(transactionList));
+        transactionList.forEach(this::createIfNotExistsTransaction);
     }
 
     public void keepWalletHasSmartContractList(List<WalletHasSmartContract> walletHasSmartContractList) {

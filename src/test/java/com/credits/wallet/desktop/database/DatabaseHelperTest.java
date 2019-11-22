@@ -66,7 +66,7 @@ class DatabaseHelperTest extends DatabaseTest {
                                        0,
                                        2);
         wallet = new Wallet("someAddress");
-        contract = new SmartContract(wallet, "someCode", new byte[0], System.currentTimeMillis());
+        contract = new SmartContract(wallet, "someCode", System.currentTimeMillis());
         contract.setByteCodeObjectList(Collections.emptyList());
     }
 

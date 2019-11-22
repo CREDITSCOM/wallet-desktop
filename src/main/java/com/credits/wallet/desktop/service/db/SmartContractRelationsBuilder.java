@@ -43,7 +43,7 @@ public class SmartContractRelationsBuilder {
         final var sourceCode = deployData.getSourceCode();
         final var timeCreation = smartContract.getTimeCreation();
         final var contractState = smartContract.getObjectState();
-        return new SmartContract(contractAddress, sourceCode, contractState, timeCreation);
+        return new SmartContract(contractAddress, sourceCode, timeCreation);
     }
 
     private WalletHasSmartContract createWalletHasSmartContractEntity(String deployerAddress, SmartContract smartContractEntity) {

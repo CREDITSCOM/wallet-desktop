@@ -403,10 +403,10 @@ public class SmartContractController extends AbstractController {
 
     private void initializeContractsTable(TableView<SmartContractTabRow> tableView) {
         initializeRowFactory(tableView);
-        initializeColumns(tableView);
+        initializeContractAddressesRows(tableView);
     }
 
-    private void initializeColumns(TableView<SmartContractTabRow> tableView) {
+    private void initializeContractAddressesRows(TableView<SmartContractTabRow> tableView) {
         TableColumn<SmartContractTabRow, String> idColumn = new TableColumn<>();
         idColumn.setPrefWidth(tableView.getPrefWidth() * 0.85);
         idColumn.setCellValueFactory(new PropertyValueFactory<>("contractAddress"));

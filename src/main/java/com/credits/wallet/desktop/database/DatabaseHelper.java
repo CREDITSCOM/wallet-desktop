@@ -75,16 +75,38 @@ public class DatabaseHelper {
         TableUtils.createTableIfNotExists(connectionSource, clazz);
     }
 
-    public void keepSmartContract(SmartContract smartContract) throws SQLException {
-        smartContractDao.createIfNotExists(smartContract);
+    public void keepSmartContract(SmartContract smartContract) {
+        catchAnyException(() -> smartContractDao.createIfNotExists(smartContract));
     }
 
     public void keepSmartContractList(List<SmartContract> smartContractList) {
-        rethrowWithDetailMessage(() -> smartContractDao.create(smartContractList));
+        catchAnyException(() -> smartContractDao.create(smartContractList));
     }
 
     public void keepSmartContractHasByteCodeList(List<SmartContractHasBytecode> smartContractHasBytecodeList) {
-        rethrowWithDetailMessage(() -> smartContractHasBytecodeDao.create(smartContractHasBytecodeList));
+        catchAnyException(() -> smartContractHasBytecodeDao.create(smartContractHasBytecodeList));
+    }
+
+    public void keepTransactionsList(List<Transaction> transactionList) {
+        transactionList.forEach(this::createIfNotExistsTransaction);
+    }
+
+    public void keepWalletHasSmartContractList(List<WalletHasSmartContract> walletHasSmartContractList) {
+        catchAnyException(() -> walletHasSmartContractDao.create(walletHasSmartContractList));
+    }
+
+    public void keepBytecodeList(List<Bytecode> bytecodeList) {
+        catchAnyException(() -> bytecodeDao.create(bytecodeList));
+    }
+
+    public void keepFavoriteContract(String walletAddress, String contractAddress) {
+        //language=sql
+        final var query = "insert into wallet_has_favorite_contract (wallet_id, smart_contract_id) " +
+                "select wallet.id, " +
+                "(select id from smart_contract where smart_contract.wallet_address = ?) " +
+                "from wallet " +
+                "where wallet.address = ?";
+        catchAnyException(() -> walletHasFavoriteContractDao.updateRaw(query, contractAddress, walletAddress));
     }
 
     public SmartContract getSmartContract(String address) {
@@ -97,21 +119,12 @@ public class DatabaseHelper {
     }
 
     public void createIfNotExistsTransaction(Transaction transaction) {
-        log.debug("create transaction {}", transaction.toString());
         try {
             transactionDao.createIfNotExists(transaction);
         } catch (SQLException e) {
             final var cause = getRootCauseMessage(e);
             log.error("can't add transaction {}.{} Reason: {}", transaction.getIndexIntoBlock(), transaction.getId(), cause);
         }
-    }
-
-    public void keepTransactionsList(List<Transaction> transactionList) {
-        transactionList.forEach(this::createIfNotExistsTransaction);
-    }
-
-    public void keepWalletHasSmartContractList(List<WalletHasSmartContract> walletHasSmartContractList) {
-        rethrowWithDetailMessage(() -> walletHasSmartContractDao.create(walletHasSmartContractList));
     }
 
     public Wallet getOrCreateWallet(String address) {
@@ -126,6 +139,7 @@ public class DatabaseHelper {
     }
 
     public List<String> getSmartContractsAddressList(String address) {
+        //language=sql
         final var query = "select smart_contract.wallet_address as address " +
                 "from wallet_has_smart_contract " +
                 "join wallet on wallet_has_smart_contract.wallet_id = wallet.id " +
@@ -139,6 +153,7 @@ public class DatabaseHelper {
     }
 
     public List<ByteCodeObjectData> getSmartContractBytecodeObjects(String address) {
+        //language=sql
         final var query = "select bytecode.* " +
                 "from bytecode " +
                 "join smart_contract_has_bytecode on bytecode.id = smart_contract_has_bytecode.bytecode_id " +
@@ -191,19 +206,6 @@ public class DatabaseHelper {
                 .query());
     }
 
-    public void keepBytecodeList(List<Bytecode> bytecodeList) {
-        rethrowWithDetailMessage(() -> bytecodeDao.create(bytecodeList));
-    }
-
-    public void keepFavoriteContract(String walletAddress, String contractAddress) {
-        final var query = "insert into wallet_has_favorite_contract (wallet_id, smart_contract_id) " +
-                "select wallet.id, " +
-                "(select id from smart_contract where smart_contract.wallet_address = ?) " +
-                "from wallet " +
-                "where wallet.address = ?";
-        rethrowWithDetailMessage(() -> walletHasFavoriteContractDao.updateRaw(query, contractAddress, walletAddress));
-    }
-
     public void deleteFavoriteContract(String account, String contractAddress) {
         rethrowWithDetailMessage(() -> {
             final var walletHasFavoriteQB = walletHasFavoriteContractDao.queryBuilder();
@@ -225,6 +227,7 @@ public class DatabaseHelper {
     }
 
     public List<String> getFavoriteContractsList(String address) {
+        //language=sql
         final var query = "select smart_contract.wallet_address as address " +
                 "from wallet_has_favorite_contract " +
                 "join wallet on wallet_has_favorite_contract.wallet_id = wallet.id " +
@@ -269,6 +272,14 @@ public class DatabaseHelper {
             return callable.call();
         } catch (Exception e) {
             throw new DatabaseHelperException(getRootCauseMessage(e));
+        }
+    }
+
+    private static void catchAnyException(Callable callable) {
+        try {
+            callable.call();
+        } catch (Throwable e) {
+            log.error("database operation exception: {}", getRootCauseMessage(e));
         }
     }
 

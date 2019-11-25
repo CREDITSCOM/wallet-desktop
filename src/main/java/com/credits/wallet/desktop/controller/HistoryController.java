@@ -34,14 +34,14 @@ public class HistoryController extends AbstractController {
 
     @FXML
     private TableView<TransactionTabRow> approvedTableView;
-    @FXML
-    private TableView<TransactionTabRow> unapprovedTableView;
+//    @FXML
+//    private TableView<TransactionTabRow> unapprovedTableView;
 
 
     @Override
     public void initialize(Map<String, ?> objects) {
         initTable(approvedTableView);
-        initTable(unapprovedTableView);
+//        initTable(unapprovedTableView);
 
         fillApprovedTable();
 //        fillUnapprovedTable();

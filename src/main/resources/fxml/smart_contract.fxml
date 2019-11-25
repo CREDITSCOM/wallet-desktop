@@ -38,64 +38,64 @@
                 <StackPane fx:id="pCodePanel" layoutX="1.0" layoutY="15.0" maxHeight="289.0" maxWidth="798.0" minHeight="289.0" minWidth="798.0" prefHeight="289.0" prefWidth="798.0" />
             </Pane>
         </Tab>
-      <Tab styleClass="credits-tab" text="Transactions">
-         <content>
-            <Pane layoutX="400.0" maxHeight="320.0" minHeight="325.0" prefHeight="325.0" prefWidth="800.0" styleClass="credits-PaneInTab">
-               <children>
-                  <TabPane layoutY="35.0" maxHeight="320.0" minHeight="260.0" prefHeight="285.0" prefWidth="800.0" side="BOTTOM" style="-fx-border-radius: 15;" styleClass="credits-tab-pane" tabClosingPolicy="UNAVAILABLE">
-                     <tabs>
-                        <Tab closable="false" styleClass="credits-bottom-tab" text="Approved">
-                           <content>
-                              <VBox layoutX="20.0" minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" styleClass="credits-history-tab-pane">
-                                 <children>
-                                    <TableView fx:id="approvedTableView" layoutY="25.0" prefHeight="258.0" prefWidth="800.0" styleClass="credits-history-table-view,credits-transaction-table-view">
-                                       <columns>
-                                          <TableColumn prefWidth="95.0" text="Inner ID" />
-                                          <TableColumn prefWidth="95.0" text="Block ID" />
-                                          <TableColumn prefWidth="400.0" text="Source" />
-                                          <TableColumn prefWidth="400.0" text="Target" />
-                                          <TableColumn prefWidth="210.0" text="Amount" />
-                                          <TableColumn prefWidth="95.0" text="Type" />
-                                       </columns>
-                                    </TableView>
-                                 </children>
-                              </VBox>
-                           </content>
-                        </Tab>
-                        <Tab styleClass="credits-bottom-tab" text="Unapproved">
-                           <content>
-                              <VBox minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" styleClass="credits-history-tab-pane">
-                                 <children>
-                                    <TableView fx:id="unapprovedTableView" layoutY="25.0" prefHeight="430.0" prefWidth="1250.0" styleClass="credits-history-table-view, credits-transaction-table-view">
-                                       <columns>
-                                          <TableColumn prefWidth="95.0" text="Inner ID" />
-                                          <TableColumn prefWidth="95.0" text="Block ID" />
-                                          <TableColumn prefWidth="400.0" text="Source" />
-                                          <TableColumn prefWidth="400.0" text="Target" />
-                                          <TableColumn prefWidth="210.0" text="Amount" />
-                                          <TableColumn prefWidth="140.0" text="State" />
-                                          <TableColumn prefWidth="95.0" text="Type" />
-                                       </columns>
-                                    </TableView>
-                                 </children>
-                              </VBox>
-                           </content>
-                        </Tab>
-                     </tabs>
-                  </TabPane>
-                  <Button minHeight="40.0" minWidth="40.0" onAction="#handleRefreshTransactions" prefHeight="40.0" prefWidth="40.0" style="-fx-border-color: transparent; -fx-background-color: transparent;" styleClass="credits-button-refresh">
-                     <graphic>
-                        <ImageView fitHeight="32.0" fitWidth="32.0" style="-fx-background-color: transparent;">
-                           <image>
-                              <Image url="@../img/reload.png" />
-                           </image>
-                        </ImageView>
-                     </graphic>
-                  </Button>
-               </children>
-            </Pane>
-         </content>
-      </Tab>
+<!--      <Tab styleClass="credits-tab" text="Transactions">-->
+<!--         <content>-->
+<!--            <Pane layoutX="400.0" maxHeight="320.0" minHeight="325.0" prefHeight="325.0" prefWidth="800.0" styleClass="credits-PaneInTab">-->
+<!--               <children>-->
+<!--                  <TabPane layoutY="35.0" maxHeight="320.0" minHeight="260.0" prefHeight="285.0" prefWidth="800.0" side="BOTTOM" style="-fx-border-radius: 15;" styleClass="credits-tab-pane" tabClosingPolicy="UNAVAILABLE">-->
+<!--                     <tabs>-->
+<!--                        <Tab closable="false" styleClass="credits-bottom-tab" text="Approved">-->
+<!--                           <content>-->
+<!--                              <VBox layoutX="20.0" minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" styleClass="credits-history-tab-pane">-->
+<!--                                 <children>-->
+<!--                                    <TableView fx:id="approvedTableView" layoutY="25.0" prefHeight="258.0" prefWidth="800.0" styleClass="credits-history-table-view,credits-transaction-table-view">-->
+<!--                                       <columns>-->
+<!--                                          <TableColumn prefWidth="95.0" text="Inner ID" />-->
+<!--                                          <TableColumn prefWidth="95.0" text="Block ID" />-->
+<!--                                          <TableColumn prefWidth="400.0" text="Source" />-->
+<!--                                          <TableColumn prefWidth="400.0" text="Target" />-->
+<!--                                          <TableColumn prefWidth="210.0" text="Amount" />-->
+<!--                                          <TableColumn prefWidth="95.0" text="Type" />-->
+<!--                                       </columns>-->
+<!--                                    </TableView>-->
+<!--                                 </children>-->
+<!--                              </VBox>-->
+<!--                           </content>-->
+<!--                        </Tab>-->
+<!--                        <Tab styleClass="credits-bottom-tab" text="Unapproved">-->
+<!--                           <content>-->
+<!--                              <VBox minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" styleClass="credits-history-tab-pane">-->
+<!--                                 <children>-->
+<!--                                    <TableView fx:id="unapprovedTableView" layoutY="25.0" prefHeight="430.0" prefWidth="1250.0" styleClass="credits-history-table-view, credits-transaction-table-view">-->
+<!--                                       <columns>-->
+<!--                                          <TableColumn prefWidth="95.0" text="Inner ID" />-->
+<!--                                          <TableColumn prefWidth="95.0" text="Block ID" />-->
+<!--                                          <TableColumn prefWidth="400.0" text="Source" />-->
+<!--                                          <TableColumn prefWidth="400.0" text="Target" />-->
+<!--                                          <TableColumn prefWidth="210.0" text="Amount" />-->
+<!--                                          <TableColumn prefWidth="140.0" text="State" />-->
+<!--                                          <TableColumn prefWidth="95.0" text="Type" />-->
+<!--                                       </columns>-->
+<!--                                    </TableView>-->
+<!--                                 </children>-->
+<!--                              </VBox>-->
+<!--                           </content>-->
+<!--                        </Tab>-->
+<!--                     </tabs>-->
+<!--                  </TabPane>-->
+<!--                  <Button minHeight="40.0" minWidth="40.0" onAction="#handleRefreshTransactions" prefHeight="40.0" prefWidth="40.0" style="-fx-border-color: transparent; -fx-background-color: transparent;" styleClass="credits-button-refresh">-->
+<!--                     <graphic>-->
+<!--                        <ImageView fitHeight="32.0" fitWidth="32.0" style="-fx-background-color: transparent;">-->
+<!--                           <image>-->
+<!--                              <Image url="@../img/reload.png" />-->
+<!--                           </image>-->
+<!--                        </ImageView>-->
+<!--                     </graphic>-->
+<!--                  </Button>-->
+<!--               </children>-->
+<!--            </Pane>-->
+<!--         </content>-->
+<!--      </Tab>-->
     </TabPane>
     <Label layoutX="20.0" styleClass="credits-topLabelText" text="Smart contracts from blockchain" />
     <Button layoutX="20.0" layoutY="590.0" onAction="#handleBack" prefHeight="60.0" prefWidth="60.0" style="-fx-font-size: 22;" styleClass="credits-button">

@@ -105,10 +105,10 @@ public class SmartContractController extends AbstractController {
     private TextField feeField;
     @FXML
     private Label actualOfferedMaxFeeLabel;
-    @FXML
-    private TableView<SmartContractTransactionTabRow> approvedTableView;
-    @FXML
-    private TableView<SmartContractTransactionTabRow> unapprovedTableView;
+//    @FXML
+//    private TableView<SmartContractTransactionTabRow> approvedTableView;
+//    @FXML
+//    private TableView<SmartContractTransactionTabRow> unapprovedTableView;
 
     @FXML
     private void handleBack() {
@@ -277,8 +277,8 @@ public class SmartContractController extends AbstractController {
         initializeContractsTable(smartContractTableView);
         refreshFavoriteContractsTab();
         initFeeField(feeField, actualOfferedMaxFeeLabel);
-        initTransactionHistoryTable(approvedTableView);
-        initTransactionHistoryTable(unapprovedTableView);
+//        initTransactionHistoryTable(approvedTableView);
+//        initTransactionHistoryTable(unapprovedTableView);
         cbStoreContractState.selectedProperty().bindBidirectional(isStoreContractState);
         favoriteContractAddresses = new HashSet<>();
         compiledContracts = new HashMap<>();

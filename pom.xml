@@ -240,15 +240,9 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.credits.client</groupId>
-            <artifactId>executor_client</artifactId>
-            <version>1.2</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>com.credits.sc-api</groupId>
             <artifactId>sc-api</artifactId>
-            <version>2.0</version>
+            <version>3.0</version>
             <scope>compile</scope>
         </dependency>
 

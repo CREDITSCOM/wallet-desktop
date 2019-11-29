@@ -38,11 +38,16 @@ public class NodeInteractionService {
         lastTransactionCount = new AtomicLong();
     }
 
-    public long getActualTransactionsCount() {
+    public long getTransactionsCount(){
+        final var totalTransactionsByAddress = nodeApi.getWalletTransactionsCount(account);
+        return Math.max(totalTransactionsByAddress, lastTransactionCount.get());
+    }
+
+    public long getAndIncrementTransactionsCount() {
         final var totalTransactionsByAddress = nodeApi.getWalletTransactionsCount(account);
 
         if (totalTransactionsByAddress > lastTransactionCount.get()) {
-            lastTransactionCount.set(totalTransactionsByAddress);
+            lastTransactionCount.set(totalTransactionsByAddress + 1);
         } else {
             lastTransactionCount.incrementAndGet();
         }
@@ -162,7 +167,7 @@ public class NodeInteractionService {
 
     public String generateSmartContractAddress(List<ByteCodeObjectData> byteCodeObjects) {
 
-        final var innerId = getActualTransactionsCount() + 1;
+        final var innerId =  getTransactionsCount() + 1;
         final var innerIdBytes = toByteArray(innerId);
 
         final var sliceId = Arrays.copyOfRange(innerIdBytes, 2, 8);
@@ -187,7 +192,7 @@ public class NodeInteractionService {
     }
 
     public ModifiedInnerIdSenderReceiver getActualIdSenderReceiver(String receiver) {
-        final var transactionsCount = getActualTransactionsCount();
-        return nodeApi.modifyInnerIdSenderReceiver(transactionsCount, account, receiver);
+        final var innerId = getAndIncrementTransactionsCount();
+        return nodeApi.modifyInnerIdSenderReceiver(innerId, account, receiver);
     }
 }

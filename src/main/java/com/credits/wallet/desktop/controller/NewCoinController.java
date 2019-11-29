@@ -2,6 +2,7 @@ package com.credits.wallet.desktop.controller;
 
 import com.credits.general.exception.CreditsException;
 import com.credits.general.util.Callback;
+import com.credits.wallet.desktop.AppState;
 import com.credits.wallet.desktop.VistaNavigator;
 import com.credits.wallet.desktop.utils.FormUtils;
 import com.credits.wallet.desktop.utils.SmartContractsUtils;
@@ -35,7 +36,7 @@ public class NewCoinController extends AbstractController {
 
     @FXML
     private void handleBack() {
-        VistaNavigator.loadVista(VistaNavigator.WALLET);
+        VistaNavigator.reloadForm(VistaNavigator.WALLET);
     }
 
     @FXML
@@ -47,7 +48,7 @@ public class NewCoinController extends AbstractController {
 
         if (checkValidData(coinName, smartContractAddress)) {
             addSmartContractTokenBalance(coinName, smartContractAddress);
-            VistaNavigator.loadVista(VistaNavigator.WALLET);
+            VistaNavigator.reloadForm(VistaNavigator.WALLET);
         }
     }
 
@@ -75,7 +76,7 @@ public class NewCoinController extends AbstractController {
     }
 
     @Override
-    public void initializeForm(Map<String, Object> objects) {
+    public void initialize(Map<String, ?> objects) {
         clearFormErrors();
     }
 
@@ -86,11 +87,11 @@ public class NewCoinController extends AbstractController {
 
     private void addSmartContractTokenBalance(String coinName, String smartContractAddress) {
 
-        session.contractInteractionService.getSmartContractBalance(smartContractAddress, new Callback<BigDecimal>() {
+        AppState.getNodeInteractionService().getBalanceOfToken(smartContractAddress, new Callback<>() {
             @Override
             public void onSuccess(BigDecimal balance) throws CreditsException {
-                SmartContractsUtils.saveSmartInTokenList(session.coinsKeeper,coinName, balance, smartContractAddress);
-                if(balance != null){
+                SmartContractsUtils.saveSmartInTokenList(session.coinsKeeper, coinName, balance, smartContractAddress);
+                if (balance != null) {
                     FormUtils.showPlatformInfo("Coin \"" + coinName + "\" was created successfully");
                 }
             }
@@ -103,7 +104,7 @@ public class NewCoinController extends AbstractController {
     }
 
     @Override
-    public void formDeinitialize() {
+    public void deinitialize() {
 
     }
 }

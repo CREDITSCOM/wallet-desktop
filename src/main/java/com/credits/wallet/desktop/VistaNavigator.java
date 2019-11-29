@@ -1,11 +1,9 @@
 package com.credits.wallet.desktop;
 
 import com.credits.wallet.desktop.controller.AbstractController;
-import com.credits.wallet.desktop.controller.FormDeinitializable;
 import com.credits.wallet.desktop.controller.HeaderController;
 import com.credits.wallet.desktop.controller.MainController;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
@@ -58,12 +56,15 @@ public class VistaNavigator {
         VistaNavigator.mainController = mainController;
     }
 
-    public static void loadVista(String fxml, Map<String, Object> params) {
+    public static void reloadForm(String fxml, Map<String, Object> params) {
         changeVista(fxml, params);
     }
 
-    public static void showFormModal(String fxml, Map<String, Object> params) {
+    public static void reloadForm(String fxml) {
+        changeVista(fxml, null);
+    }
 
+    public static void showModalForm(String fxml, Map<String, Object> params) {
         FXMLLoader loader = new FXMLLoader(VistaNavigator.class.getResource(fxml));
         Scene scene;
         try {
@@ -74,21 +75,17 @@ public class VistaNavigator {
         }
         scene.getStylesheets().setAll(WalletApp.class.getResource("/styles.css").toExternalForm());
         AbstractController controller = loader.getController();
-        controller.initializeForm(params);
+        controller.initialize(params);
         Stage stage = new Stage();
         stage.initOwner(AppState.getPrimaryStage());
         stage.initModality(Modality.WINDOW_MODAL);
         stage.getIcons().add(new Image(WalletApp.class.getResourceAsStream("/img/icon.png")));
         stage.setTitle("Credits");
         stage.setOnCloseRequest(event -> {
-            controller.formDeinitialize();
+            controller.deinitialize();
         });
         stage.setScene(scene);
         stage.showAndWait();
-    }
-
-    public static void loadVista(String fxml) {
-        changeVista(fxml, null);
     }
 
     static void loadFirstForm(String form) throws IOException {
@@ -96,45 +93,48 @@ public class VistaNavigator {
         BorderPane headerPane = headerLoader.load();
         mainController.setTopVista(headerPane);
         headerController = headerLoader.getController();
-        VistaNavigator.loadVista(form, null);
+        VistaNavigator.reloadForm(form, null);
     }
 
     private static void changeVista(String fxml, Map<String, Object> params) {
         try {
-            AbstractController oldVista = currentVistaController;
-            FXMLLoader fxmlLoader = new FXMLLoader(VistaNavigator.class.getResource(fxml));
-            Node load = fxmlLoader.load();
+            final var oldVista = currentVistaController;
+            final var fxmlLoader = new FXMLLoader(VistaNavigator.class.getResource(fxml));
+            final var pane = (Pane) fxmlLoader.load();
             currentVistaController = fxmlLoader.getController();
-            resizeForm((Pane) load);
-            initializeNewController(oldVista, fxmlLoader.getController(), params);
-            deinitialize(oldVista);
-            mainController.setVista(load);
+            resizeForm(pane);
+            if (oldVista != null) {
+                initializeNewController(oldVista, currentVistaController, params);
+                deinitialize(oldVista);
+            }
+            mainController.setVista(pane);
         } catch (IOException e) {
             LOGGER.error("failed!", e);
         }
     }
 
     private static void initializeNewController(AbstractController oldVistaController,
-        AbstractController newVistaController, Map<String, Object> params) {
+                                                AbstractController newVistaController,
+                                                Map<String, Object> params) {
         try {
             if (oldVistaController != null) {
                 newVistaController.session = oldVistaController.session;
             }
             headerController.changeParentController(newVistaController);
-            newVistaController.initializeForm(params);
+            newVistaController.initialize(params);
         } catch (Exception e) {
-            LOGGER.error("Cannot initializeNewController vista", e);
+            LOGGER.error("cannot initialize controller", e);
             throw e;
         }
     }
 
-    private static void deinitialize(Object oldVistaController) {
+    private static void deinitialize(AbstractController oldVistaController) {
         try {
-            if (oldVistaController instanceof FormDeinitializable) {
-                ((FormDeinitializable) oldVistaController).formDeinitialize();
+            if (oldVistaController != null) {
+                oldVistaController.deinitialize();
             }
         } catch (Exception e) {
-            LOGGER.error("Cannot formDeinitialize vista", e);
+            LOGGER.error("Cannot deinitialize vista", e);
             throw e;
         }
     }

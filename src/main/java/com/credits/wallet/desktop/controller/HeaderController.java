@@ -1,7 +1,7 @@
 package com.credits.wallet.desktop.controller;
 
+import com.credits.client.node.pojo.SyncStateInfoData;
 import com.credits.general.thrift.ThriftClientPool;
-import com.credits.wallet.desktop.AppState;
 import com.credits.wallet.desktop.VistaNavigator;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -21,8 +21,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static com.credits.wallet.desktop.AppState.DELAY_AFTER_FULL_SYNC;
-import static com.credits.wallet.desktop.AppState.DELAY_BEFORE_FULL_SYNC;
+import static com.credits.wallet.desktop.AppState.*;
 
 
 public class HeaderController implements Initializable {
@@ -61,35 +60,36 @@ public class HeaderController implements Initializable {
     @FXML
     private void handleLogout() {
         parentController.closeSession();
-        VistaNavigator.loadVista(VistaNavigator.WELCOME);
+        VistaNavigator.reloadForm(VistaNavigator.WELCOME);
     }
 
     public void handleWallet() {
-        VistaNavigator.loadVista(VistaNavigator.WALLET);
+        VistaNavigator.reloadForm(VistaNavigator.WALLET);
     }
 
     public void handleTransaction() {
-        VistaNavigator.loadVista(VistaNavigator.HISTORY);
+        VistaNavigator.reloadForm(VistaNavigator.HISTORY);
     }
 
     public void handleSmartExecute() {
-        VistaNavigator.loadVista(VistaNavigator.SMART_CONTRACT);
+        VistaNavigator.reloadForm(VistaNavigator.SMART_CONTRACT);
     }
 
     public void handleSmartDeploy() {
-        VistaNavigator.loadVista(VistaNavigator.SMART_CONTRACT_DEPLOY);
+        VistaNavigator.reloadForm(VistaNavigator.SMART_CONTRACT_DEPLOY);
     }
 
     public void initializeSynchronize() {
         headerExecService = Executors.newScheduledThreadPool(1);
         runnable = () -> {
             try {
-                Pair<Integer, Long> blockAndSynchronizePercent = AppState.getNodeApiService().getBlockAndSynchronizePercent();
-                Long lastRound = blockAndSynchronizePercent.getRight();
-                int synchronizePercent = blockAndSynchronizePercent.getLeft();
+                final var syncStateInfo = getNodeApiService().getSyncStateInfo();
+                final var blockAndSyncPercent = calculateBlockAndSyncPercent(syncStateInfo);
+                Long lastRound = blockAndSyncPercent.getLeft();
+                int synchronizePercent = blockAndSyncPercent.getRight();
                 Platform.runLater(() -> {
                     sync.setProgress((double) synchronizePercent / 100);
-                    syncPercent.setText(String.valueOf(synchronizePercent)+"%");
+                    syncPercent.setText(synchronizePercent + "%");
                     lastRoundLabel.setText(String.valueOf(lastRound));
                 });
                 if (synchronizePercent == 100 && !flag) {
@@ -113,9 +113,16 @@ public class HeaderController implements Initializable {
         future = headerExecService.scheduleWithFixedDelay(runnable, 0, DELAY_BEFORE_FULL_SYNC, TimeUnit.SECONDS);
     }
 
+    private Pair<Long, Integer> calculateBlockAndSyncPercent(SyncStateInfoData syncStateInfo) {
+        final var blockchainCurrentBlockNumber = syncStateInfo.getBlockchainCurrentBlockNumber();
+        final var nodeCurrentBlockNumber = syncStateInfo.getNodeCurrentBlockNumber();
+        final int percent = (int) (blockchainCurrentBlockNumber / nodeCurrentBlockNumber * 100);
+        return Pair.of(blockchainCurrentBlockNumber, percent);
+
+    }
+
     private void changeDelay(int delay) {
         flag = future.cancel(false);
-        System.out.println("Synchronized is 100% : " + flag);
         future = headerExecService.scheduleWithFixedDelay(runnable, delay, delay, TimeUnit.SECONDS);
     }
 

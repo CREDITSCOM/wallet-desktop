@@ -1,7 +1,7 @@
 package com.credits.wallet.desktop.controller;
 
 import com.credits.client.node.crypto.Ed25519;
-import com.credits.general.util.GeneralConverter;
+import com.credits.wallet.desktop.AppState;
 import com.credits.wallet.desktop.VistaNavigator;
 import com.credits.wallet.desktop.utils.FormUtils;
 import com.credits.wallet.desktop.utils.crypto.sodium.SodiumLibrary;
@@ -13,16 +13,15 @@ import javafx.scene.control.PasswordField;
 
 import java.util.Map;
 
-import static com.credits.wallet.desktop.AppState.setPrivateKey;
-import static com.credits.wallet.desktop.AppState.setPublicKey;
+import static com.credits.general.util.GeneralConverter.decodeFromBASE58;
 
 
-public class CheckPrivKeyPwdController extends AbstractController {
+public class CheckPrivateKeyPwdController extends AbstractController {
 
     private String nonce;
     private String salt;
     private String encryptedPrivKey;
-    private String pubKey;
+    private String publicKeyBase58;
 
     @FXML
     Button btnShowPassword;
@@ -47,7 +46,7 @@ public class CheckPrivKeyPwdController extends AbstractController {
 
     @FXML
     private void handleBack() {
-        VistaNavigator.loadVista(VistaNavigator.FORM_5);
+        VistaNavigator.reloadForm(VistaNavigator.FORM_5);
     }
 
     @FXML
@@ -59,10 +58,10 @@ public class CheckPrivKeyPwdController extends AbstractController {
 
         byte[] decryptedPrivateKey;
         try {
-            byte[] key = SodiumLibrary.cryptoPwhashArgon2i(pwd.getBytes(), GeneralConverter.decodeFromBASE58(salt));
+            byte[] key = SodiumLibrary.cryptoPwhashArgon2i(pwd.getBytes(), decodeFromBASE58(salt));
             decryptedPrivateKey = SodiumLibrary.cryptoSecretBoxOpenEasy(
-                    GeneralConverter.decodeFromBASE58(encryptedPrivKey),
-                    GeneralConverter.decodeFromBASE58(nonce),
+                    decodeFromBASE58(encryptedPrivKey),
+                    decodeFromBASE58(nonce),
                     key
             );
         } catch (SodiumLibraryException e) {
@@ -70,30 +69,34 @@ public class CheckPrivKeyPwdController extends AbstractController {
             return;
         }
 
-        setSession(pubKey);
+        final var publicKey = Ed25519.bytesToPublicKey(decodeFromBASE58(publicKeyBase58));
+        final var privateKey = Ed25519.bytesToPrivateKey(decryptedPrivateKey);
+        setSession(publicKeyBase58);
+        AppState.setPublicKey(publicKey);
+        AppState.setPrivateKey(privateKey);
+        AppState.initializeNodeInteractionService(publicKeyBase58);
 
-        setPrivateKey(Ed25519.bytesToPrivateKey(decryptedPrivateKey));
         byte[] publicKeyByteArr;
         try {
-            publicKeyByteArr = GeneralConverter.decodeFromBASE58(pubKey);
-            setPublicKey(Ed25519.bytesToPublicKey(publicKeyByteArr));
+            publicKeyByteArr = decodeFromBASE58(publicKeyBase58);
+            AppState.setPublicKey(Ed25519.bytesToPublicKey(publicKeyByteArr));
         } catch (Exception e) {
             FormUtils.showError(e.getMessage());
             return;
         }
 
         if (validateKeys(publicKeyByteArr, decryptedPrivateKey)) {
-            VistaNavigator.loadVista(VistaNavigator.WALLET);
+            VistaNavigator.reloadForm(VistaNavigator.WALLET);
         }
     }
 
     @Override
-    public void initializeForm(Map<String, Object> objects) {
+    public void initialize(Map<String, ?> objects) {
 
         nonce = (String)objects.get(PutKeysController.NONCE_KEY);
         salt = (String)objects.get(PutKeysController.SALT_KEY);
         encryptedPrivKey = (String)objects.get(PutKeysController.ENCRYPTED_PRIVKEY_KEY);
-        pubKey = (String)objects.get(PutKeysController.PUBKEY_KEY);
+        publicKeyBase58 = (String)objects.get(PutKeysController.PUBKEY_KEY);
 
 
         txPassword.setVisible(true);
@@ -121,11 +124,6 @@ public class CheckPrivKeyPwdController extends AbstractController {
         });
 
         SodiumLibrary.initSodium();
-    }
-
-    @Override
-    public void formDeinitialize() {
-
     }
 }
 

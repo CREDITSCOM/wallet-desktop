@@ -33,8 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.credits.client.node.service.NodeApiServiceImpl.async;
-import static com.credits.wallet.desktop.AppState.CREDITS_DECIMAL;
-import static com.credits.wallet.desktop.AppState.CREDITS_TOKEN_NAME;
+import static com.credits.wallet.desktop.AppState.*;
 import static com.credits.wallet.desktop.utils.NumberUtils.checkCorrectInputNumber;
 import static org.apache.commons.lang3.StringUtils.repeat;
 
@@ -79,12 +78,12 @@ public class WalletController extends AbstractController {
     @FXML
     private void handleLogout() {
         closeSession();
-        VistaNavigator.loadVista(VistaNavigator.WELCOME);
+        VistaNavigator.reloadForm(VistaNavigator.WELCOME);
     }
 
     @FXML
     private void handleAddCoin() {
-        VistaNavigator.loadVista(VistaNavigator.NEW_COIN);
+        VistaNavigator.reloadForm(VistaNavigator.NEW_COIN);
     }
 
     @FXML
@@ -143,7 +142,7 @@ public class WalletController extends AbstractController {
             params.put("actualOfferedMaxFee16Bits", FormUtils.getActualOfferedMaxFee16Bits(feeField));
             params.put("usedSmartContracts", usedSmartContracts);
 
-            VistaNavigator.loadVista(VistaNavigator.FORM_7, params);
+            VistaNavigator.reloadForm(VistaNavigator.FORM_7, params);
         }
     }
 
@@ -199,8 +198,7 @@ public class WalletController extends AbstractController {
             changeTableViewValue(coinRow, WAITING_STATE_MESSAGE);
             DecimalFormat decimalFormat =
                     new DecimalFormat("##0.000000000000000000"); // todo must use the method "tokenContract.decimal()"
-            session.contractInteractionService.getSmartContractBalance(smartContractAddress,
-                                                                       handleUpdateCoinValue(coinRow, decimalFormat));
+            AppState.getNodeInteractionService().getBalanceOfToken(smartContractAddress, handleUpdateCoinValue(coinRow, decimalFormat));
         }
     }
 
@@ -275,11 +273,14 @@ public class WalletController extends AbstractController {
     }
 
     @Override
-    public void initializeForm(Map<String, Object> objects) {
+    public void initialize(Map<String, ?> objects) {
         clearLabErr();
 
         initializeTable(coinsTableView);
         updateCoins(coinsTableView);
+
+        getDatabase().keepLogin(session.account);
+        configureUpdateDatabaseService();
 
         publicWalletID.setText(session.account);
 
@@ -308,6 +309,15 @@ public class WalletController extends AbstractController {
         }
     }
 
+    public void configureUpdateDatabaseService() {
+        final var updateService = getUpdateDatabaseService();
+        if(!updateService.daemonIsStarted()){
+            updateService.startUpdateDatabaseDaemon(session.account);
+        }else {
+            updateService.changeUpdateAddress(session.account);
+        }
+    }
+
     private void setFieldValue(TextField tf, String newValue) {
         if (newValue.isEmpty()) {
             tf.setText("");
@@ -318,6 +328,6 @@ public class WalletController extends AbstractController {
 
 
     @Override
-    public void formDeinitialize() {
+    public void deinitialize() {
     }
 }

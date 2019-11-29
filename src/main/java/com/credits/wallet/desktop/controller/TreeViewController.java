@@ -115,12 +115,12 @@ public class TreeViewController extends AbstractController {
 
 
     @Override
-    public void formDeinitialize() {
+    public void deinitialize() {
 
     }
 
     @Override
-    public void initializeForm(Map<String, Object> objects) {
+    public void initialize(Map<String, ?> objects) {
 
     }
 }

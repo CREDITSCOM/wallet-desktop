@@ -30,30 +30,32 @@
                            styleClass="credits-history-table-view,credits-transaction-table-view">
                     <columns>
                         <TableColumn prefWidth="95.0" text="Id"/>
-                        <TableColumn prefWidth="400.0" text="Source"/>
-                        <TableColumn prefWidth="400.0" text="Target"/>
-                        <TableColumn prefWidth="210.0" text="Amount"/>
+                        <TableColumn prefWidth="190.0" text="Time"/>
+                        <TableColumn prefWidth="300.0" text="Source"/>
+                        <TableColumn prefWidth="320.0" text="Target"/>
+                        <TableColumn prefWidth="200.0" text="Amount"/>
                         <TableColumn prefWidth="140.0" text="Type"/>
                     </columns>
                 </TableView>
 
             </VBox>
         </Tab>
-        <Tab styleClass="credits-tab" text="Unapproved transactions">
-            <VBox minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0"
-                  styleClass="credits-history-tab-pane">
-                <TableView fx:id="unapprovedTableView" layoutY="15.0" prefHeight="430.0" prefWidth="1250.0"
-                           styleClass="credits-history-table-view, credits-transaction-table-view">
-                    <columns>
-                        <TableColumn prefWidth="95.0" text="Id"/>
-                        <TableColumn prefWidth="400.0" text="Source"/>
-                        <TableColumn prefWidth="400.0" text="Target"/>
-                        <TableColumn prefWidth="210.0" text="Amount"/>
-                        <TableColumn prefWidth="140.0" text="Type"/>
-                    </columns>
-                </TableView>
-            </VBox>
-        </Tab>
+<!--        <Tab styleClass="credits-tab" text="Unapproved transactions">-->
+<!--            <VBox minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0"-->
+<!--                  styleClass="credits-history-tab-pane">-->
+<!--                <TableView fx:id="unapprovedTableView" layoutY="15.0" prefHeight="430.0" prefWidth="1250.0"-->
+<!--                           styleClass="credits-history-table-view, credits-transaction-table-view">-->
+<!--                    <columns>-->
+<!--                        <TableColumn prefWidth="95.0" text="Id"/>-->
+<!--                        <TableColumn prefWidth="190.0" text="Time"/>-->
+<!--                        <TableColumn prefWidth="300.0" text="Source"/>-->
+<!--                        <TableColumn prefWidth="320.0" text="Target"/>-->
+<!--                        <TableColumn prefWidth="200.0" text="Amount"/>-->
+<!--                        <TableColumn prefWidth="140.0" text="Type"/>-->
+<!--                    </columns>-->
+<!--                </TableView>-->
+<!--            </VBox>-->
+<!--        </Tab>-->
     </TabPane>
     <Button layoutX="1220.0" layoutY="68.0" onAction="#handleRefresh" prefHeight="27.0" prefWidth="30.0"
             style="-fx-border-color: transparent; -fx-background-color: transparent;"

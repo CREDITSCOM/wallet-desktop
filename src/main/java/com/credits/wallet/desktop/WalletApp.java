@@ -13,18 +13,16 @@ import javafx.scene.layout.Pane;
 import javafx.scene.text.Font;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.net.URL;
-import java.util.Properties;
+
+import static com.credits.wallet.desktop.utils.ApplicationProperties.loadPropertyFile;
+import static com.credits.wallet.desktop.utils.GeneralUtils.getResourceAsStream;
 
 
+@Slf4j
 public class WalletApp extends Application {
-
-    private final static Logger LOGGER = LoggerFactory.getLogger(WalletApp.class);
-    AppStateInitializer appStateInitializer;
 
     public static void main(String[] args) {
         launch(args);
@@ -33,27 +31,14 @@ public class WalletApp extends Application {
     @Override
     public void start(Stage stage) throws IOException {
 
-        Properties prop = new Properties();
-        URL url = WalletApp.class.getResource("/git.properties");
-        String tag = null;
-        String build = null;
-        String commit = null;
-        if (url != null) {
-            prop.load(url.openStream());
-            tag = (String) prop.get("git.closest.tag.name");
-            build = (String) prop.get("git.closest.tag.commit.count");
-            commit = (String) prop.get("git.commit.id");
-        }
-        LOGGER.info("\n\n\n");
-        LOGGER.info("---------------------------------------------------------------------------");
-        LOGGER.info("Wallet Desktop {} build {} commit {}",  tag, build, commit);
-        LOGGER.info("---------------------------------------------------------------------------\n\n\n");
-        appStateInitializer = appStateInitializer != null ? appStateInitializer : new AppStateInitializer();
-        LOGGER.info("Initializing application state");
-        appStateInitializer.init();
-        LOGGER.info("Displaying the main window");
+        final var properties = loadPropertyFile("settings.properties");
+        final var gitProperties = properties.getGitProperties();
+        log.info("---------------------------------------------------------------------------");
+        log.info("Wallet Desktop {} build {} commit {}", gitProperties.getTag(), gitProperties.getBuild(), gitProperties.getCommit());
+        log.info("---------------------------------------------------------------------------");
+        AppState.initialize(properties);
 
-        stage.getIcons().add(new Image(WalletApp.class.getResourceAsStream("/img/icon.png")));
+        stage.getIcons().add(new Image(getResourceAsStream("/img/icon.png")));
         Screen screen = Screen.getPrimary();
         Rectangle2D bounds = screen.getVisualBounds();
 
@@ -67,9 +52,8 @@ public class WalletApp extends Application {
 
         stage.setScene(createScene(loadMainPane()));
         loadFirstForm(VistaNavigator.WELCOME);
-        //ScenicView.show(stage.getScene());
         stage.setOnCloseRequest(event -> {
-            VistaNavigator.getCurrentVistaController().formDeinitialize();
+            VistaNavigator.getCurrentVistaController().deinitialize();
             AppState.getSessionMap().forEach((account, session) -> session.close());
             Platform.exit();
             System.exit(0);
@@ -84,7 +68,7 @@ public class WalletApp extends Application {
 
     private Pane loadMainPane() throws IOException {
         FXMLLoader loader = new FXMLLoader();
-        BorderPane mainPane = loader.load(WalletApp.class.getResourceAsStream(VistaNavigator.MAIN));
+        BorderPane mainPane = loader.load(getResourceAsStream(VistaNavigator.MAIN));
         MainController mainController = loader.getController();
         VistaNavigator.saveMainController(mainController);
         return mainPane;

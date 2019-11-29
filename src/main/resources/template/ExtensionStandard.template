@@ -1,22 +1,25 @@
+package com.example.token;
+
 import com.credits.scapi.annotations.*;
+import com.credits.scapi.v1.*;
 import com.credits.scapi.v2.SmartContract;
-import com.credits.scapi.v0.*;
 import java.math.BigDecimal;
 
 
-public class MySmartContract extends SmartContract implements ExtensionStandard {
+public class %s extends SmartContract implements ExtensionTokenStandard {
 
-    public MySmartContract() {
+    public %s() {
     }
 
-    @Override
-    public void register() {
-
+    private BigDecimal getTokensBalance(String address) {
+        return null;
     }
 
-    @Override
-    public boolean buyTokens(String amount) {
-        return false;
+    private void contractIsNotFrozen() {
+    }
+
+    private BigDecimal scale(BigDecimal value) {
+        return null;
     }
 
     @Override
@@ -40,42 +43,46 @@ public class MySmartContract extends SmartContract implements ExtensionStandard 
     }
 
     @Override
-    public String totalSupply() {
+    public BigDecimal totalSupply() {
         return null;
     }
 
     @Override
-    public String balanceOf(String owner) {
+    public BigDecimal balanceOf(String owner) {
         return null;
     }
 
     @Override
-    public String allowance(String owner, String spender) {
+    public BigDecimal allowance(String owner, String spender) {
         return null;
     }
 
     @Override
-    public boolean transfer(String to, String amount) {
+    public boolean transfer(String to, BigDecimal amount) {
         return false;
     }
 
     @Override
-    public boolean transferFrom(String from, String to, String amount) {
+    public boolean transferFrom(String from, String to, BigDecimal amount) {
         return false;
     }
 
     @Override
-    public void approve(String spender, String amount) {
-
+    public void approve(String spender, BigDecimal amount) {
     }
 
     @Override
-    public boolean burn(String amount) {
+    public boolean burn(BigDecimal amount) {
         return false;
+    }
+
+    @Override
+    public void register(){
+
     }
 
     @Override
     public String payable(BigDecimal amount, byte[] userData) {
-        return null;
+        return "";
     }
 }

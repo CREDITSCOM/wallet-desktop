@@ -1,10 +1,13 @@
+package com.example.contract;
+
 import com.credits.scapi.annotations.*;
-import com.credits.scapi.v2.*;
+import com.credits.scapi.v2.SmartContract;
+import com.credits.scapi.v1.*;
 import java.math.BigDecimal;
 
-public class MySmartContract extends SmartContract {
+public class %s extends SmartContract {
 
-    public MySmartContract() {
+    public %s() {
     }
 
     @Override

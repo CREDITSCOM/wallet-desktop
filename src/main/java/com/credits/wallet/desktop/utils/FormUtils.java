@@ -2,7 +2,6 @@ package com.credits.wallet.desktop.utils;
 
 import com.credits.client.node.pojo.TransactionData;
 import com.credits.general.util.Constants;
-import com.credits.client.node.pojo.TransactionData;
 import com.credits.general.util.GeneralConverter;
 import com.credits.wallet.desktop.struct.CoinTabRow;
 import javafx.application.Platform;
@@ -10,34 +9,34 @@ import javafx.scene.control.*;
 import javafx.stage.StageStyle;
 import javafx.util.Callback;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import static com.credits.general.util.Utils.calculateActualFee;
 import static com.credits.wallet.desktop.utils.NumberUtils.checkCorrectInputNumber;
+import static java.util.function.Predicate.not;
 
 
 public class FormUtils {
-
-    public static void showError(String text) {
+    public static void showError(String title, String header, String message) {
         Platform.runLater(() -> {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.initStyle(StageStyle.UTILITY);
-            alert.setTitle("Error");
-            alert.setHeaderText("Error!");
-            alert.setContentText(cutMessage(text));
+            alert.setTitle(title);
+            alert.setHeaderText(header);
+            alert.setContentText(cutMessage(message));
             alert.showAndWait();
         });
     }
 
+    public static void showError(String message) {
+        showError("Error", "Error", cutMessage(message));
+    }
+
     public static void showInfo(String text) {
-        Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.initStyle(StageStyle.UTILITY);
-            alert.setTitle("Information");
-            alert.setHeaderText("Information");
-            alert.setContentText(cutMessage(text));
-            alert.showAndWait();
-        });
+        showPlatformInfo(text, "Information", "Information");
     }
 
     public static void showPlatformWarning(String content) {
@@ -63,11 +62,15 @@ public class FormUtils {
     }
 
     public static void showPlatformInfo(String message) {
+        showPlatformInfo("Info", message, "Info");
+    }
+
+    public static void showPlatformInfo(String title, String header, String message) {
         Platform.runLater(() -> {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.initStyle(StageStyle.UTILITY);
-            alert.setTitle("Info");
-            alert.setHeaderText("Info");
+            alert.setTitle(title);
+            alert.setHeaderText(header);
             alert.setContentText(cutMessage(message));
             alert.showAndWait();
         });
@@ -109,8 +112,8 @@ public class FormUtils {
     }
 
     public static void validateTable(
-        TableView<CoinTabRow> tableView, Label errorLabel, String errorText,
-        AtomicBoolean validationFlag) {
+            TableView<CoinTabRow> tableView, Label errorLabel, String errorText,
+            AtomicBoolean validationFlag) {
         errorLabel.setText(errorText);
         tableView.getStyleClass().add("credits-border-red");
         validationFlag.set(false);
@@ -147,12 +150,17 @@ public class FormUtils {
     }
 
     public static String getTransactionDescType(TransactionData transactionData) {
-        switch (transactionData.getType()){
-            case TT_SmartDeploy: return "Deploy";
-            case TT_SmartState: return "State";
-            case TT_SmartExecute: return "Execute";
-            case TT_Normal: return "CS Transfer";
-            default: return "Unknown";
+        switch (transactionData.getType()) {
+            case TT_SmartDeploy:
+                return "Deploy";
+            case TT_SmartState:
+                return "State";
+            case TT_SmartExecute:
+                return "Execute";
+            case TT_Normal:
+                return "CS Transfer";
+            default:
+                return "Unknown";
         }
     }
 
@@ -166,6 +174,14 @@ public class FormUtils {
             actualOfferedMaxFeeLabel.setText(GeneralConverter.toString(actualOfferedMaxFeePair.getLeft()));
         }
         feeField.setText(value);
+    }
+
+    public static List<String> parseUsedContractsField(String usedSmartContracts) {
+        return Arrays
+                .stream(usedSmartContracts.split(","))
+                .map(String::trim)
+                .filter(not(String::isEmpty))
+                .collect(Collectors.toList());
     }
 }
 

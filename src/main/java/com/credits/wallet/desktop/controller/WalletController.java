@@ -9,6 +9,7 @@ import com.credits.wallet.desktop.VistaNavigator;
 import com.credits.wallet.desktop.struct.CoinTabRow;
 import com.credits.wallet.desktop.utils.FormUtils;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -74,6 +75,13 @@ public class WalletController extends AbstractController {
     private Label actualOfferedMaxFeeLabel;
     @FXML
     public TextField usdSmart;
+    @FXML
+    public CheckBox cbDelegate;
+    @FXML
+    public CheckBox cbWithdrawDelegation;
+    private SimpleBooleanProperty isWithdrawDelegation;
+    private SimpleBooleanProperty isDelegate;
+
 
     @FXML
     private void handleLogout() {
@@ -141,6 +149,8 @@ public class WalletController extends AbstractController {
             params.put("transactionText", transactionText);
             params.put("actualOfferedMaxFee16Bits", FormUtils.getActualOfferedMaxFee16Bits(feeField));
             params.put("usedSmartContracts", usedSmartContracts);
+            int delegationOptions = isDelegate.get() ? 1 : isWithdrawDelegation.get() ? 2 : 0;
+            params.put("delegationOptions", delegationOptions);
 
             VistaNavigator.reloadForm(VistaNavigator.FORM_7, params);
         }
@@ -275,7 +285,20 @@ public class WalletController extends AbstractController {
     @Override
     public void initialize(Map<String, ?> objects) {
         clearLabErr();
-
+        isDelegate = new SimpleBooleanProperty();
+        isDelegate.addListener((observable, oldValue, newValue) -> {
+            if(newValue) {
+                isWithdrawDelegation.setValue(false);
+            }
+        });
+        isWithdrawDelegation = new SimpleBooleanProperty();
+        isWithdrawDelegation.addListener((observable, oldValue, newValue) -> {
+            if(newValue) {
+                isDelegate.setValue(false);
+            }
+        });
+        cbDelegate.selectedProperty().bindBidirectional(isDelegate);
+        cbWithdrawDelegation.selectedProperty().bindBidirectional(isWithdrawDelegation);
         initializeTable(coinsTableView);
         updateCoins(coinsTableView);
 

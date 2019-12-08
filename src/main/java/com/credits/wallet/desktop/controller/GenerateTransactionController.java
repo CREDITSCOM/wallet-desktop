@@ -47,6 +47,8 @@ public class GenerateTransactionController extends AbstractController {
 
     private short actualOfferedMaxFee16Bits;
 
+    private int delegationOptions;
+
     @FXML
     private void handleBack() {
         Map<String, Object> params = new HashMap<>();
@@ -56,6 +58,7 @@ public class GenerateTransactionController extends AbstractController {
         params.put("transactionText", transactionText.getText());
         params.put("coinType", coinType.getText());
         params.put("usedSmartContracts", usedSmartContracts.getText());
+        params.put("delegationOptions", delegationOptions);
         VistaNavigator.reloadForm(VistaNavigator.WALLET, params);
     }
 
@@ -69,7 +72,7 @@ public class GenerateTransactionController extends AbstractController {
         final var userData = transactionAmount.getText().getBytes(StandardCharsets.UTF_8);
         try {
             if (coinType.getText().equals(CREDITS_TOKEN_NAME)) {
-                nodeService.transferCsTo(receiver, amount, maxFee, usedContracts, userData, (result, error) -> {
+                nodeService.transferCsTo(receiver, amount, maxFee, usedContracts, userData, delegationOptions, (result, error) -> {
                     if (error == null) {
                         FormUtils.showPlatformInfo("Transaction creation result",
                                                    "Transaction created successfully",
@@ -142,6 +145,7 @@ public class GenerateTransactionController extends AbstractController {
         coinType.setText(objects.get("coinType").toString());
         actualOfferedMaxFee16Bits = (Short) objects.get("actualOfferedMaxFee16Bits");
         usedSmartContracts.setText(objects.get("usedSmartContracts").toString());
+        delegationOptions = ((Integer) objects.get("delegationOptions"));
     }
 
     @Override

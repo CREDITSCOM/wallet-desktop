@@ -236,13 +236,13 @@
         <dependency>
             <groupId>com.credits.client</groupId>
             <artifactId>node_client</artifactId>
-            <version>2.0</version>
+            <version>LATEST</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.credits.sc-api</groupId>
             <artifactId>sc-api</artifactId>
-            <version>3.0</version>
+            <version>LATEST</version>
             <scope>compile</scope>
         </dependency>
 

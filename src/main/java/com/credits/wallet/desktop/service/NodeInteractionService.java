@@ -74,6 +74,7 @@ public class NodeInteractionService {
                              float maxFee,
                              List<String> usedContracts,
                              byte[] userData,
+                             int delegationOptions,
                              BiConsumer<? super TransactionFlowResultData, ? super Throwable> handleResult) {
         CompletableFuture
                 .supplyAsync(() -> getActualIdSenderReceiver(receiver), threadPool)
@@ -84,6 +85,7 @@ public class NodeInteractionService {
                                                                    maxFee,
                                                                    usedContracts,
                                                                    userData,
+                                                                   delegationOptions,
                                                                    privateKey))
                 .whenComplete(handleResult);
     }

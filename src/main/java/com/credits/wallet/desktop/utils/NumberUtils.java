@@ -16,8 +16,12 @@ public class NumberUtils {
         final var hasMoreThenOneSeparator = s.chars().filter(ch -> ch == ds).count() > 1;
         if(hasMoreThenOneSeparator) return false;
 
-        final var hasIncorrectSymbol =  s.matches(".*[^\\d" + ds + "].*");
-        if(hasIncorrectSymbol) return false;
+        //final var hasIncorrectSymbol =  s.matches(".*[^\\d" + ds + "].*");
+        //if(hasIncorrectSymbol) return false;
+
+        final var hasCorrectSymbol = s.matches("\\d*((\\.|\\,)\\d*)?");
+
+        if(!hasCorrectSymbol) return false;
 
         return s.length() < 40;
     }

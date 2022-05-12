@@ -281,12 +281,12 @@
         <dependency>
             <groupId>com.j256.ormlite</groupId>
             <artifactId>ormlite-core</artifactId>
-            <version>5.2</version>
+            <version>5.7</version>
         </dependency>
         <dependency>
             <groupId>com.j256.ormlite</groupId>
             <artifactId>ormlite-jdbc</artifactId>
-            <version>5.2</version>
+            <version>5.7</version>
         </dependency>
 
         <dependency>

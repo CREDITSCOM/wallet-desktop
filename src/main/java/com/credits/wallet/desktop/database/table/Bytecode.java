@@ -1,9 +1,9 @@
 package com.credits.wallet.desktop.database.table;
 
-import com.j256.ormlite.core.dao.DatabaseResultsMapper;
-import com.j256.ormlite.core.field.DataType;
-import com.j256.ormlite.core.field.DatabaseField;
-import com.j256.ormlite.core.support.DatabaseResults;
+import com.j256.ormlite.dao.DatabaseResultsMapper;
+import com.j256.ormlite.field.DataType;
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.support.DatabaseResults;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

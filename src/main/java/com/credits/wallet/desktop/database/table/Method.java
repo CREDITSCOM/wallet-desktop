@@ -1,6 +1,6 @@
 package com.credits.wallet.desktop.database.table;
 
-import com.j256.ormlite.core.field.DatabaseField;
+import com.j256.ormlite.field.DatabaseField;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

@@ -2,10 +2,10 @@ package com.credits.wallet.desktop.database.table;
 
 
 import com.credits.general.pojo.ByteCodeObjectData;
-import com.j256.ormlite.core.dao.DatabaseResultsMapper;
-import com.j256.ormlite.core.field.DatabaseField;
-import com.j256.ormlite.core.support.DatabaseResults;
-import com.j256.ormlite.core.table.DatabaseTable;
+import com.j256.ormlite.dao.DatabaseResultsMapper;
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.support.DatabaseResults;
+import com.j256.ormlite.table.DatabaseTable;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
